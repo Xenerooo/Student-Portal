@@ -1,0 +1,79 @@
+{
+    "1": {
+        "1": [
+            {"subject_code": "GE USELF 1","subject_name": "Understanding the self","units": 3},
+            {"subject_code": "GE FIL 1","subject_name": "Filipino 1","units": 3},
+            {"subject_code": "GE MATH 4","subject_name": "Mathematics in Modern World","units": 3},
+            {"subject_code": "CC COM 01","subject_name": "Introduction to Computing","units": 3},
+            {"subject_code": "CC PRG 02","subject_name": "Computer Programming 1","units": 3},
+            {"subject_code": "PROF DS 01","subject_name": "Discrete Structures 1","units": 3},
+            {"subject_code": "NSTP 1","subject_name": "Civic Welfare Training Service 1","units": 3},
+            {"subject_code": "PE 1","subject_name": "Physical Fitness","units": 2},
+            {"subject_code": "EUTH", "subject_name": "Euthenics","units": 1}
+        ],
+        "2": [
+            {"subject_code": "GE COMM 5", "subject_name": "Purposive Communication", "units": 3},
+            {"subject_code": "GE FIL 2", "subject_name": "Filipino 2", "units": 3},
+            {"subject_code": "GE HIS 2", "subject_name": "Readings in Philippines History", "units": 3},
+            {"subject_code": "LIT 1", "subject_name": "Philippine Literature", "units": 3},
+            {"subject_code": "CC PRG 03", "subject_name": "Computer Programming 2", "units": 3},
+            {"subject_code": "PROF DS 02", "subject_name": "Discrete Structures 2", "units": 3},
+            {"subject_code": "PROF NET 03", "subject_name": "Network and Communication", "units": 3},
+            {"subject_code": "PE 2", "subject_name": "Rhythmic Activities", "units": 2},
+            {"subject_code": "NSTP 2", "subject_name": "Civic Welfare Training Service 2", "units": 3}
+            ]
+        },
+    "2": {
+        "1": [
+            {"subject_code": "GE CONTEM 3", "subject_name": "The Contemporary World", "units": 3},
+            {"subject_code": "GE ART 6", "subject_name": "Art Appreciation", "units": 3},
+            {"subject_code": "CC ALG 04", "subject_name": "Data Structures and Algorithms", "units": 3},
+            {"subject_code": "PROF SP 04", "subject_name": "Social Issues and Professional Practice", "units": 3},
+            {"subject_code": "PROF HCI 05", "subject_name": "Human Computer Interaction", "units": 3},
+            {"subject_code": "PROF SAD 06", "subject_name": "System Administration and Maintenance", "units": 3},
+            {"subject_code": "PROFE SF 01", "subject_name": "System Fundamentals", "units": 3},
+            {"subject_code": "PE 3", "subject_name": "Individual/Dual Sports Games", "units": 2}
+            ],
+        "2": [
+            {"subject_code": "GE STS 7", "subject_name": "Science, Technology and Society", "units": 3},
+            {"subject_code": "MATH 0", "subject_name": "Statistics", "units": 3},
+            {"subject_code": "CC IM 05", "subject_name": "Information Management", "units": 3},
+            {"subject_code": "PROF OOP 07", "subject_name": "Object Oriented Programming", "units": 3},
+            {"subject_code": "PROF ARCH 08", "subject_name": "Architecture and Organization", "units": 3},
+            {"subject_code": "PROF ATFL 09", "subject_name": "Automata Theory and Formal language", "units": 3},
+            {"subject_code": "PROF IS 10", "subject_name": "Intelligent System", "units": 3},
+            {"subject_code": "PE 4", "subject_name": "Team Sports", "units": 2}
+        ]
+    },
+
+    "3": {
+        "1": [
+            {"subject_code": "GE ETH 8", "subject_name": "Ethics", "units": 3},
+            {"subject_code": "PROF SE 11", "subject_name": "Software Engineering 1", "units": 3},
+            {"subject_code": "PROF OS 12", "subject_name": "Operating System", "units": 3},
+            {"subject_code": "PROF PRG 13", "subject_name": "Programming Languages", "units": 3},
+            {"subject_code": "PROF GVC 14", "subject_name": "Graphics and Visual Computing", "units": 3},
+            {"subject_code": "PROF ALG 15", "subject_name": "Algorithm and Complexity", "units": 3},
+            {"subject_code": "CC APP 06", "subject_name": "Application Development and Emerging Tech", "units": 3} 
+        ],
+
+        "2": [
+            {"subject_code": "RIZAL 1", "subject_name": "Lifeworks and Writings of Dr. Jose Rizal", "units": 3},
+            {"subject_code": "PROF SE 16", "subject_name": "Software Engineering 2", "units": 3},
+            {"subject_code": "PROF SYS 17", "subject_name": "ystem Integration and Architecture", "units": 3},
+            {"subject_code": "PROFE CS 02", "subject_name": "Computational Science", "units": 3},
+            {"subject_code": "PROFE PDC 03", "subject_name": "Parallel and Distributed Computing", "units": 3},
+            {"subject_code": "THESIS 1", "subject_name": "CS Thesis Writing 1", "units": 3}
+        ]
+    },
+    "4": {
+        "1": [
+            {"subject_code": "THESIS 2", "subject_name": "CS Thesis Writing 1", "units": 3},
+            {"subject_code": "PROF IAS 18", "subject_name": "Information Assurance and Security", "units": 3}
+        ],
+
+        "2": [
+             {"subject_code": "OJT 1", "subject_name": "Practicum", "units": 6}
+        ]
+    }
+}

@@ -1,0 +1,88 @@
+{
+    "1": {
+        "1": [
+            {"subject_code": "GE FIL 1", "subject_name": "komunikasyon sa Academicang Filipino", "units": 3},
+            {"subject_code": "GE HIS 2", "subject_name": "Readings in Philippine History", "units": 3},
+            {"subject_code": "GE COMM 5", "subject_name": "Purposive Communication", "units": 3},
+            {"subject_code": "THC 1", "subject_name": "Macro Perspective of Tourism and Hospitality", "units": 3},
+            {"subject_code": "THC 2", "subject_name": "Risk Mngt as Applied to Safety, Security and Sanitation", "units": 3},
+            {"subject_code": "NSTP 1", "subject_name": "Civic welfare Training Service 1", "units": 3},
+            {"subject_code": "PE 1", "subject_name": "Physical Fitness", "units": 2},
+            {"subject_code": "EUTH", "subject_name": "Euthenics", "units": 1},
+            {"subject_code": "GE MATH 4", "subject_name": "Mathematics in the Modern World", "units": 3}
+        ],
+        "2": [
+            {"subject_code": "GE FIL 2", "subject_name": "Pagbasa at Pagsulat sa Iba't-Ibang Disiplina ", "units": 3},
+            {"subject_code": "THC 3", "subject_name": "Quality Service Management in Tourism and Hospitality", "units": 3},
+            {"subject_code": "THC 4", "subject_name": "Philippine Tourism, Geography and Culture", "units": 3},
+            {"subject_code": "THC 5", "subject_name": "Micro Perspective of Tourism and Hospitality", "units": 3},
+            {"subject_code": "HPC 1", "subject_name": "Kitchen Essentials and Basic Food Preparation", "units": 3},
+            {"subject_code": "HPC 2", "subject_name": "Fund in Lodging Preparation", "units": 3},
+            {"subject_code": "NSTP 2", "subject_name": "Civic Welfare Training and Service 2", "units": 3},
+            {"subject_code": "PE 2", "subject_name": "Rhythmic Activities", "units": 3},
+            {"subject_code": "LIT 1", "subject_name": "Philippine Literature", "units": 3}
+            ]
+        },
+    "2": {
+        "1": [
+            {"subject_code": "GE USELF 1", "subject_name": "Understanding the Self", "units": 3},
+            {"subject_code": "GEE SCI 1", "subject_name": "Environmental Science", "units": 3},
+            {"subject_code": "ABM 1", "subject_name": "Organization and Management", "units": 3},
+            {"subject_code": "ABM 2", "subject_name": "Fund of Accounting", "units": 3},
+            {"subject_code": "HPC 3", "subject_name": "Applied Business Tools and Technologies w/ Lab", "units": 3},
+            {"subject_code": "HPC4", "subject_name": "Supply Chain Management in Hospitality Industry", "units": 3},
+            {"subject_code": "HPC 5", "subject_name": "Foreign Language", "units": 3},
+            {"subject_code": "PE 3", "subject_name": "Individual/Dual Sports/Games", "units": 2},
+            {"subject_code": "HME 001", "subject_name": "Philippine Regional Cuisine", "units": 3}
+            ],
+        "2": [
+            {"subject_code": "GE STS 7", "subject_name": "Science, Technology and Society", "units": 3},
+            {"subject_code": "GEE REL 4", "subject_name": "Religion, Religious Experiences and Spirituality", "units": 3},
+            {"subject_code": "ABM 3", "subject_name": "Business Marketing", "units": 3},
+            {"subject_code": "HPC 6", "subject_name": "Fundamentals in Food Service Operation", "units": 3},
+            {"subject_code": "HPC 7", "subject_name": "Intro to Meeting Incentives Conferences and Events Mngt.", "units": 3},
+            {"subject_code": "HPC 8", "subject_name": "Foreign Language 2 (HPC)", "units": 3},
+            {"subject_code": "HME 002", "subject_name": "Trends and Issues in Hospitality", "units": 3},
+            {"subject_code": "PE 4", "subject_name": "Team Sports", "units": 2},
+            {"subject_code": "GE ETH 8", "subject_name": "Ethics", "units": 3}
+        ]
+    },
+
+    "3": {
+        "1": [
+            {"subject_code": "GE CONTEM 3", "subject_name": "The Contemporary World", "units": 3},
+            {"subject_code": "ABM4", "subject_name": "Business Finance", "units": 3},
+            {"subject_code": "BME 1", "subject_name": "Operation Management in TH 1 Industry", "units": 3},
+            {"subject_code": "THC 6", "subject_name": "Professional Development and Applied Ethics", "units": 3},
+            {"subject_code": "THC 7", "subject_name": "Tourism and Hospitality Marketing", "units": 3},
+            {"subject_code": "HME 004", "subject_name": "Recreation and Leisure Management", "units": 3},
+            {"subject_code": "HME 005", "subject_name": "Room Division Cost Control", "units": 3},
+            {"subject_code": "HME 003", "subject_name": "Culinary Nutrition", "units": 3}
+        ],
+
+        "2": [
+            {"subject_code": "CONSTI", "subject_name": "Philippine Government and Constitution", "units": 3},
+            {"subject_code": "BME 2", "subject_name": "Strategic Management and Total Quality Management", "units": 3},
+            {"subject_code": "THC 8", "subject_name": "Legal Aspects in Tourism and Hospitality", "units": 3},
+            {"subject_code": "THC 9", "subject_name": "Multicultural Diversity in Workplace for the Tourism Professional", "units": 3},
+            {"subject_code": "THC 10", "subject_name": "Entrepreneurship in Tourism and Hospitality", "units": 3},
+            {"subject_code": "HPC 9", "subject_name": "Ergonomics & Facilities Planning for Hospitality Industry", "units": 3},
+            {"subject_code": "HME 006", "subject_name": "Front Office Operation", "units": 3},
+            {"subject_code": "ABM 5", "subject_name": "Applied Economics", "units": 3}
+        ]
+    },
+    "4": {
+        "1": [
+            {"subject_code": "GE ART 6", "subject_name": "Art Appreciation", "units": 3},
+            {"subject_code": "GEE IT 3", "subject_name": "Living in IT Era", "units": 3},
+            {"subject_code": "RIZAL 1", "subject_name": "Life & Works of Rizal", "units": 3},
+            {"subject_code": "HPC 10", "subject_name": "Research in Hospitality", "units": 3},
+            {"subject_code": "HME 007", "subject_name": "Housekeeping Operation", "units": 3},
+            {"subject_code": "GEE HUM 2", "subject_name": "Human Reproduction", "units": 3}
+        ],
+
+        "2": [
+            {"subject_code": "OJT 1", "subject_name": "Practicum", "units": 6}
+        ]
+    }
+}

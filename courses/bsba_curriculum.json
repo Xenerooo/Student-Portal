@@ -1,0 +1,83 @@
+{
+    "1": {
+        "1": [
+            {"subject_code": "GE FIL", "subject_name": "Filipino 1", "units": 3},
+            {"subject_code": "GE USELF 1", "subject_name": "Understanding the self", "units": 3},
+            {"subject_code": "GE HIS 2", "subject_name": "Readings in Philippine History", "units": 3},
+            {"subject_code": "GE CONTEM 3", "subject_name": "Cotemporary World", "units": 3},
+            {"subject_code": "GE MATH 4", "subject_name": "Mathematics in Modern World", "units": 3},
+            {"subject_code": "MGT 1", "subject_name": "Intro to Business Management", "units": 3},
+            {"subject_code": "NSTP 1", "subject_name": "Civic Welfare Training Service 1", "units": 3},
+            {"subject_code": "PE 1", "subject_name": "Physical Fitness", "units": 2},
+            {"subject_code": "ACCTG 1", "subject_name": "Fundamentals of Accounting 1", "units": 3},
+            {"subject_code": "EUTH", "subject_name": "Euthenics", "units": 1}
+        ],
+        "2": [
+            {"subject_code": "GE FIL 2", "subject_name": "Filipino 2", "units": 3},
+            {"subject_code": "GE COMM 5", "subject_name": "Purposive Communication", "units": 3},
+            {"subject_code": "GE ART 6", "subject_name": "Art Appreciation", "units": 3},
+            {"subject_code": "GE STS 7", "subject_name": "Science, Technology, and Society", "units": 3},
+            {"subject_code": "GE ETH 8", "subject_name": "Ethics", "units": 3},
+            {"subject_code": "LIT 1", "subject_name": "Philippine Literature", "units": 3},
+            {"subject_code": "PE 2", "subject_name": "Rhythmic Activities", "units": 2},
+            {"subject_code": "NSTP 2", "subject_name": "Civic Welfare Training Service 2", "units": 3},
+            {"subject_code": "ACCTG 2", "subject_name": "Fundamentals of Accounting 2", "units": 3}
+            ]
+        },
+    "2": {
+        "1": [
+            {"subject_code": "GE FIL 3", "subject_name": "Filipino 3", "units": 3},
+            {"subject_code": "GEE SCI 1", "subject_name": "Environmental Science", "units": 3},
+            {"subject_code": "GEE HUM 2", "subject_name": "Human Reproduction", "units": 3},
+            {"subject_code": "LIT 2", "subject_name": "World Literature", "units": 3},
+            {"subject_code": "RIZAL 1", "subject_name": "Rizal's Life and Works", "units": 3},
+            {"subject_code": "BAC ECO 1", "subject_name": "Basic Microeconomics", "units": 3},
+            {"subject_code": "PROF BA 1", "subject_name": "Professional Salesmanship", "units": 3},
+            {"subject_code": "PE 3", "subject_name": "Individual/Dual Sports/Games", "units": 2}
+            ],
+        "2": [
+            {"subject_code": "CONSTI", "subject_name": "Philippine Government and Constitution", "units": 3},
+            {"subject_code": "GEE REL 4", "subject_name": "Religions, Religious Experiences and Spirituality", "units": 3},
+            {"subject_code": "GEE IT 3", "subject_name": "Living in the IT Era", "units": 3},
+            {"subject_code": "BAC LAW 2", "subject_name": "Business Law (Obligations and Contracts)", "units": 3},
+            {"subject_code": "BAC TAX 3", "subject_name": "Taxation (Income Taxation)", "units": 3},
+            {"subject_code": "PROF MKTG 2", "subject_name": "Marketing Research", "units": 3},
+            {"subject_code": "PROF MKTG 3", "subject_name": "Marketing Management", "units": 3},
+            {"subject_code": "PE 4", "subject_name": "Team Sports", "units": 2}
+        ]
+    },
+
+    "3": {
+        "1": [
+            {"subject_code": "CBM MNGT 1", "subject_name": "Strategic Management", "units": 3},
+            {"subject_code": "BAC 4", "subject_name": "Good Governance and Social Responsibility", "units": 3},
+            {"subject_code": "BAC MNGT 5", "subject_name": "Human Resource Management", "units": 3},
+            {"subject_code": "BAC 6", "subject_name": "International Trade and Agreements", "units": 3},
+            {"subject_code": "PROF 4", "subject_name": "Distribution Management", "units": 3},
+            {"subject_code": "PROF 5", "subject_name": "Advertising", "units": 3}
+        ],
+
+        "2": [
+            {"subject_code": "BAC 7", "subject_name": "Business Research", "units": 3},
+            {"subject_code": "CBM MNGT 2", "subject_name": "Operations Management (TQM)", "units": 3},
+            {"subject_code": "PROF 6", "subject_name": "Product Management", "units": 3},
+            {"subject_code": "PROF 7", "subject_name": "Retail Management", "units": 3},
+            {"subject_code": "MME 1", "subject_name": "Consumer Behavior", "units": 3},
+            {"subject_code": "MME 2", "subject_name": "Franchising", "units": 3},
+            {"subject_code": "MME 3", "subject_name": "Entrepreneural Management", "units": 3}
+        ]
+    },
+    "4": {
+        "1": [
+            {"subject_code": "PROF 8", "subject_name": "Pricing Strategy", "units": 3},
+            {"subject_code": "MME 4", "subject_name": "Sales Management", "units": 3},
+            {"subject_code": "MME 5", "subject_name": "Strategic Marketing Management", "units": 3},
+            {"subject_code": "MME 6", "subject_name": "International Marketing", "units": 3},
+            {"subject_code": "RAC 8", "subject_name": "Thesis/Feasability Study", "units": 3}
+        ],
+
+        "2": [
+            {"subject_code": "OJT 1", "subject_name": "Practicum", "units": 6}
+        ]
+    }
+}
