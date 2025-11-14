@@ -9,7 +9,7 @@ $conn = connect();
 // 1. Data Retrieval: Load Courses for Dropdown
 $courses = [];
 try {
-    $courses_result = $conn->query("SELECT course_id, course_name FROM courses ORDER BY course_name");
+    $courses_result = $conn->query("getCourseList();");
     if ($courses_result) {
         $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
     }

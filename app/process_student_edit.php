@@ -93,24 +93,11 @@ try {
     $conn->begin_transaction();
     
     // --- UPDATE 1: Update User Account (Username and optionally Password) ---
-    if (!empty($password)) {
         // Update both username and password
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt_user = $conn->prepare("
-            UPDATE users 
-            SET username = ?, password_hash = ?
-            WHERE user_id = ?
-        ");
-        $stmt_user->bind_param("ssi", $username, $hashed_password, $user_id);
-    } else {
-        // Update only username
-        $stmt_user = $conn->prepare("
-            UPDATE users 
-            SET username = ?
-            WHERE user_id = ?
-        ");
-        $stmt_user->bind_param("si", $username, $user_id);
-    }
+    $hashed_password = !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null;
+    $stmt_user = $conn->prepare("CALL updateUser(?, ?, ?);");
+    $stmt_user->bind_param("ssi", $username, $hashed_password, $user_id);
+
     
     if (!$stmt_user->execute()) {
         $conn->rollback();
@@ -126,26 +113,13 @@ try {
     $stmt_user->close();
 
     // --- UPDATE 2: Update Student Profile ---
+    $image_param = $image_data !== null ? $image_data : null;
+    $stmt_student = $conn->prepare("CALL UpdateStudent(?, ?, ?, ?, ?, ?)");
+    $null = null;
+    $stmt_student->bind_param("ssisbi", $name, $number, $course_id, $birthday, $null, $student_id);
     if ($image_data !== null) {
-        // Update with image
-        $stmt_student = $conn->prepare("
-            UPDATE students 
-            SET student_name = ?, student_number = ?, course_id = ?, birthday = ?, img = ?
-            WHERE student_id = ?
-        ");
-        // For binary data, bind NULL first then send the data
-        $null = null;
-        $stmt_student->bind_param("ssisbi", $name, $number, $course_id, $birthday, $null, $student_id);
         // Send binary data (parameter index 4, which is the 5th parameter - 0-indexed)
         $stmt_student->send_long_data(4, $image_data);
-    } else {
-        // Update without changing image
-        $stmt_student = $conn->prepare("
-            UPDATE students 
-            SET student_name = ?, student_number = ?, course_id = ?, birthday = ?
-            WHERE student_id = ?
-        ");
-        $stmt_student->bind_param("ssisi", $name, $number, $course_id, $birthday, $student_id);
     }
 
     if (!$stmt_student->execute()) {

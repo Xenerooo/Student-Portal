@@ -14,25 +14,11 @@ if (!$student_id) {
 }
 
 // Fetch student data with user info
-$stmt = $conn->prepare("
-    SELECT 
-        s.student_id,
-        s.student_name,
-        s.student_number,
-        s.course_id,
-        s.birthday,
-        s.img,
-        u.user_id,
-        u.username
-    FROM students s
-    JOIN users u ON s.user_id = u.user_id
-    WHERE s.student_id = ?
-");
-
+$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
 $stmt->bind_param("i", $student_id);
 $stmt->execute();
-$result = $stmt->get_result();
-$student = $result->fetch_assoc();
+$student = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if (!$student) {
     $conn->close();
@@ -42,7 +28,7 @@ if (!$student) {
 // Load courses for dropdown
 $courses = [];
 try {
-    $courses_result = $conn->query("SELECT course_id, course_name FROM courses ORDER BY course_name");
+    $courses_result = $conn->query("CALL getCourseList();");
     if ($courses_result) {
         $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
     }
@@ -190,7 +176,7 @@ $conn->close();
 
         function handleEditStudentSubmit(e) {
             e.preventDefault(); 
-            console.log("Edit Student Form Submission Intercepted.");
+            // console.log("Edit Student Form Submission Intercepted.");
             
             const form = e.target;
             const formData = new FormData(form);
@@ -213,7 +199,7 @@ $conn->close();
                     return response.json();
             })
             .then(data => {
-                console.log("Server Response:", data);
+                // console.log("Server Response:", data);
                 window.scrollTo(0, 0);
                 if (data.success) {
                     messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;

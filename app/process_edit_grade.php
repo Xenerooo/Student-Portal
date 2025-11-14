@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_grades'])) {
             if ($grade !== '' && is_numeric($grade)) {
                 // Use stored procedure to insert/update grade
                 $stmt = $conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?);");
-                $stmt->bind_param("iisii", $student_id, $subject_id, $grade, $current_semester_id, $current_school_year_id);
+                $stmt->bind_param("iidii", $student_id, $subject_id, $grade, $current_semester_id, $current_school_year_id);
                 $stmt->execute();
                 $stmt->close();
             } else if ($grade === '') {

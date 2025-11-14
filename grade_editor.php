@@ -37,7 +37,7 @@ $current_school_year_id = 1;
 
 // a) Get Student Details 
 $student_details = null;
-$stmt = $conn->prepare("SELECT student_name, student_number FROM students WHERE student_id = ?");
+$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
 $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -52,33 +52,9 @@ if (!$student_details) {
 
 // b) Get Student's Subjects and Current Grades for the active term
 $grades_data = [];
-$stmt = $conn->prepare("
-    SELECT 
-        s.subject_id, 
-        s.subject_code, 
-        -- USE CURRICULUM NAME (CRITICAL FOR YOUR CUSTOMIZATION)
-        curr.subject_name, 
-        g.grade,
-        curr.year_level,  
-        curr.semester
-    FROM students stu
-    -- 1. Use the curriculum table to find all subjects for the student's course
-    JOIN curriculum curr ON curr.course_id = stu.course_id
-    -- 2. Join subjects to get the subject_code
-    JOIN subjects s ON s.subject_id = curr.subject_id
-    
-    -- 3. LEFT JOIN filters existing grades by the active term IDs
-    LEFT JOIN grades g ON g.student_id = stu.student_id 
-        AND g.subject_id = s.subject_id
-        AND g.semester_id = ? 
-        AND g.school_year_id = ?
-        
-    WHERE stu.student_id = ?
-    ORDER BY curr.year_level, curr.semester, s.subject_code
-");
+$stmt = $conn->prepare("CALL getSubjectsByStudentId(?);");
 
-// Bind term IDs and student ID for the SELECT query
-$stmt->bind_param("iii", $current_semester_id, $current_school_year_id, $student_id);
+$stmt->bind_param("i", $student_id);
 $stmt->execute();
 $grades_result = $stmt->get_result();
 $grades_data = $grades_result->fetch_all(MYSQLI_ASSOC);
@@ -206,7 +182,7 @@ $conn->close(); // Close connection after all operations
                 window.scrollTo(0, 0);
                 setTimeout(() => {
                     window.location.href = 'admin_dashboard.php?view=get_student_list';
-                }, 0);
+                }, 3000);
             }
         })
         .catch(err => {

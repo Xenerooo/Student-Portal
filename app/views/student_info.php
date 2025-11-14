@@ -10,25 +10,37 @@ $conn = connect();
 $student_id = $_SESSION['student_id'];
 
 // Get student info + course details
-$stmt = $conn->prepare("
-    SELECT 
-        st.img,
-        st.student_id,
-        st.student_number,
-        st.student_name, 
-        st.course_id, 
-        st.birthday,
-        c.course_name
-    FROM students st
-    JOIN courses c ON st.course_id = c.course_id
-    WHERE st.student_id = ?
-");
+// $stmt = $conn->prepare("
+//     SELECT 
+//         st.img,
+//         st.student_id,
+//         st.student_number,
+//         st.student_name, 
+//         st.course_id, 
+//         st.birthday,
+//         c.course_name
+//     FROM students st
+//     JOIN courses c ON st.course_id = c.course_id
+//     WHERE st.student_id = ?
+// ");
 
-
-
+$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
 $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$stmt = $conn->prepare("SELECT course_name FROM courses WHERE course_id = ?;");
+$stmt->bind_param("i", $student['course_id']);
+$stmt->execute();
+$student['course_name'] = $stmt->get_result()->fetch_assoc()['course_name'];
+$stmt->close();
+
+
+
+// $stmt->bind_param("i", $student_id);
+// $stmt->execute();
+// $student = $stmt->get_result()->fetch_assoc();
 
 $conn->close();
 ?>

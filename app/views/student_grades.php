@@ -10,36 +10,19 @@ $conn = connect();
 $student_id = $_SESSION['student_id'];
 
 // Get student's course_id
-$stmt = $conn->prepare("
-    SELECT course_id
-    FROM students
-    WHERE student_id = ?
-");
+$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
 $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 $course_id = $student['course_id'];
+$stmt->close();
 
 // Fetch subjects for that course from curriculum with grades
-$sql = "
-    SELECT 
-        cu.year_level, 
-        cu.semester, 
-        s.subject_code, 
-        cu.subject_name,
-        s.units, 
-        g.grade
-    FROM curriculum cu
-    JOIN subjects s ON cu.subject_id = s.subject_id
-    LEFT JOIN grades g ON g.subject_id = s.subject_id AND g.student_id = ?
-    WHERE cu.course_id = ?
-    ORDER BY cu.year_level, cu.semester, s.subject_code
-";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $student_id, $course_id);
+$stmt = $conn->prepare("CALL getSubjectsByStudentId(?);");
+$stmt->bind_param("i", $student_id);
 $stmt->execute();
 $result = $stmt->get_result();
+$stmt->close();
 
 // Group results by year & semester
 $curriculum_data = [];
@@ -57,10 +40,10 @@ function getRemarks($r) {
 
     if ($r <= 3.0) {
         return ["remarks" => "Passed", "color" => "success"];
-    } else if ($r == 4.0) {
+    } else if ($r <= 4.0) {
         return ["remarks" => "Incomplete", "color" => "warning"];
     } else if ($r > 4.0){
-        return ["remarks" => "failed", "color" => "danger"];;
+        return ["remarks" => "Failed", "color" => "danger"];;
     } else {
         return ["remarks" => "", "color" => "danger"];
     }

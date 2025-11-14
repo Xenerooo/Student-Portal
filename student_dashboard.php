@@ -13,17 +13,20 @@ if (!isset($_SESSION['student_id'])) {
 $student_id = $_SESSION['student_id'];
 
 // Get student info + course for the welcome message
-$stmt = $conn->prepare("
-    SELECT st.student_name, st.course_id, c.course_name
-    FROM students st
-    JOIN courses c ON st.course_id = c.course_id
-    WHERE st.student_id = ?
-");
+$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
 $stmt->bind_param("i", $student_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-$conn->close(); // Close connection early since content will be loaded via AJAX
+$stmt = $conn->prepare("SELECT course_name FROM courses WHERE course_id = ?;");
+$stmt->bind_param("i", $student['course_id']);
+$stmt->execute();
+$student['course_name'] = $stmt->get_result()->fetch_assoc()['course_name'];
+$stmt->close();
+
+
+$conn->close();
 ?>
 
 
@@ -81,12 +84,9 @@ $conn->close(); // Close connection early since content will be loaded via AJAX
             </div>
         </div>
     </div>
+</body>
 
-    <script>
-
-        async function sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
+<script>
         document.addEventListener('DOMContentLoaded', function() {
             const contentArea = document.getElementById('main-content-area');
             const navLinks = document.querySelectorAll('.nav-link[data-content]');
@@ -180,5 +180,5 @@ $conn->close(); // Close connection early since content will be loaded via AJAX
             loadContent(defaultContentAction, defaultLink);
         });
     </script>
-</body>
+
 </html>
