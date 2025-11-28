@@ -141,6 +141,7 @@ $conn->close();
             body: data,
             credentials: 'same-origin'
         });
+        // await console.log(res.clone().text());
         const json = await res.json();
         const cls = json.success ? 'alert-success' : 'alert-danger';
         feedback.innerHTML = `<div class="alert ${cls}">${json.message || (json.success ? 'Password updated.' : 'Failed to update password.')}</div>`;
@@ -148,7 +149,7 @@ $conn->close();
             form.reset();
         }
     } catch (err) {
-        feedback.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+        feedback.innerHTML = '<div class="alert alert-danger">Network error. Please try again. Error: ' + err + '</div>';
     }
 });
 </script>

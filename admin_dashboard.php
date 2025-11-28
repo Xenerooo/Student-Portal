@@ -16,7 +16,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 $conn->close(); // Close connection early since the shell does not query the DB
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="auto">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

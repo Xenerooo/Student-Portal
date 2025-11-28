@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
                 if ($student_data) {
                     $_SESSION['student_id'] = $student_data['student_id'];
-                    $redirect_page = '../student_dashboard.php';
+                    $redirect_page = 'student_dashboard.php';
                 }
                 
             } elseif ($user['role'] === 'admin') {
@@ -57,26 +57,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 
                 if ($admin_data) {
                     $_SESSION['admin_id'] = $admin_data['admin_id'];
-                    $redirect_page = '../admin_dashboard.php';
+                    $redirect_page = 'admin_dashboard.php';
                 }
             }
 
             $conn->close(); // Close connection after successful DB operations
             
-            // 4. Redirect the user
-            header("Location: " . $redirect_page);
+            // Return success with redirect URL
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'redirect' => $redirect_page
+            ]);
             exit();
             
     } else {
-        // Invalid username or password (user not found or password doesn't match)
-        $error_message = 'Invalid username or password.';
+        // Invalid username or password
+        $conn->close();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid username or password.'
+        ]);
+        exit();
     }
-    
-    // Display error message using JavaScript alert (Only runs if login failed)
-    if (isset($error_message)) {
-        echo "<script>alert('$error_message');</script>";
-    }
-    
-    $conn->close();
 }
 ?>

@@ -80,7 +80,7 @@ if (!password_verify($oldPassword, $row['password_hash'])) {
 
 // Update to new hash
 $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-$update = $conn->prepare('CALL updateUserPassword(?, ?);');
+$update = $conn->prepare('CALL UserUpdatePassword(?, ?);');
 $update->bind_param('si', $newHash, $row['user_id']);
 $ok = $update->execute();
 $update->close();
