@@ -1,0 +1,12 @@
+{
+    "name": "student/portal",
+    "authors": [
+        {
+            "name": "xenerooo",
+            "email": "87416211+Xenerooo@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "altorouter/altorouter": "^2.0"
+    }
+}

@@ -3,7 +3,7 @@
 // This file is loaded via AJAX by ajax_handler.php.
 
 // The session is already started, and authorization is complete in ajax_handler.php.
-require_once "includes/db_connect.php";
+require_once 'core/db_connect.php';
 $conn = connect();
 
 // 1. Data Retrieval: Load Courses for Dropdown
@@ -95,7 +95,7 @@ $conn->close();
         
         messageDiv.innerHTML = '<div class="alert alert-info">Processing...</div>';
 
-        fetch('app/process_student_create.php', {
+        fetch('/Student-Portal/admin/api/students/store', {
             method: 'POST',
             body: formData
         })

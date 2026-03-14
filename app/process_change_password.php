@@ -1,7 +1,7 @@
 <?php
 // app/process_change_password.php - Handles student change password via AJAX (JSON)
 
-session_start();
+// session_start() handled by index.php
 header('Content-Type: application/json');
 
 // Authorization: must be logged in as a student
@@ -27,7 +27,7 @@ if (!$sentCsrf || !$sessionCsrf || !hash_equals($sessionCsrf, $sentCsrf)) {
     exit();
 }
 
-require_once 'includes/db_connect.php';
+require_once 'core/db_connect.php';
 $conn = connect();
 
 $studentId = $_SESSION['student_id'];

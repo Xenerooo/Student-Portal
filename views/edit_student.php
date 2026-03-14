@@ -3,7 +3,7 @@
 // This file is loaded via AJAX by ajax_handler.php for editing student information.
 
 // The session is already started, and authorization is complete in ajax_handler.php.
-require_once "includes/db_connect.php";
+require_once 'core/db_connect.php';
 $conn = connect();
 
 // Get student_id from GET parameter
@@ -124,7 +124,7 @@ $conn->close();
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success flex-fill">Update Student</button>
                 <button type="button" class="btn btn-danger flex-fill" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">Delete Student</button>
-                <button type="button" class="btn btn-secondary cancel-edit-btn"> Cancel</button>
+                <button type="button" class="btn btn-secondary cancel-edit-btn">Cancel</button>
             </div>
         </form>
     </div>
@@ -167,7 +167,7 @@ $conn->close();
                 } else {
                     // Fallback if loadContent is not available
                     console.error('loadContent function not available');
-                    window.location.href = 'admin_dashboard.php';
+                    window.location.href = '/Student-Portal/admin/dashboard';
                 }
             });
         }
@@ -184,7 +184,7 @@ $conn->close();
             
             messageDiv.innerHTML = '<div class="alert alert-info">Processing...</div>';
 
-            fetch('app/process_student_edit.php', {
+            fetch('/Student-Portal/admin/api/students/update', {
                 method: 'POST',
                 body: formData
             })
@@ -211,7 +211,7 @@ $conn->close();
                         if (typeof window.loadContent === 'function') {
                             window.loadContent(action, targetLink);
                         } else {
-                            window.location.href = 'admin_dashboard.php';
+                            window.location.href = '/Student-Portal/admin/dashboard';
                         }
                     }, 1500);
                 } else {
@@ -254,7 +254,7 @@ $conn->close();
                 const formData = new FormData();
                 formData.append('student_id', studentId);
 
-                fetch('app/process_student_delete.php', {
+                fetch('/Student-Portal/admin/api/students/delete', {
                     method: 'POST',
                     body: formData
                 })
@@ -294,7 +294,7 @@ $conn->close();
                             if (typeof window.loadContent === 'function') {
                                 window.loadContent(action, targetLink);
                             } else {
-                                window.location.href = 'admin_dashboard.php';
+                                window.location.href = '/Student-Portal/admin/dashboard';
                             }
                         }, 1000);
                     } else {

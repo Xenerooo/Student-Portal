@@ -6,7 +6,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     die("<div class='alert alert-danger'>Access Denied. Please log in as an administrator.</div>");
 }
 
-require_once "includes/db_connect.php";
+require_once 'core/db_connect.php';
 $conn = connect();
 
 // Fetch existing subjects
@@ -151,7 +151,7 @@ $conn->close();
         
         messageDiv.innerHTML = '<div class="alert alert-info">Adding subject...</div>';
         
-        fetch('app/process_subject_manage.php', {
+        fetch('/Student-Portal/admin/api/subjects/manage', {
             method: 'POST',
             body: formData
         })
@@ -313,7 +313,7 @@ $conn->close();
                 formData.append('action', 'delete');
                 formData.append('subject_id', pendingDeleteSubjectId);
 
-                fetch('app/process_subject_manage.php', {
+                fetch('/Student-Portal/admin/api/subjects/manage', {
                     method: 'POST',
                     body: formData
                 })

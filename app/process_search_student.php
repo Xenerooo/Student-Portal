@@ -1,6 +1,6 @@
 <?php 
-session_start();
-require_once "includes/db_connect.php";
+// session_start() already handled by index.php
+require_once "core/db_connect.php";
 $conn = connect();
 
 header('Content-Type: application/json'); // Ensure JSON response

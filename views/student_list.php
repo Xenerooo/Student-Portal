@@ -3,7 +3,7 @@
 // This script is loaded via AJAX and only returns the HTML fragment.
 
 
-require_once "includes/db_connect.php";
+require_once 'core/db_connect.php';
 
 $conn = connect();
 
@@ -79,7 +79,7 @@ $conn->close();
             `;
             
             // Build URL with search parameter
-            let url = 'app/process_search_student.php';
+            let url = '/Student-Portal/admin/api/students/search';
             const params = new URLSearchParams();
             if (searchTerm.trim()) {
                 params.set('search', searchTerm.trim());
@@ -227,21 +227,10 @@ $conn->close();
 
         
         
-        // Function to load edit student form with student_id parameter
         function loadEditStudentForm(studentId) {
             const contentArea = document.getElementById('main-content-area');
-            const ajaxHandlerPath = 'app/ajax_handler.php';
             
-            // Show loading spinner
-            contentArea.innerHTML = `
-                <div class="d-flex justify-content-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            `;
-            
-            const url = `${ajaxHandlerPath}?action=get_edit_student_form&student_id=${studentId}`;
+            const url = `/Student-Portal/admin/api/students/edit?student_id=${studentId}`;
             
             fetch(url)
                 .then(response => {
@@ -281,7 +270,7 @@ $conn->close();
                     });
                     
                     // Update URL
-                    history.pushState(null, '', `admin_dashboard.php?view=get_edit_student_form&student_id=${studentId}`);
+                    history.pushState(null, '', `/Student-Portal/admin/dashboard?view=get_edit_student_form&student_id=${studentId}`);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;
@@ -302,7 +291,7 @@ $conn->close();
                 </div>
             `;
 
-            const url = `grade_editor.php?student_id=${studentId}`;
+            const url = `/Student-Portal/admin/api/grades/edit?student_id=${studentId}`;
 
             fetch(url)
                 .then(response => {
@@ -337,7 +326,7 @@ $conn->close();
                         newScript.remove();
                     });
 
-                    history.pushState(null, '', `admin_dashboard.php?view=grade_editor&student_id=${studentId}`);
+                    history.pushState(null, '', `/Student-Portal/admin/dashboard?view=grade_editor&student_id=${studentId}`);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;

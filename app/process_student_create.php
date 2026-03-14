@@ -1,7 +1,7 @@
 <?php
 // app/process_student_create.php - Handles the form submission via AJAX
 
-session_start();
+// session_start() handled by index.php
 
 header('Content-Type: application/json'); // Ensure JSON response
 
@@ -12,7 +12,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-require_once "includes/db_connect.php";
+require_once 'core/db_connect.php';
 $conn = connect();
 
 // --- 1. Collect and sanitize input ---

@@ -1,126 +1,80 @@
 <?php
 session_start();
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/core/db_connect.php';
 
-require_once "app/includes/db_connect.php"; // DB connection file
+// Initialize AltoRouter
+$router = new AltoRouter();
+// Set base path if your project isn't at the root of the domain.
+// e.g. localhost/Student-Portal
+$router->setBasePath('/Student-Portal');
 
-$conn = connect();
+/*====================================
+ * PUBLIC ROUTES
+ *====================================*/
+$router->map('GET', '/', 'AControlluther#showLoginForm', 'home');
+$router->map('GET', '/login', 'AuthController#showLoginForm', 'login_form');
+$router->map('POST', '/login', 'AuthController#login', 'login_post');
+$router->map('GET', '/logout', 'AuthController#logout', 'logout');
 
-// --- PRE-LOGIN CHECK: Redirect if user is already authenticated ---
-if (isset($_SESSION['role'])) {
-    if ($_SESSION['role'] === 'student') {
-        // Close connection before redirecting
-        $conn->close();
-        header("Location: student_dashboard.php");
-        exit();
-    } elseif ($_SESSION['role'] === 'admin') {
-        // Close connection before redirecting
-        $conn->close();
-        header("Location: admin_dashboard.php");
-        exit();
-    }
-}
+/*====================================
+ * ADMIN ROUTES (Requires Admin Role)
+ *====================================*/
+$router->map('GET', '/admin/dashboard', 'AdminController#dashboard', 'admin_dashboard');
+// Admin AJAX Routes
+$router->map('GET', '/admin/api/students', 'AdminController#getStudentList', 'api_admin_students');
+$router->map('GET', '/admin/api/students/search', 'AdminController#searchStudents', 'api_admin_students_search');
+$router->map('GET', '/admin/api/students/create', 'AdminController#getCreateStudentForm', 'api_admin_student_create_form');
+$router->map('GET', '/admin/api/students/edit', 'AdminController#getEditStudentForm', 'api_admin_student_edit_form');
 
+$router->map('POST', '/admin/api/students/store', 'AdminController#createStudent', 'api_admin_student_store');
+$router->map('POST', '/admin/api/students/update', 'AdminController#editStudent', 'api_admin_student_update');
+$router->map('POST', '/admin/api/students/delete', 'AdminController#deleteStudent', 'api_admin_student_delete');
 
-// Close connection if it was opened and not already closed during redirect
-$conn->close(); 
-?>
+$router->map('GET', '/admin/api/subjects', 'AdminController#getManageSubjects', 'api_admin_subjects');
+$router->map('POST', '/admin/api/subjects/manage', 'AdminController#manageSubject', 'api_admin_subject_manage');
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="assets/images/icon.png">
+$router->map('GET', '/admin/api/curriculum', 'AdminController#getManageCurriculum', 'api_admin_curriculum');
+$router->map('GET', '/admin/api/curriculum/data', 'AdminController#getCurriculumData', 'api_admin_curriculum_data');
+$router->map('POST', '/admin/api/curriculum/manage', 'AdminController#manageCurriculum', 'api_admin_curriculum_manage');
+
+$router->map('GET', '/admin/api/grades/edit', 'AdminController#getGradeEditor', 'api_admin_grades_edit');
+$router->map('POST', '/admin/api/grades/save', 'AdminController#saveGrade', 'api_admin_grades_save');
+
+/*====================================
+ * STUDENT ROUTES (Requires Student Role)
+ *====================================*/
+$router->map('GET', '/student/dashboard', 'StudentController#dashboard', 'student_dashboard');
+// Student AJAX Routes
+$router->map('GET', '/student/api/info', 'StudentController#getStudentInfo', 'api_student_info');
+$router->map('GET', '/student/api/grades', 'StudentController#getStudentGrades', 'api_student_grades');
+$router->map('GET', '/student/api/grades/data', 'StudentController#getGradesData', 'api_student_grades_data');
+$router->map('POST', '/student/api/password/change', 'StudentController#changePassword', 'api_student_password_change');
+
+/*====================================
+ * MATCH AND ROUTE
+ *====================================*/
+$match = $router->match();
+
+if (is_array($match) && is_callable($match['target'])) {
+    call_user_func_array($match['target'], $match['params']);
+} else if (is_array($match) && is_string($match['target'])) {
+    // String mapping like 'AdminController#dashboard'
+    list($controllerName, $methodName) = explode('#', $match['target']);
     
-    <title>Portal Login</title>
-    <link href="assets/css/bootstrap.css" rel="stylesheet" >
-
-</head>
-<body class="bg-dark d-flex align-items-center justify-content-center vh-100" style="height: 100%;">
-
-    <div class="card shadow p-3" style="width: 350px;">
-        <div class="d-flex align-items-center justify-content-center m-1" >
-            <img src="assets/images/icon.png" alt="" width="96" height="96">
-        </div>
-        <!-- <h3 class="text-center mb-4">University Portal</h3> -->
-
-        <form method="POST" action="app/proccess_login.php" id="loginForm">
-
-            <div class="form-floating mb-3">
-                <input type="text" name="username" class="form-control" id="username" placeholder="25-001" required>
-                <label for="floatingInput">Username</label>
-            </div>
-            <!-- <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" name="username" id="username" class="form-control" required>
-            </div> -->
-            <div class="form-floating mb-3">
-                <input type="password" name="password" class="form-control" id="password" placeholder="25-001" required>
-                <label for="floatingInput">Password</label>
-            </div>
-
-            <!-- <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" name="password" id="password" class="form-control" required>
-            </div> -->
-
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
-    </div>
-
-    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="errorModalLabel">Login Failed</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="errorModalMessage">
-                    <!-- Error message will be inserted here -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-</body>
-
-<script src="assets/js/bootstrap.bundle.js"></script>
-<script>
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        const formData = new FormData(event.target);
-        
-        fetch('app/proccess_login.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Redirect on success
-                window.location.href = data.redirect;
-            } else {
-                // Show modal and clear form on failure
-                document.getElementById('errorModalMessage').textContent = data.message;
-                const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-                errorModal.show();
-                
-                // Clear form
-                event.target.reset();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('errorModalMessage').textContent = 'An error occurred. Please try again.';
-            const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-            errorModal.show();
-        });
-    });
-</script>
-
-</html>
+    // Require the controller file dynamically
+    $controllerPath = __DIR__ . '/controllers/' . $controllerName . '.php';
+    if (file_exists($controllerPath)) {
+        require_once $controllerPath;
+        $controller = new $controllerName();
+        call_user_func_array([$controller, $methodName], $match['params']);
+    } else {
+        http_response_code(500);
+        echo "Controller $controllerName not found.";
+    }
+} else {
+    // 404
+    http_response_code(404);
+    echo "404 Not Found.";
+}
+?>

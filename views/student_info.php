@@ -3,8 +3,8 @@
 // This file is loaded via AJAX by student_ajax_handler.php.
 // The session is already started, and authorization is complete in student_ajax_handler.php.
 
-require_once 'includes/db_connect.php';
-require_once 'includes/utilities.php';
+require_once 'core/db_connect.php';
+require_once 'core/utilities.php';
 $conn = connect();
 
 $student_id = $_SESSION['student_id'];
@@ -136,7 +136,7 @@ $conn->close();
     const feedback = document.getElementById('changePasswordFeedback');
     feedback.innerHTML = '';
     try {
-        const res = await fetch('app/process_change_password.php', {
+        const res = await fetch('/Student-Portal/student/api/password/change', {
             method: 'POST',
             body: data,
             credentials: 'same-origin'

@@ -305,3 +305,11 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- Insert an initial admin user (username: admin, password: admin123)
+INSERT INTO `users` (`username`, `password_hash`, `role`, `is_active`) 
+VALUES ('admin', '$2y$10$OiZJXD6bWC3xg9qNnCFj0uPlFnDLGqgAk8qpFhdqv1b1HmGONoWXK', 'admin', 1);
+
+-- Insert the associated admin profile using the ID we just created
+INSERT INTO `admins` (`user_id`, `admin_name`) 
+VALUES (LAST_INSERT_ID(), 'System Admin');

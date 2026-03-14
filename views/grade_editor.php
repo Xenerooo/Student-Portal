@@ -2,8 +2,8 @@
 // edit_grades.php - Page for updating a student's grades
 
 session_start();
-// Path is relative to the root:
-require_once "app/includes/db_connect.php";
+// session_start() handled by index.php
+require_once 'core/db_connect.php';
 $conn = connect();
 
 // --- 1. Authorization and Input Validation ---
@@ -93,10 +93,10 @@ $conn->close(); // Close connection after all operations
             <label for="searchGradeEdit" class="form-label">Search Subject:</label>
             <input type="text" id="searchGradeEdit" class="form-control" placeholder="Search by Subject code or Subject name" autocomplete="off">
         </div>
-
-        <form method="POST" action="app/process_edit_grade.php" class="shadow p-4 rounded bg-light">
-            <input type="hidden" name="update_grades" value="1">
-            <input type="hidden" name="student_id" value="<?php echo $student_id; ?>">
+        <div class="container-fluid mt-4 fade-in">
+    <div class="row w-100 max-w-4xl mx-auto">
+        <form method="POST" action="/Student-Portal/admin/api/grades/save" class="shadow p-4 rounded bg-light">
+            <input type="hidden" name="student_id" value="<?= htmlspecialchars($student_id) ?>">
             <input type="hidden" name="semester_id" value="<?php echo $current_semester_id; ?>">
             <input type="hidden" name="school_year_id" value="<?php echo $current_school_year_id; ?>">
             
@@ -140,13 +140,15 @@ $conn->close(); // Close connection after all operations
             </div>
             
             <button type="submit" class="btn btn-success mt-3">Save All Grades</button>
-            <a href="admin_dashboard.php?view=get_student_list" class="btn btn-secondary mt-3">Back to Student List</a>
+            <a href="/Student-Portal/admin/dashboard?view=get_student_list" class="btn btn-secondary mt-3">Back to Student List</a>
         </form>
     </div>
+</div>
 </body>
 <script>
 (function() {
-    const form = document.querySelector("form[action^='app/process_edit_grade.php']");
+    // Form submission via AJAX
+    const form = document.querySelector("form[action^='/Student-Portal/admin/api/grades/save']");
     if (!form) return;
 
     const feedback = document.getElementById('saveFeedback');

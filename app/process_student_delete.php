@@ -1,5 +1,5 @@
 <?php
-    session_start();
+    // session_start() handled by index.php
 
     header('Content-Type: application/json'); // Ensure JSON response
 
@@ -10,7 +10,7 @@
         exit();
     }
 
-    require_once "includes/db_connect.php";
+    require_once 'core/db_connect.php';
     $conn = connect();
 
     // Validate input

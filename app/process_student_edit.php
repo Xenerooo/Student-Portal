@@ -1,8 +1,7 @@
 <?php
 // app/process_student_edit.php - Handles the student edit form submission via AJAX
 
-session_start();
-
+// session_start() handled by index.php
 header('Content-Type: application/json'); // Ensure JSON response
 
 // Authorization Check
@@ -12,7 +11,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-require_once "includes/db_connect.php";
+require_once 'core/db_connect.php';
 $conn = connect();
 
 // --- 1. Collect and sanitize input ---

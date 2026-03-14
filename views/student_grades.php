@@ -210,7 +210,7 @@
                 return;
             }
 
-            fetch('app/process_get_student_grade.php')
+            fetch('/Student-Portal/student/api/grades/data')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');

@@ -6,7 +6,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     die("<div class='alert alert-danger'>Access Denied. Please log in as an administrator.</div>");
 }
 
-require_once "includes/db_connect.php";
+require_once 'core/db_connect.php';
 $conn = connect();
 
 // Fetch courses and subjects for dropdowns
@@ -318,7 +318,7 @@ $conn->close();
             return;
         }
         
-        fetch(`app/ajax_handler.php?action=get_curriculum_data&course_id=${courseId}`)
+        fetch(`/Student-Portal/admin/api/curriculum/data?course_id=${courseId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -407,7 +407,7 @@ $conn->close();
         const formData = new FormData(this);
         formData.append('action', 'add');
         
-        fetch('app/process_curriculum_manage.php', {
+        fetch('/Student-Portal/admin/api/curriculum/manage', {
             method: 'POST',
             body: formData
         })
@@ -449,7 +449,7 @@ $conn->close();
         const formData = new FormData(form);
         formData.append('action', 'update');
         
-        fetch('app/process_curriculum_manage.php', {
+        fetch('/Student-Portal/admin/api/curriculum/manage', {
             method: 'POST',
             body: formData
         })
@@ -477,7 +477,7 @@ $conn->close();
         formData.append('action', 'delete');
         formData.append('curriculum_id', curriculumId);
         
-        fetch('app/process_curriculum_manage.php', {
+        fetch('/Student-Portal/admin/api/curriculum/manage', {
             method: 'POST',
             body: formData
         })
@@ -603,7 +603,7 @@ $conn->close();
                 formData.append('action', 'bulk_save');
                 formData.append('curriculum_data', JSON.stringify(curriculumData));
                 
-                fetch('app/process_curriculum_manage.php', {
+                fetch('/Student-Portal/admin/api/curriculum/manage', {
                     method: 'POST',
                     body: formData
                 })
