@@ -1,10 +1,10 @@
 <?php
-class Grade {
-    private $conn;
+namespace App\Models;
 
-    public function __construct($dbConnection) {
-        $this->conn = $dbConnection;
-    }
+use App\Core\BaseModel;
+use Throwable;
+
+class Grade extends BaseModel {
 
     public function upsertGrades($student_id, $grades, $semester_id, $school_year_id) {
         try {
@@ -38,33 +38,58 @@ class Grade {
     }
 
     public function getStudentGrades($student_id) {
-        // First get course_id
-        $stmt = $this->conn->prepare("CALL getStudentDetailsByStudentId(?);");
+        // First get student's course_id
+        $stmt = $this->conn->prepare("SELECT course_id FROM students WHERE student_id = ?");
         $stmt->bind_param("i", $student_id);
         $stmt->execute();
-        $student = $stmt->get_result()->fetch_assoc();
-        $course_id = $student['course_id'] ?? null;
+        $course_id = $stmt->get_result()->fetch_assoc()['course_id'] ?? null;
         $stmt->close();
-        
-        while ($this->conn->more_results()) { $this->conn->next_result(); }
 
-        // Fetch subjects and grades
-        $stmt = $this->conn->prepare("CALL getSubjectsByStudentId(?);");
-        $stmt->bind_param("i", $student_id);
+        // Get all subjects and grades for this student from their curriculum
+        // We use a query that joins subjects and potential grades
+        $sql = "
+            SELECT 
+                c.year_level, 
+                c.semester, 
+                s.subject_id,
+                s.subject_code, 
+                c.subject_name, 
+                s.units,
+                g.grade
+            FROM curriculum c
+            JOIN subjects s ON c.subject_id = s.subject_id
+            LEFT JOIN grades g ON s.subject_id = g.subject_id AND g.student_id = ?
+            WHERE c.course_id = ?
+            ORDER BY c.year_level, c.semester, s.subject_code
+        ";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $student_id, $course_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
-        $curriculum_data = [];
-        while ($row = $result->fetch_assoc()) {
-            $curriculum_data[$row['year_level']][$row['semester']][] = $row;
-        }
+        $all_data = $result->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
-        
+
         while ($this->conn->more_results()) { $this->conn->next_result(); }
+
+        // Group by Year and Semester
+        $grouped = [];
+        foreach ($all_data as $row) {
+            $year = $row['year_level'];
+            $sem = $row['semester'];
+            
+            if (!isset($grouped[$year])) {
+                $grouped[$year] = [];
+            }
+            if (!isset($grouped[$year][$sem])) {
+                $grouped[$year][$sem] = [];
+            }
+            $grouped[$year][$sem][] = $row;
+        }
 
         return [
             'course_id' => $course_id,
-            'grades' => $curriculum_data
+            'grades' => $grouped
         ];
     }
 }

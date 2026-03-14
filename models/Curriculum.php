@@ -1,10 +1,10 @@
 <?php
-class Curriculum {
-    private $conn;
+namespace App\Models;
 
-    public function __construct($dbConnection) {
-        $this->conn = $dbConnection;
-    }
+use App\Core\BaseModel;
+use Exception;
+
+class Curriculum extends BaseModel {
 
     public function addEntry($course_id, $subject_id, $year_level, $semester, $subject_name) {
         $stmt = $this->conn->prepare("INSERT INTO curriculum (course_id, subject_id, year_level, semester, subject_name) VALUES (?, ?, ?, ?, ?)");
@@ -126,6 +126,26 @@ class Curriculum {
         $exists = ($result && $result->num_rows > 0);
         $stmt->close();
         return $exists;
+    }
+    public function getEntriesByCourse($course_id) {
+        $stmt = $this->conn->prepare("
+            SELECT c.curriculum_id, c.course_id, c.subject_id, c.year_level, c.semester, c.subject_name,
+                   co.course_name, s.subject_code
+            FROM curriculum c
+            LEFT JOIN courses co ON c.course_id = co.course_id
+            LEFT JOIN subjects s ON c.subject_id = s.subject_id
+            WHERE c.course_id = ?
+            ORDER BY c.year_level, c.semester, s.subject_code
+        ");
+        $stmt->bind_param('i', $course_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $entries = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        
+        while ($this->conn->more_results()) { $this->conn->next_result(); }
+        
+        return $entries;
     }
 }
 ?>

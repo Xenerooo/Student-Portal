@@ -1,76 +1,15 @@
 <?php
 // edit_grades.php - Page for updating a student's grades
-
-session_start();
-// session_start() handled by index.php
-require_once 'core/db_connect.php';
-$conn = connect();
-
-// --- 1. Authorization and Input Validation ---
-
-// Redirect non-admins or if no student_id is provided
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    $conn->close();
-    header("Location: index.php");
-    exit();
-}
-
-// Get student_id from URL and sanitize it
-$student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
-
-if (!$student_id) {
-    // If no valid student ID is passed, redirect back to the student list
-    $conn->close();
-    header("Location: admin_dashboard.php");
-    exit();
-}
-
-// --- 1.5. Determine Active Term (CRITICAL for your schema) ---
-// NOTE: In a production system, these IDs should be fetched dynamically 
-// (e.g., from a settings table, a URL parameter, or a dropdown selector).
-$current_semester_id = 1;   
-$current_school_year_id = 1; 
-
-
-
-// --- 3. Data Retrieval for Display (The 'R' in CRUD) ---
-
-// a) Get Student Details 
-$student_details = null;
-$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
-$stmt->bind_param("i", $student_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$student_details = $result->fetch_assoc();
-$stmt->close();
-
-if (!$student_details) {
-    $conn->close();
-    die("<div class='alert alert-danger'>Student not found.</div>");
-}
-
-
-// b) Get Student's Subjects and Current Grades for the active term
-$grades_data = [];
-$stmt = $conn->prepare("CALL getSubjectsByStudentId(?);");
-
-$stmt->bind_param("i", $student_id);
-$stmt->execute();
-$grades_result = $stmt->get_result();
-$grades_data = $grades_result->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
-
-$conn->close(); // Close connection after all operations
+// Data provided by AdminController: $student_id, $student_details, $grades_data, $current_semester_id, $current_school_year_id
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Grades for <?php echo htmlspecialchars($student_details['student_name']); ?></title>
-    <link href="assets/css/bootstrap.min.css" rel="stylesheet"> 
-    <script defer src="assets/js/bootstrap.bundle.js"></script>
+    <link href="/Student-Portal/assets/css/bootstrap.min.css" rel="stylesheet"> 
+    <script defer src="/Student-Portal/assets/js/bootstrap.bundle.js"></script>
 
 </head>
 <body>
@@ -140,7 +79,7 @@ $conn->close(); // Close connection after all operations
             </div>
             
             <button type="submit" class="btn btn-success mt-3">Save All Grades</button>
-            <a href="/Student-Portal/admin/dashboard?view=get_student_list" class="btn btn-secondary mt-3">Back to Student List</a>
+            <a href="/Student-Portal/" class="btn btn-secondary mt-3">Back to Student List</a>
         </form>
     </div>
 </div>
@@ -183,7 +122,7 @@ $conn->close(); // Close connection after all operations
             if (json.success) {
                 window.scrollTo(0, 0);
                 setTimeout(() => {
-                    window.location.href = 'admin_dashboard.php?view=get_student_list';
+                    window.location.href = '/Student-Portal/';
                 }, 3000);
             }
         })

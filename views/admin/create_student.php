@@ -1,25 +1,6 @@
 <?php
-// app/views/create_student.php
-// This file is loaded via AJAX by ajax_handler.php.
-
-// The session is already started, and authorization is complete in ajax_handler.php.
-require_once 'core/db_connect.php';
-$conn = connect();
-
-// 1. Data Retrieval: Load Courses for Dropdown
-$courses = [];
-try {
-    $courses_result = $conn->query("CALL getCourseList();");
-    if ($courses_result) {
-        $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
-    }
-} catch (Exception $e) {
-    // If error, courses array remains empty
-}
-
-$conn->close();
-
-// NOTE: No POST handling here! The form submits to a different endpoint.
+// views/admin/create_student.php
+// Data provided by AdminController: $courses
 ?>
 
 <h1 class="mb-4">Create New Student Account</h1>

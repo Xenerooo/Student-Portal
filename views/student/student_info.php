@@ -1,48 +1,6 @@
 <?php
-// app/views/student_info.php
-// This file is loaded via AJAX by student_ajax_handler.php.
-// The session is already started, and authorization is complete in student_ajax_handler.php.
-
-require_once 'core/db_connect.php';
-require_once 'core/utilities.php';
-$conn = connect();
-
-$student_id = $_SESSION['student_id'];
-
-// Get student info + course details
-// $stmt = $conn->prepare("
-//     SELECT 
-//         st.img,
-//         st.student_id,
-//         st.student_number,
-//         st.student_name, 
-//         st.course_id, 
-//         st.birthday,
-//         c.course_name
-//     FROM students st
-//     JOIN courses c ON st.course_id = c.course_id
-//     WHERE st.student_id = ?
-// ");
-
-$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
-$stmt->bind_param("i", $student_id);
-$stmt->execute();
-$student = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-$stmt = $conn->prepare("SELECT course_name FROM courses WHERE course_id = ?;");
-$stmt->bind_param("i", $student['course_id']);
-$stmt->execute();
-$student['course_name'] = $stmt->get_result()->fetch_assoc()['course_name'];
-$stmt->close();
-
-
-
-// $stmt->bind_param("i", $student_id);
-// $stmt->execute();
-// $student = $stmt->get_result()->fetch_assoc();
-
-$conn->close();
+// views/student/student_info.php
+// Data provided by StudentController: $student
 ?>
 
 

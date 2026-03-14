@@ -1,12 +1,12 @@
 <?php
-require_once 'models/Grade.php';
+namespace App\Controllers;
 
-class StudentController {
-    private $conn;
+use App\Core\BaseController;
+use App\Models\Grade;
+use App\Models\User;
+use Throwable;
 
-    public function __construct($dbConnection = null) {
-        $this->conn = $dbConnection;
-    }
+class StudentController extends BaseController {
 
     public function dashboard() {
         if (!isset($_SESSION['student_id']) || $_SESSION['role'] !== 'student') {
@@ -15,33 +15,37 @@ class StudentController {
         }
 
         $student_id = $_SESSION['student_id'];
-        
-        $stmt = $this->conn->prepare("CALL getStudentDetailsByStudentId(?);");
-        $stmt->bind_param("i", $student_id);
-        $stmt->execute();
-        $student = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        
-        while ($this->conn->more_results()) { $this->conn->next_result(); }
+        $studentModel = new \App\Models\Student($this->conn);
+        $student = $studentModel->getStudentDashboardData($student_id);
 
-        $stmt = $this->conn->prepare("SELECT course_name FROM courses WHERE course_id = ?;");
-        $stmt->bind_param("i", $student['course_id']);
-        $stmt->execute();
-        $student['course_name'] = $stmt->get_result()->fetch_assoc()['course_name'];
-        $stmt->close();
-
-        $pageTitle = "Student Dashboard | SIS";
-        require 'views/student/dashboard.php';
+        $this->render('student/dashboard', [
+            'pageTitle' => "Student Dashboard | SIS",
+            'student' => $student
+        ]);
     }
 
     public function getStudentInfo() {
         $this->checkStudent();
-        include 'views/student_info.php';
+        $student_id = $_SESSION['student_id'];
+
+        $studentModel = new \App\Models\Student($this->conn);
+        $student = $studentModel->getStudentById($student_id);
+
+        if (!$student) {
+            if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
+                $this->json(['success' => false, 'message' => 'Student info not found.'], 404);
+            }
+            die("<div class='alert alert-danger'>Student info not found.</div>");
+        }
+
+        $this->render('student/student_info', [
+            'student' => $student
+        ]);
     }
 
     public function getStudentGrades() {
         $this->checkStudent();
-        include 'views/student_grades.php';
+        $this->render('student/student_grades');
     }
 
     public function changePassword() {
@@ -49,17 +53,13 @@ class StudentController {
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
         }
 
         $sentCsrf = $_POST['csrf'] ?? '';
         $sessionCsrf = $_SESSION['csrf'] ?? '';
         if (!$sentCsrf || !$sessionCsrf || !hash_equals($sessionCsrf, $sentCsrf)) {
-            http_response_code(419);
-            echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 419);
         }
 
         $student_id = $_SESSION['student_id'];
@@ -68,41 +68,32 @@ class StudentController {
         $enteredUsername = (string)($_POST['username'] ?? '');
 
         if ($oldPassword === '' || $newPassword === '') {
-            echo json_encode(['success' => false, 'message' => 'Please provide old and new password.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Please provide old and new password.'], 400);
         }
         if (strlen($newPassword) < 6) {
-            echo json_encode(['success' => false, 'message' => 'New password must be at least 6 characters.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'New password must be at least 6 characters.'], 400);
         }
 
         $userModel = new User($this->conn);
         $row = $userModel->getUserAccountDetails($student_id);
 
         if (!$row) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'User account not found.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'User account not found.'], 404);
         }
 
         if ($enteredUsername != $row['username']) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Username invalid.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Username invalid.'], 401);
         }
 
         if (!password_verify($oldPassword, $row['password_hash'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Old password is incorrect.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Old password is incorrect.'], 401);
         }
 
         $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
         if ($userModel->updatePassword($row['user_id'], $newHash)) {
-            echo json_encode(['success' => true, 'message' => 'Password updated successfully.']);
+            $this->json(['success' => true, 'message' => 'Password updated successfully.']);
         } else {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Failed to update password.']);
+            $this->json(['success' => false, 'message' => 'Failed to update password.'], 500);
         }
     }
 
@@ -115,19 +106,21 @@ class StudentController {
         
         try {
             $data = $gradeModel->getStudentGrades($student_id);
-            echo json_encode([
+            $this->json([
                 'success' => true,
                 'data' => $data['grades'],
                 'course_id' => $data['course_id']
             ]);
         } catch (Throwable $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Failed to fetch grades: ' . $e->getMessage()]);
+            $this->json(['success' => false, 'message' => 'Failed to fetch grades: ' . $e->getMessage()], 500);
         }
     }
 
     private function checkStudent() {
-        if (!isset($_SESSION['student_id'])) {
+        if (!isset($_SESSION['student_id']) || $_SESSION['role'] !== 'student') {
+            if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
+                $this->json(['success' => false, 'message' => 'Access Denied.'], 403);
+            }
             http_response_code(403);
             die("<div class='alert alert-danger'>Access Denied. Invalid session or not logged in as student.</div>");
         }

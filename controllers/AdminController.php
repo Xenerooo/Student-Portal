@@ -1,15 +1,17 @@
 <?php
-require_once 'models/Subject.php';
-require_once 'models/Student.php';
-require_once 'models/Curriculum.php';
-require_once 'models/Grade.php';
+namespace App\Controllers;
 
-class AdminController {
-    private $conn;
+use App\Core\BaseController;
+use App\Models\Subject;
+use App\Models\Student;
+use App\Models\Curriculum;
+use App\Models\Grade;
+use Exception;
+use DateTime;
+use mysqli_sql_exception;
+use Throwable;
 
-    public function __construct($dbConnection = null) {
-        $this->conn = $dbConnection;
-    }
+class AdminController extends BaseController {
 
     public function dashboard() {
         if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -17,50 +19,96 @@ class AdminController {
             exit();
         }
 
-        $pageTitle = "Admin Dashboard | SIS";
-        require 'views/admin/dashboard.php';
+        $this->render('admin/dashboard', [
+            'pageTitle' => "Admin Dashboard | SIS"
+        ]);
     }
 
     public function getStudentList() {
         $this->checkAdmin();
-        include 'views/student_list.php';
+        $this->render('admin/student_list');
     }
 
     public function getManageSubjects() {
         $this->checkAdmin();
-        include 'views/manage_subjects.php';
+        $subjectModel = new Subject($this->conn);
+        $subjects = $subjectModel->getAllSubjects();
+        $this->render('admin/manage_subjects', ['subjects' => $subjects]);
     }
 
     public function getManageCurriculum() {
         $this->checkAdmin();
-        include 'views/manage_curriculum.php';
+        $courseModel = new \App\Models\Course($this->conn);
+        $subjectModel = new Subject($this->conn);
+        
+        $courses = $courseModel->getAllCourses();
+        $subjects = $subjectModel->getAllSubjects();
+        
+        $this->render('admin/manage_curriculum', [
+            'courses' => $courses,
+            'subjects' => $subjects
+        ]);
     }
 
     public function getCreateStudentForm() {
         $this->checkAdmin();
-        include 'views/create_student.php';
+        $this->render('admin/create_student');
     }
 
     public function getEditStudentForm() {
         $this->checkAdmin();
         // The view expects $_GET['student_id'] to be present
-        include 'views/edit_student.php';
+        $this->render('admin/edit_student');
     }
 
     public function getGradeEditor() {
         $this->checkAdmin();
-        // The view expects $_GET['student_id'] to be present
-        include 'views/grade_editor.php';
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+
+        if (!$student_id) {
+            header("Location: /Student-Portal/admin/dashboard");
+            exit();
+        }
+
+        // Fetch Student Details
+        $studentModel = new Student($this->conn);
+        $student_details = $studentModel->getStudentById($student_id);
+
+        if (!$student_details) {
+            die("<div class='alert alert-danger'>Student not found.</div>");
+        }
+
+        // Fetch Grades/Subjects
+        $gradeModel = new Grade($this->conn);
+        $res = $gradeModel->getStudentGrades($student_id);
+        
+        // Flatten grades_data for the view
+        $flattened_grades = [];
+        if (!empty($res['grades']) && is_array($res['grades'])) {
+            foreach ($res['grades'] as $year => $semesters) {
+                foreach ($semesters as $sem => $subjects) {
+                    foreach ($subjects as $subject) {
+                        $flattened_grades[] = $subject;
+                    }
+                }
+            }
+        }
+
+        $this->render('admin/grade_editor', [
+            'student_id' => $student_id,
+            'student_details' => $student_details,
+            'grades_data' => $flattened_grades,
+            'current_semester_id' => 1, // Mocking current term for now
+            'current_school_year_id' => 1
+        ]);
     }
 
     public function saveGrade() {
         $this->checkAdmin();
         header('Content-Type: application/json');
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['update_grades'])) {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
-            exit();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
         }
 
         $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
@@ -68,30 +116,26 @@ class AdminController {
         $school_year_id = filter_input(INPUT_POST, 'school_year_id', FILTER_VALIDATE_INT) ?: 1;
 
         if (!$student_id || !isset($_POST['grades']) || !is_array($_POST['grades'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid student ID or missing grades.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Invalid student ID or missing grades.'], 400);
         }
 
         $gradeModel = new Grade($this->conn);
         try {
             $gradeModel->upsertGrades($student_id, $_POST['grades'], $semester_id, $school_year_id);
-            echo json_encode(['success' => true, 'message' => "Grades for student ID {$student_id} updated successfully!"]);
+            $this->json(['success' => true, 'message' => "Grades for student ID {$student_id} updated successfully!"]);
         } catch (Throwable $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error updating grades: ' . $e->getMessage()]);
+            $this->json(['success' => false, 'message' => 'Error updating grades: ' . $e->getMessage()], 500);
         }
     }
 
     public function searchStudents() {
         $this->checkAdmin();
-        header('Content-Type: application/json');
         
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
         $studentModel = new Student($this->conn);
         $students = $studentModel->searchStudents($search);
         
-        echo json_encode(['success' => true, 'students' => $students]);
+        $this->json(['success' => true, 'students' => $students]);
     }
 
     public function manageSubject() {
@@ -118,7 +162,7 @@ class AdminController {
                 }
 
                 if ($subjectModel->addSubject($subject_code, $units)) {
-                    echo json_encode(['success' => true, 'message' => 'Subject added successfully!']);
+                    $this->json(['success' => true, 'message' => 'Subject added successfully!']);
                 } else {
                     throw new Exception('Failed to add subject.');
                 }
@@ -135,7 +179,7 @@ class AdminController {
                 }
 
                 if ($subjectModel->deleteSubject($subject_id)) {
-                    echo json_encode(['success' => true, 'message' => 'Subject deleted successfully!']);
+                    $this->json(['success' => true, 'message' => 'Subject deleted successfully!']);
                 }
 
             } else {
@@ -143,11 +187,9 @@ class AdminController {
             }
 
         } catch (mysqli_sql_exception $e) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            $this->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()], 400);
         } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
@@ -177,7 +219,7 @@ class AdminController {
                 }
 
                 $entry = $curriculumModel->addEntry($course_id, $subject_id, $year_level, $semester, $subject_name);
-                echo json_encode(['success' => true, 'message' => 'Curriculum entry added successfully!', 'data' => $entry]);
+                $this->json(['success' => true, 'message' => 'Curriculum entry added successfully!', 'data' => $entry]);
 
             } elseif ($action === 'update') {
                 $curriculum_id = filter_input(INPUT_POST, 'curriculum_id', FILTER_VALIDATE_INT);
@@ -196,7 +238,7 @@ class AdminController {
                 }
 
                 $entry = $curriculumModel->updateEntry($curriculum_id, $course_id, $subject_id, $year_level, $semester, $subject_name);
-                echo json_encode(['success' => true, 'message' => 'Curriculum entry updated successfully!', 'data' => $entry]);
+                $this->json(['success' => true, 'message' => 'Curriculum entry updated successfully!', 'data' => $entry]);
 
             } elseif ($action === 'delete') {
                 $curriculum_id = filter_input(INPUT_POST, 'curriculum_id', FILTER_VALIDATE_INT);
@@ -207,7 +249,7 @@ class AdminController {
                 }
 
                 if ($curriculumModel->deleteEntry($curriculum_id)) {
-                    echo json_encode(['success' => true, 'message' => 'Curriculum entry deleted successfully!']);
+                    $this->json(['success' => true, 'message' => 'Curriculum entry deleted successfully!']);
                 } else {
                     throw new Exception('Failed to delete curriculum entry.');
                 }
@@ -226,18 +268,16 @@ class AdminController {
                 if (!is_array($curriculum_data)) throw new Exception('Curriculum data must be an array.');
 
                 $affected_rows = $curriculumModel->bulkSave($curriculum_data);
-                echo json_encode(['success' => true, 'message' => "Curriculum saved successfully!", 'affected_rows' => $affected_rows]);
+                $this->json(['success' => true, 'message' => "Curriculum saved successfully!", 'affected_rows' => $affected_rows]);
 
             } else {
                 throw new Exception('Invalid action.');
             }
 
         } catch (mysqli_sql_exception $e) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            $this->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()], 400);
         } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
@@ -255,28 +295,23 @@ class AdminController {
         $birthday = trim($_POST['birthday'] ?? '');
 
         if (!$student_id || !$user_id) {
-            echo json_encode(['success' => false, 'message' => 'Invalid student or user ID.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Invalid student or user ID.'], 400);
         }
 
         if (empty($name) || empty($number) || !$course_id || empty($username) || empty($birthday)) {
-            echo json_encode(['success' => false, 'message' => 'Please fill out all required fields.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Please fill out all required fields.'], 400);
         }
 
         if (!empty($password) && strlen($password) < 6) {
-            echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters long.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Password must be at least 6 characters long.'], 400);
         }
 
         $birthdayDate = DateTime::createFromFormat('Y-m-d', $birthday);
         if (!$birthdayDate || $birthdayDate->format('Y-m-d') !== $birthday) {
-            echo json_encode(['success' => false, 'message' => 'Invalid birthday format. Use YYYY-MM-DD.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Invalid birthday format. Use YYYY-MM-DD.'], 400);
         }
         if ($birthdayDate > new DateTime('today')) {
-            echo json_encode(['success' => false, 'message' => 'Birthday cannot be in the future.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Birthday cannot be in the future.'], 400);
         }
 
         $image_data = null;
@@ -288,12 +323,10 @@ class AdminController {
             finfo_close($finfo);
             
             if (!in_array($mime_type, $allowed_types)) {
-                echo json_encode(['success' => false, 'message' => 'Invalid image file type.']);
-                exit();
+                $this->json(['success' => false, 'message' => 'Invalid image file type.'], 400);
             }
             if ($file['size'] > 5 * 1024 * 1024) {
-                echo json_encode(['success' => false, 'message' => 'Image file is too large.']);
-                exit();
+                $this->json(['success' => false, 'message' => 'Image file is too large.'], 400);
             }
             $image_data = file_get_contents($file['tmp_name']);
         }
@@ -301,9 +334,9 @@ class AdminController {
         $studentModel = new Student($this->conn);
         try {
             $result = $studentModel->editStudent($student_id, $user_id, $username, $password, $name, $number, $course_id, $birthday, $image_data);
-            echo json_encode($result);
+            $this->json($result);
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
@@ -313,16 +346,15 @@ class AdminController {
         
         $studentId = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
         if (!$studentId) {
-            echo json_encode(['success' => false, 'message' => 'Invalid or missing student ID.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Invalid or missing student ID.'], 400);
         }
         
         $studentModel = new Student($this->conn);
         try {
             $studentModel->deleteStudent($studentId);
-            echo json_encode(['success' => true, 'message' => 'Student deleted successfully.']);
+            $this->json(['success' => true, 'message' => 'Student deleted successfully.']);
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
@@ -338,22 +370,18 @@ class AdminController {
         $birthday = trim($_POST['birthday'] ?? '');
 
         if (empty($name) || empty($number) || !$course_id || empty($username) || empty($password) || empty($birthday)) {
-            echo json_encode(['success' => false, 'message' => 'Please fill out all required fields.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Please fill out all required fields.'], 400);
         }
         if (strlen($password) < 6) {
-            echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters long.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Password must be at least 6 characters long.'], 400);
         }
 
         $birthdayDate = DateTime::createFromFormat('Y-m-d', $birthday);
         if (!$birthdayDate || $birthdayDate->format('Y-m-d') !== $birthday) {
-            echo json_encode(['success' => false, 'message' => 'Invalid birthday format. Use YYYY-MM-DD.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Invalid birthday format. Use YYYY-MM-DD.'], 400);
         }
         if ($birthdayDate > new DateTime('today')) {
-            echo json_encode(['success' => false, 'message' => 'Birthday cannot be in the future.']);
-            exit();
+            $this->json(['success' => false, 'message' => 'Birthday cannot be in the future.'], 400);
         }
 
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -367,12 +395,10 @@ class AdminController {
             finfo_close($finfo);
             
             if (!in_array($mime_type, $allowed_types)) {
-                echo json_encode(['success' => false, 'message' => 'Invalid image file type.']);
-                exit();
+                $this->json(['success' => false, 'message' => 'Invalid image file type.'], 400);
             }
             if ($file['size'] > 5 * 1024 * 1024) {
-                echo json_encode(['success' => false, 'message' => 'Image file is too large. Maximum size is 5MB.']);
-                exit();
+                $this->json(['success' => false, 'message' => 'Image file is too large. Maximum size is 5MB.'], 400);
             }
             $image_data = file_get_contents($file['tmp_name']);
         }
@@ -380,43 +406,30 @@ class AdminController {
         $studentModel = new Student($this->conn);
         try {
             $result = $studentModel->createStudent($username, $hashed_password, $name, $number, $course_id, $birthday, $image_data);
-            echo json_encode($result);
+            $this->json($result);
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
     public function getCurriculumData() {
         $this->checkAdmin();
-        header('Content-Type: application/json');
         $course_id = isset($_GET['course_id']) ? (int)$_GET['course_id'] : 0;
         
         if ($course_id > 0) {
-            $stmt = $this->conn->prepare("
-                SELECT c.curriculum_id, c.course_id, c.subject_id, c.year_level, c.semester, c.subject_name,
-                       co.course_name, s.subject_code
-                FROM curriculum c
-                LEFT JOIN courses co ON c.course_id = co.course_id
-                LEFT JOIN subjects s ON c.subject_id = s.subject_id
-                WHERE c.course_id = ?
-                ORDER BY c.year_level, c.semester, c.subject_name
-            ");
-            $stmt->bind_param('i', $course_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $entries = [];
-            while ($row = $result->fetch_assoc()) {
-                $entries[] = $row;
-            }
-            $stmt->close();
-            echo json_encode(['success' => true, 'entries' => $entries]);
+            $curriculumModel = new Curriculum($this->conn);
+            $entries = $curriculumModel->getEntriesByCourse($course_id);
+            $this->json(['success' => true, 'entries' => $entries]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid course ID']);
+            $this->json(['success' => false, 'message' => 'Invalid course ID'], 400);
         }
     }
 
     private function checkAdmin() {
         if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
+                $this->json(['success' => false, 'message' => 'Access Denied.'], 403);
+            }
             http_response_code(403);
             die("<div class='alert alert-danger'>Access Denied. Invalid session or role.</div>");
         }

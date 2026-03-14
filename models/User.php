@@ -1,15 +1,15 @@
 <?php
-require_once 'core/db_connect.php';
+namespace App\Models;
 
-class User {
-    private $conn;
+use App\Core\BaseModel;
+
+class User extends BaseModel {
 
     public function __construct($dbConnection = null) {
         if ($dbConnection === null) {
-            $this->conn = connect(); // fallback if not provided for some reason
-        } else {
-            $this->conn = $dbConnection;
+            $dbConnection = \connect(); // fallback if not provided for some reason
         }
+        parent::__construct($dbConnection);
     }
 
     public function authenticate($username, $password) {

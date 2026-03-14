@@ -1,10 +1,10 @@
 <?php
-class Student {
-    private $conn;
+namespace App\Models;
 
-    public function __construct($dbConnection) {
-        $this->conn = $dbConnection;
-    }
+use App\Core\BaseModel;
+use Exception;
+
+class Student extends BaseModel {
 
     public function createStudent($username, $hashed_password, $name, $number, $course_id, $birthday, $image_data) {
         try {
@@ -200,31 +200,64 @@ class Student {
         }
     }
 
-    public function searchStudents($searchQuery = '') {
-        $students = [];
+    public function getStudentById($student_id) {
+        $stmt = $this->conn->prepare("CALL getStudentDetailsByStudentId(?);");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $student = $result->fetch_assoc();
+        $stmt->close();
         
-        if (!empty($searchQuery)) {
-            $searchParam = "%{$searchQuery}%";
-            $stmt = $this->conn->prepare("CALL getStudentBySearch(?);");
-            if ($stmt) {
-                $stmt->bind_param("s", $searchParam);
-                if ($stmt->execute()) {
-                    $result = $stmt->get_result();
-                    $students = ($result && $result->num_rows > 0) ? $result->fetch_all(MYSQLI_ASSOC) : [];
-                }
-                $stmt->close();
-                while ($this->conn->more_results()) { $this->conn->next_result(); }
-            }
-        } else {
-            $sql = "CALL getAllStudents();";
-            $result = $this->conn->query($sql);
-            if ($result) {
-                $students = ($result->num_rows > 0) ? $result->fetch_all(MYSQLI_ASSOC) : [];
-            }
-            while ($this->conn->more_results()) { $this->conn->next_result(); }
+        while ($this->conn->more_results()) { $this->conn->next_result(); }
+        
+        if ($student && !isset($student['course_name']) && isset($student['course_id'])) {
+            $stmt = $this->conn->prepare("SELECT course_name FROM courses WHERE course_id = ?;");
+            $stmt->bind_param("i", $student['course_id']);
+            $stmt->execute();
+            $courseResult = $stmt->get_result()->fetch_assoc();
+            $student['course_name'] = $courseResult['course_name'] ?? 'Unknown Course';
+            $stmt->close();
         }
         
+        return $student;
+    }
+
+    public function getAllStudents() {
+        $sql = "
+            SELECT s.student_id, s.student_number, s.student_name, c.course_name 
+            FROM students s 
+            LEFT JOIN courses c ON s.course_id = c.course_id 
+            ORDER BY s.student_name
+        ";
+        $result = $this->conn->query($sql);
+        if (!$result) {
+            return [];
+        }
+        $students = $result->fetch_all(MYSQLI_ASSOC);
+        $result->close();
         return $students;
+    }
+
+    public function searchStudents($search) {
+        $search = "%{$search}%";
+        $sql = "
+            SELECT s.student_id, s.student_number, s.student_name, c.course_name 
+            FROM students s 
+            LEFT JOIN courses c ON s.course_id = c.course_id 
+            WHERE s.student_name LIKE ? OR s.student_number LIKE ? OR c.course_name LIKE ?
+            ORDER BY s.student_name
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("sss", $search, $search, $search);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $students = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $students;
+    }
+
+    public function getStudentDashboardData($student_id) {
+        return $this->getStudentById($student_id);
     }
 }
 ?>

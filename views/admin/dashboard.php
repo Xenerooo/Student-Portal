@@ -1,4 +1,4 @@
-<?php require 'views/layouts/header.php'; ?>
+<?php require ROOT_PATH . '/views/layouts/header.php'; ?>
 
 <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark">
     <div class="container-fluid">
@@ -135,4 +135,4 @@
     });
 </script>
 
-<?php require 'views/layouts/footer.php'; ?>
+<?php require ROOT_PATH . '/views/layouts/footer.php'; ?>

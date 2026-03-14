@@ -1,26 +1,6 @@
 <?php
-// app/views/manage_subjects.php
-
-// Basic Authorization Check (Essential!)
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    die("<div class='alert alert-danger'>Access Denied. Please log in as an administrator.</div>");
-}
-
-require_once 'core/db_connect.php';
-$conn = connect();
-
-// Fetch existing subjects
-$subjects = [];
-try {
-    $result = $conn->query("SELECT subject_id, subject_code, units FROM subjects ORDER BY subject_code");
-    if ($result) {
-        $subjects = $result->fetch_all(MYSQLI_ASSOC);
-    }
-} catch (Exception $e) {
-    // If error, subjects array remains empty
-}
-
-$conn->close();
+// views/admin/manage_subjects.php
+// Data provided by AdminController: $subjects
 ?>
 
 <h1 class="mb-4">Manage Subjects</h1>

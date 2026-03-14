@@ -1,34 +1,6 @@
 <?php
-// manage_curriculum.php
-
-// Basic Authorization Check (Essential!)
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    die("<div class='alert alert-danger'>Access Denied. Please log in as an administrator.</div>");
-}
-
-require_once 'core/db_connect.php';
-$conn = connect();
-
-// Fetch courses and subjects for dropdowns
-$courses = [];
-$subjects = [];
-$curriculum_entries = [];
-
-try {
-    $courses_result = $conn->query("SELECT course_id, course_name FROM courses ORDER BY course_name");
-    if ($courses_result) {
-        $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
-    }
-    
-    $subjects_result = $conn->query("SELECT subject_id, subject_code FROM subjects ORDER BY subject_code");
-    if ($subjects_result) {
-        $subjects = $subjects_result->fetch_all(MYSQLI_ASSOC);
-    }
-} catch (Exception $e) {
-    // Handle error silently, arrays remain empty
-}
-
-$conn->close();
+// views/admin/manage_curriculum.php
+// Data provided by AdminController: $courses, $subjects
 ?>
 
 <h1 class="mb-4">Manage Curriculum and Programs</h1>

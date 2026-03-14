@@ -6,6 +6,6 @@
     <title><?= htmlspecialchars($pageTitle ?? 'SIS Portal') ?></title>
     <link href="/Student-Portal/assets/css/bootstrap.css" rel="stylesheet"> 
     <script defer src="/Student-Portal/assets/js/bootstrap.bundle.js"></script>
-    <link rel="icon" href="assets/images/icon.png">
+    <link rel="icon" href="/Student-Portal/assets/images/icon.png">
 </head>
 <body class="vh-100">

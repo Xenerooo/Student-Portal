@@ -1,18 +1,19 @@
 <?php
-// Database connection settings
-$servername = "localhost";   // since you’re using XAMPP
-$username   = "root";        // default MySQL username
-$password   = "";            // default MySQL password is empty
-$dbname     = "student_portal"; // <-- change this to your database name
-
-// Create connection
-// $conn = new mysqli($servername, $username, $password, $dbname);
-
 function connect() {
-    global $servername, $username, $password, $dbname;
+    $envPath = __DIR__ . '/../.env';
+    $config = [];
+    if (file_exists($envPath)) {
+        $config = parse_ini_file($envPath);
+    }
+
+    $servername = getenv('DB_HOST') ?: ($config['DB_HOST'] ?? "localhost");
+    $username   = getenv('DB_USER') ?: ($config['DB_USER'] ?? "root");
+    $password   = getenv('DB_PASS') ?: ($config['DB_PASS'] ?? "");
+    $dbname     = getenv('DB_NAME') ?: ($config['DB_NAME'] ?? "student_portal");
+
     $conn = new mysqli($servername, $username, $password, $dbname);
     if ($conn->connect_error) {
-        die("Database connection failed: " . $conn->connect_error);
+        throw new Exception("Database connection failed: " . $conn->connect_error);
     }
     return $conn;
 }

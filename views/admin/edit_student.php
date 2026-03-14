@@ -1,42 +1,6 @@
 <?php
-// app/views/edit_student.php
-// This file is loaded via AJAX by ajax_handler.php for editing student information.
-
-// The session is already started, and authorization is complete in ajax_handler.php.
-require_once 'core/db_connect.php';
-$conn = connect();
-
-// Get student_id from GET parameter
-$student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
-
-if (!$student_id) {
-    die("<div class='alert alert-danger'>Invalid student ID.</div>");
-}
-
-// Fetch student data with user info
-$stmt = $conn->prepare("CALL getStudentDetailsByStudentId(?);");
-$stmt->bind_param("i", $student_id);
-$stmt->execute();
-$student = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-if (!$student) {
-    $conn->close();
-    die("<div class='alert alert-danger'>Student not found.</div>");
-}
-
-// Load courses for dropdown
-$courses = [];
-try {
-    $courses_result = $conn->query("CALL getCourseList();");
-    if ($courses_result) {
-        $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
-    }
-} catch (Exception $e) {
-    // If error, courses array remains empty
-}
-
-$conn->close();
+// views/admin/edit_student.php
+// Data provided by AdminController: $student, $courses
 ?>
 
 

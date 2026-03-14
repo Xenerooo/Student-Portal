@@ -1,23 +1,7 @@
 <?php
 // student_list_content.php
 // This script is loaded via AJAX and only returns the HTML fragment.
-
-
-require_once 'core/db_connect.php';
-
-$conn = connect();
-
-// Authorization Check (CRUCIAL)
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    $conn->close();
-    // Return an error message to display in the content area
-    die("<div class='alert alert-danger'>Access Denied. Please log in as an administrator.</div>");
-}
-
-// Get search parameter
-
-
-$conn->close();
+// Authorization and Data fetching handled by AdminController
 ?>
 
 <h1 class="mb-4">Student Lookup Table</h1>
@@ -26,7 +10,7 @@ $conn->close();
 <div class="mb-3 input-group">
     <span class="input-group-text">
         <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Tools" ">
-            <use xlink:href="assets/images/search.svg"/>
+            <use xlink:href="/Student-Portal/assets/images/search.svg"/>
         </svg>
     </span>
 
@@ -139,7 +123,7 @@ $conn->close();
                     <tr>
                         <td>${escapeHtml(student.student_number)}</td>
                         <td>
-                            <img src="assets/images/person.svg" alt="" class="mb-1">
+                            <img src="/Student-Portal/assets/images/person.svg" alt="" class="mb-1">
                             ${escapeHtml(student.student_name)}
                         </td>
                         <td>${escapeHtml(student.course_name)}</td>
@@ -150,7 +134,7 @@ $conn->close();
                                         <button type="button" class="btn btn-outline-secondary w-100 edit-grades-btn m-1"
                                             data-student-id="${studentId}">
                                             <svg class="bi" height="16px" width="16px" fill="current" role="img" aria-label="Tools">
-                                                <use xlink:href="assets/images/pencil-fill.svg"/>
+                                                <use xlink:href="/Student-Portal/assets/images/pencil-fill.svg"/>
                                             </svg>
                                             Edit Grades
                                         </button>
@@ -159,7 +143,7 @@ $conn->close();
                                         <button type="button" class="btn btn-outline-secondary w-100 edit-info-btn m-1"
                                             data-student-id="${studentId}">
                                             <svg class="bi" height="16px" width="16px" fill="current" role="img" aria-label="Tools">
-                                                <use xlink:href="assets/images/pencil-fill.svg"/>
+                                                <use xlink:href="/Student-Portal/assets/images/pencil-fill.svg"/>
                                             </svg>
                                             Edit Info
                                         </button>

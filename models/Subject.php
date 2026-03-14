@@ -1,10 +1,10 @@
 <?php
-class Subject {
-    private $conn;
+namespace App\Models;
 
-    public function __construct($dbConnection) {
-        $this->conn = $dbConnection;
-    }
+use App\Core\BaseModel;
+use Exception;
+
+class Subject extends BaseModel {
 
     public function subjectExists($subject_code) {
         $checkStmt = $this->conn->prepare("SELECT subject_id FROM subjects WHERE subject_code = ?");
@@ -84,6 +84,18 @@ class Subject {
             $this->conn->rollback();
             throw $e;
         }
+    }
+    public function getAllSubjects() {
+        $result = $this->conn->query("SELECT subject_id, subject_code, units FROM subjects ORDER BY subject_code");
+        if (!$result) {
+            return [];
+        }
+        $subjects = $result->fetch_all(MYSQLI_ASSOC);
+        $result->close();
+        
+        while ($this->conn->more_results()) { $this->conn->next_result(); }
+        
+        return $subjects;
     }
 }
 ?>

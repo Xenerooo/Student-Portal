@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="assets/images/icon.png">
+    <link rel="icon" href="/Student-Portal/assets/images/icon.png">
     
     <title>Portal Login</title>
     <link href="/Student-Portal/assets/css/bootstrap.css" rel="stylesheet" >

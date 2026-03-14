@@ -1,12 +1,10 @@
 <?php
-require_once 'models/User.php';
+namespace App\Controllers;
 
-class AuthController {
-    private $conn;
+use App\Core\BaseController;
+use App\Models\User;
 
-    public function __construct($dbConnection = null) {
-        $this->conn = $dbConnection;
-    }
+class AuthController extends BaseController {
     public function showLoginForm() {
         // If already logged in, redirect
         if (isset($_SESSION['role'])) {
@@ -19,7 +17,7 @@ class AuthController {
             }
         }
         
-        require 'views/auth/login.php';
+        $this->render('auth/login');
     }
 
     public function login() {
@@ -51,18 +49,16 @@ class AuthController {
                 }
             }
 
-            echo json_encode([
+            $this->json([
                 'success' => true,
                 'redirect' => $redirect_page
             ]);
-            exit();
             
         } else {
-            echo json_encode([
+            $this->json([
                 'success' => false,
                 'message' => 'Invalid username or password.'
-            ]);
-            exit();
+            ], 401);
         }
     }
 
