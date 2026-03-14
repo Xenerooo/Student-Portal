@@ -23,7 +23,7 @@ $router->map('GET', '/logout', 'App\\Controllers\\AuthController#logout', 'logou
  * ADMIN ROUTES (Requires Admin Role)
  *====================================*/
 $router->map('GET', '/admin/dashboard', 'App\\Controllers\\AdminController#dashboard', 'admin_dashboard');
-// Admin AJAX Routes
+
 $router->map('GET', '/admin/api/students', 'App\\Controllers\\AdminController#getStudentList', 'api_admin_students');
 $router->map('GET', '/admin/api/students/search', 'App\\Controllers\\AdminController#searchStudents', 'api_admin_students_search');
 $router->map('GET', '/admin/api/students/create', 'App\\Controllers\\AdminController#getCreateStudentForm', 'api_admin_student_create_form');
@@ -41,7 +41,11 @@ $router->map('GET', '/admin/api/curriculum/data', 'App\\Controllers\\AdminContro
 $router->map('POST', '/admin/api/curriculum/manage', 'App\\Controllers\\AdminController#manageCurriculum', 'api_admin_curriculum_manage');
 
 $router->map('GET', '/admin/api/grades/edit', 'App\\Controllers\\AdminController#getGradeEditor', 'api_admin_grades_edit');
+$router->map('GET', '/admin/api/subject/history', 'App\\Controllers\\AdminController#getSubjectHistoryApi', 'api_admin_subject_history');
 $router->map('POST', '/admin/api/grades/save', 'App\\Controllers\\AdminController#saveGrade', 'api_admin_grades_save');
+
+$router->map('GET', '/admin/api/account', 'App\\Controllers\\AdminController#getManageAccount', 'admin_manage_account');
+$router->map('POST', '/admin/api/account/update', 'App\\Controllers\\AdminController#updateAccountProfile', 'api_admin_account_update');
 
 /*====================================
  * STUDENT ROUTES (Requires Student Role)
@@ -49,7 +53,8 @@ $router->map('POST', '/admin/api/grades/save', 'App\\Controllers\\AdminControlle
 $router->map('GET', '/student/dashboard', 'App\\Controllers\\StudentController#dashboard', 'student_dashboard');
 $router->map('GET', '/student/api/info', 'App\\Controllers\\StudentController#getStudentInfo', 'api_student_info');
 $router->map('GET', '/student/api/grades', 'App\\Controllers\\StudentController#getStudentGrades', 'api_student_grades');
-$router->map('GET', '/student/api/grades/data', 'App\\Controllers\\StudentController#getGradesData', 'api_student_grades_data');
+$router->map('GET', '/student/api/grades/progress', 'App\\Controllers\\StudentController#getGradesProgress', 'api_student_grades_progress');
+$router->map('GET', '/student/api/grades/history', 'App\\Controllers\\StudentController#getScholasticHistory', 'api_student_grades_history');
 $router->map('POST', '/student/api/password/change', 'App\\Controllers\\StudentController#changePassword', 'api_student_password_change');
 
 /*====================================

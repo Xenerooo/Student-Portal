@@ -90,5 +90,48 @@ class User extends BaseModel {
         
         return $success;
     }
+
+    public function getAdminDetailsByUserId($user_id) {
+        $stmt = $this->conn->prepare("
+            SELECT u.user_id, u.username, a.admin_id, a.admin_name 
+            FROM users u 
+            JOIN admins a ON u.user_id = a.user_id 
+            WHERE u.user_id = ?
+        ");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $admin = $result->fetch_assoc();
+        $stmt->close();
+        return $admin;
+    }
+
+    public function updateAdminProfile($user_id, $admin_id, $username, $admin_name, $new_password_hash = null) {
+        $this->conn->begin_transaction();
+        try {
+            // Update User table
+            if ($new_password_hash) {
+                $stmt = $this->conn->prepare("UPDATE users SET username = ?, password_hash = ? WHERE user_id = ?");
+                $stmt->bind_param("ssi", $username, $new_password_hash, $user_id);
+            } else {
+                $stmt = $this->conn->prepare("UPDATE users SET username = ? WHERE user_id = ?");
+                $stmt->bind_param("si", $username, $user_id);
+            }
+            $stmt->execute();
+            $stmt->close();
+
+            // Update Admin table
+            $stmt = $this->conn->prepare("UPDATE admins SET admin_name = ? WHERE admin_id = ?");
+            $stmt->bind_param("si", $admin_name, $admin_id);
+            $stmt->execute();
+            $stmt->close();
+
+            $this->conn->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->conn->rollback();
+            throw $e;
+        }
+    }
 }
 ?>

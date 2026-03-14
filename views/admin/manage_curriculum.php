@@ -40,71 +40,13 @@
     </div>
 </div>
 
-<!-- Add Curriculum Entry Form -->
-<div class="card shadow mb-4">
-    <div class="card-header bg-success text-white">
-        <h5 class="mb-0">Add New Curriculum Entry</h5>
-    </div>
-    <div class="card-body">
-        
-        <form id="addCurriculumForm">
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label for="add_course_id" class="form-label">Course <span class="text-danger">*</span></label>
-                    <select name="course_id" id="add_course_id" class="form-control" required>
-                        <option value="">Select Course</option>
-                        <?php foreach ($courses as $course): ?>
-                            <option value="<?php echo htmlspecialchars($course['course_id']); ?>">
-                                <?php echo htmlspecialchars($course['course_name']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="add_subject_id" class="form-label">Subject Code <span class="text-danger">*</span></label>
-                    <select name="subject_id" id="add_subject_id" class="form-control" required>
-                        <option value="">Select Subject</option>
-                        <?php foreach ($subjects as $subject): ?>
-                            <option value="<?php echo htmlspecialchars($subject['subject_id']); ?>">
-                                <?php echo htmlspecialchars($subject['subject_code']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="add_subject_name" class="form-label">Subject Name <span class="text-danger">*</span></label>
-                    <input type="text" name="subject_name" id="add_subject_name" class="form-control" required>
-                </div>
-                <div class="col-md-1 mb-3">
-                    <label for="add_year_level" class="form-label">Year <span class="text-danger">*</span></label>
-                    <select name="year_level" id="add_year_level" class="form-control" required>
-                        <option value="">--</option>
-                        <?php for ($i = 1; $i <= 4; $i++): ?>
-                            <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
-                        <?php endfor; ?>
-                    </select>
-                </div>
-                <div class="col-md-1 mb-3">
-                    <label for="add_semester" class="form-label">Sem <span class="text-danger">*</span></label>
-                    <select name="semester" id="add_semester" class="form-control" required>
-                        <option value="">--</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                    </select>
-                </div>
-                <div class="col-md-1 mb-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-success w-100">Add</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- Curriculum Entries List -->
 <div class="card shadow">
     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Curriculum Entries</h5>
-        <span id="curriculum-count-badge" class="badge bg-light text-dark">0 entries</span>
+        <div class="d-flex align-items-center gap-2">
+            <span id="curriculum-count-badge" class="badge bg-light text-dark">0 entries</span>
+        </div>
     </div>
     <div class="card-body">
 
@@ -144,6 +86,7 @@
                     </span>
                     <input type="text" class="form-control" id="curriculum-search" placeholder="Search by subject code, name, year, or semester...">
                     <button class="btn btn-outline-secondary" type="button" id="clear-curriculum-search" style="display: none;">Clear</button>
+                    <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#addCurriculumModal">Add Entry</button>
                 </div>
             </div>
             
@@ -172,7 +115,75 @@
     </div>
 </div>
 
-<!-- Edit Modal -->
+    </div>
+</div>
+
+<!-- Add Curriculum Entry Modal -->
+<div class="modal fade" id="addCurriculumModal" tabindex="-1" aria-labelledby="addCurriculumModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="addCurriculumModalLabel">Add New Curriculum Entry</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addCurriculumForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="add_course_id" class="form-label">Course <span class="text-danger">*</span></label>
+                            <select name="course_id" id="add_course_id" class="form-control" required>
+                                <option value="">Select Course</option>
+                                <?php foreach ($courses as $course): ?>
+                                    <option value="<?php echo htmlspecialchars($course['course_id']); ?>">
+                                        <?php echo htmlspecialchars($course['course_name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="add_subject_id" class="form-label">Subject Code <span class="text-danger">*</span></label>
+                            <select name="subject_id" id="add_subject_id" class="form-control" required>
+                                <option value="">Select Subject</option>
+                                <?php foreach ($subjects as $subject): ?>
+                                    <option value="<?php echo htmlspecialchars($subject['subject_id']); ?>">
+                                        <?php echo htmlspecialchars($subject['subject_code']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_subject_name" class="form-label">Subject Name <span class="text-danger">*</span></label>
+                        <input type="text" name="subject_name" id="add_subject_name" class="form-control" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="add_year_level" class="form-label">Year Level <span class="text-danger">*</span></label>
+                            <select name="year_level" id="add_year_level" class="form-control" required>
+                                <option value="">Select Year</option>
+                                <?php for ($i = 1; $i <= 4; $i++): ?>
+                                    <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="add_semester" class="form-label">Semester <span class="text-danger">*</span></label>
+                            <select name="semester" id="add_semester" class="form-control" required>
+                                <option value="">Select Semester</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="editCurriculumModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -388,6 +399,16 @@
             if (data.success) {
                 showMessage(data.message, 'success');
                 this.reset();
+                
+                // Hide modal
+                const modalEl = document.getElementById('addCurriculumModal');
+                if (modalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+                    const instance = window.bootstrap.Modal.getInstance(modalEl);
+                    if (instance) {
+                        instance.hide();
+                    }
+                }
+
                 // Reload curriculum if a course is selected
                 if (currentCourseId) {
                     loadCurriculum(currentCourseId);

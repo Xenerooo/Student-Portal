@@ -22,11 +22,12 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-content="get_create_student_form">Create Student</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="none">VIP Student</a>
-                </li>
+
             </ul>
             <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-content="get_manage_account">Manage Account (Admin)</a>
+                </li>
                 <li class="nav-item">
                     <a class="btn btn-outline-light" href="/Student-Portal/logout">Logout (<?php echo htmlspecialchars($_SESSION['role'] ?? ''); ?>)</a>
                 </li>
@@ -56,7 +57,8 @@
             'get_student_list': 'students',
             'get_manage_subjects': 'subjects',
             'get_manage_curriculum': 'curriculum',
-            'get_create_student_form': 'students/create'
+            'get_create_student_form': 'students/create',
+            'get_manage_account': 'manage-account'
         };
 
         const apiBasePath = '/Student-Portal/admin/api/';

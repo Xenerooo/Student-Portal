@@ -6,38 +6,12 @@
 <h1 class="mb-4">Manage Subjects</h1>
 <div id="form-submission-message"></div>
 
-<!-- Add Subject Form -->
-<div class="card shadow mb-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Add New Subject</h5>
-    </div>
-    <div class="card-body">
-        <form id="addSubjectForm">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="subject_code" class="form-label">Subject Code <span class="text-danger">*</span></label>
-                    <input type="text" name="subject_code" id="subject_code" class="form-control" 
-                           placeholder="e.g., CS101, MATH102" required>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="units" class="form-label">Units <span class="text-danger">*</span></label>
-                    <input type="number" name="units" id="units" class="form-control" 
-                           placeholder="e.g., 3" min="1" max="10" required>
-                </div>
-                <div class="col-md-2 mb-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Add Subject</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- Subjects List -->
 <div class="card shadow">
     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Current Subjects</h5>
         <div class="d-flex align-items-center gap-2">
-            <span id="subject-count-badge" class="badge bg-light text-dark"><?php echo count($subjects); ?> subjects</span>
+            <span id="subject-count-badge" class="badge bg-light text-dark"><?php echo (is_array($subjects) || $subjects instanceof Countable) ? count($subjects) : 0; ?> subjects</span>
         </div>
     </div>
     <div class="card-body">
@@ -58,6 +32,9 @@
                            placeholder="Search by subject code or units...">
                     <button class="btn btn-outline-secondary" type="button" id="clear-search" style="display: none;">
                         Clear
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                        <i class="bi bi-plus-lg"></i> New Subject
                     </button>
                 </div>
             </div>
@@ -97,6 +74,36 @@
                 </table>
             </div>
         <?php endif; ?>
+    </div>
+</div>
+
+<!-- Add Subject Modal -->
+<div class="modal fade" id="addSubjectModal" tabindex="-1" aria-labelledby="addSubjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addSubjectModalLabel">Add New Subject</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addSubjectForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="subject_code" class="form-label">Subject Code <span class="text-danger">*</span></label>
+                        <input type="text" name="subject_code" id="subject_code" class="form-control" 
+                               placeholder="e.g., CS101, MATH102" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="units" class="form-label">Units <span class="text-danger">*</span></label>
+                        <input type="number" name="units" id="units" class="form-control" 
+                               placeholder="e.g., 3" min="1" max="10" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Subject</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -151,6 +158,16 @@
             if (data.success) {
                 messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
                 form.reset();
+                
+                // Hide modal
+                const modalEl = document.getElementById('addSubjectModal');
+                if (modalEl && window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+                    const instance = window.bootstrap.Modal.getInstance(modalEl);
+                    if (instance) {
+                        instance.hide();
+                    }
+                }
+
                 // Reload the page content to show new subject
                 setTimeout(() => {
                     const action = 'get_manage_subjects';

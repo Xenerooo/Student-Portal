@@ -6,6 +6,7 @@ use App\Models\Subject;
 use App\Models\Student;
 use App\Models\Curriculum;
 use App\Models\Grade;
+use App\Models\Course;
 use Exception;
 use DateTime;
 use mysqli_sql_exception;
@@ -52,13 +53,33 @@ class AdminController extends BaseController {
 
     public function getCreateStudentForm() {
         $this->checkAdmin();
-        $this->render('admin/create_student');
+        $courseModel = new Course($this->conn);
+        $courses = $courseModel->getAllCourses();
+        $this->render('admin/create_student', ['courses' => $courses]);
     }
 
     public function getEditStudentForm() {
         $this->checkAdmin();
-        // The view expects $_GET['student_id'] to be present
-        $this->render('admin/edit_student');
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+
+        if (!$student_id) {
+            die("<div class='alert alert-danger'>Invalid student ID.</div>");
+        }
+
+        $studentModel = new Student($this->conn);
+        $student = $studentModel->getStudentById($student_id);
+
+        if (!$student) {
+            die("<div class='alert alert-danger'>Student not found.</div>");
+        }
+
+        $courseModel = new Course($this->conn);
+        $courses = $courseModel->getAllCourses();
+
+        $this->render('admin/edit_student', [
+            'student' => $student,
+            'courses' => $courses
+        ]);
     }
 
     public function getGradeEditor() {
@@ -78,18 +99,20 @@ class AdminController extends BaseController {
             die("<div class='alert alert-danger'>Student not found.</div>");
         }
 
-        // Fetch Grades/Subjects
+        // Defaults for term selection if not provided in GET
+        $current_school_year = trim($_GET['school_year'] ?? "2024-2025");
+        $current_semester = trim($_GET['semester'] ?? "1st Semester");
+
+        // Fetch curriculum progress filtered by term
         $gradeModel = new Grade($this->conn);
-        $res = $gradeModel->getStudentGrades($student_id);
+        $res = $gradeModel->getCurriculumProgress($student_id, $current_semester, $current_school_year);
         
-        // Flatten grades_data for the view
+        // Flatten for the current simple view compatibility
         $flattened_grades = [];
-        if (!empty($res['grades']) && is_array($res['grades'])) {
-            foreach ($res['grades'] as $year => $semesters) {
-                foreach ($semesters as $sem => $subjects) {
-                    foreach ($subjects as $subject) {
-                        $flattened_grades[] = $subject;
-                    }
+        foreach ($res as $year => $semesters) {
+            foreach ($semesters as $sem => $subjects) {
+                foreach ($subjects as $subject) {
+                    $flattened_grades[] = $subject;
                 }
             }
         }
@@ -98,9 +121,29 @@ class AdminController extends BaseController {
             'student_id' => $student_id,
             'student_details' => $student_details,
             'grades_data' => $flattened_grades,
-            'current_semester_id' => 1, // Mocking current term for now
-            'current_school_year_id' => 1
+            'current_school_year' => $current_school_year,
+            'current_semester' => $current_semester
         ]);
+    }
+
+    public function getSubjectHistoryApi() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+        $subject_id = filter_input(INPUT_GET, 'subject_id', FILTER_VALIDATE_INT);
+
+        if (!$student_id || !$subject_id) {
+            $this->json(['success' => false, 'message' => 'Invalid student or subject ID.'], 400);
+        }
+
+        try {
+            $gradeModel = new Grade($this->conn);
+            $history = $gradeModel->getSubjectHistory($student_id, $subject_id);
+            $this->json(['success' => true, 'history' => $history]);
+        } catch (Exception $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
     }
 
     public function saveGrade() {
@@ -112,8 +155,8 @@ class AdminController extends BaseController {
         }
 
         $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
-        $semester_id = filter_input(INPUT_POST, 'semester_id', FILTER_VALIDATE_INT) ?: 1;
-        $school_year_id = filter_input(INPUT_POST, 'school_year_id', FILTER_VALIDATE_INT) ?: 1;
+        $semester = trim($_POST['semester'] ?? '1st Semester');
+        $school_year = trim($_POST['school_year'] ?? '2024-2025');
 
         if (!$student_id || !isset($_POST['grades']) || !is_array($_POST['grades'])) {
             $this->json(['success' => false, 'message' => 'Invalid student ID or missing grades.'], 400);
@@ -121,8 +164,8 @@ class AdminController extends BaseController {
 
         $gradeModel = new Grade($this->conn);
         try {
-            $gradeModel->upsertGrades($student_id, $_POST['grades'], $semester_id, $school_year_id);
-            $this->json(['success' => true, 'message' => "Grades for student ID {$student_id} updated successfully!"]);
+            $gradeModel->upsertGrades($student_id, $_POST['grades'], $semester, $school_year);
+            $this->json(['success' => true, 'message' => "Grades for {$semester}, SY {$school_year} updated successfully!"]);
         } catch (Throwable $e) {
             $this->json(['success' => false, 'message' => 'Error updating grades: ' . $e->getMessage()], 500);
         }
@@ -422,6 +465,70 @@ class AdminController extends BaseController {
             $this->json(['success' => true, 'entries' => $entries]);
         } else {
             $this->json(['success' => false, 'message' => 'Invalid course ID'], 400);
+        }
+    }
+
+    public function getManageAccount() {
+        $this->checkAdmin();
+        $userModel = new \App\Models\User($this->conn);
+        $admin = $userModel->getAdminDetailsByUserId($_SESSION['user_id']);
+        
+        if (!$admin) {
+            die("<div class='alert alert-danger'>Admin details not found.</div>");
+        }
+
+        $this->render('admin/manage_account', [
+            'admin' => $admin,
+            'pageTitle' => "Manage Account | SIS"
+        ]);
+    }
+
+    public function updateAccountProfile() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
+        }
+
+        $user_id = $_SESSION['user_id'];
+        $admin_id = filter_input(INPUT_POST, 'admin_id', FILTER_VALIDATE_INT);
+        $admin_name = trim($_POST['admin_name'] ?? '');
+        $username = trim($_POST['username'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+
+        if (empty($admin_name) || empty($username)) {
+            $this->json(['success' => false, 'message' => 'Admin Name and Username are required.'], 400);
+        }
+
+        $new_password_hash = null;
+        if (!empty($password)) {
+            if (strlen($password) < 6) {
+                $this->json(['success' => false, 'message' => 'Password must be at least 6 characters long.'], 400);
+            }
+            if ($password !== $confirm_password) {
+                $this->json(['success' => false, 'message' => 'Passwords do not match.'], 400);
+            }
+            $new_password_hash = password_hash($password, PASSWORD_DEFAULT);
+        }
+
+        $userModel = new \App\Models\User($this->conn);
+        try {
+            $success = $userModel->updateAdminProfile($user_id, $admin_id, $username, $admin_name, $new_password_hash);
+            if ($success) {
+                // Update session if username changed? 
+                // Usually session stores user_id and role, maybe username if displayed
+                $this->json(['success' => true, 'message' => 'Account updated successfully!']);
+            } else {
+                $this->json(['success' => false, 'message' => 'Failed to update account.'], 500);
+            }
+        } catch (\Exception $e) {
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                $this->json(['success' => false, 'message' => 'Username already exists.'], 400);
+            } else {
+                $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            }
         }
     }
 

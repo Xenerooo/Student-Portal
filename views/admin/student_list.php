@@ -263,7 +263,7 @@
         }
 
         // Function to load grade editor into main content with student_id parameter
-        function loadGradeEditor(studentId) {
+        window.loadGradeEditor = function(studentId, schoolYear = '', semester = '') {
             const contentArea = document.getElementById('main-content-area');
 
             // Show loading spinner
@@ -275,7 +275,9 @@
                 </div>
             `;
 
-            const url = `/Student-Portal/admin/api/grades/edit?student_id=${studentId}`;
+            let url = `/Student-Portal/admin/api/grades/edit?student_id=${studentId}`;
+            if (schoolYear) url += `&school_year=${encodeURIComponent(schoolYear)}`;
+            if (semester) url += `&semester=${encodeURIComponent(semester)}`;
 
             fetch(url)
                 .then(response => {
@@ -310,7 +312,10 @@
                         newScript.remove();
                     });
 
-                    history.pushState(null, '', `/Student-Portal/admin/dashboard?view=grade_editor&student_id=${studentId}`);
+                    let pushUrl = `/Student-Portal/admin/dashboard?view=grade_editor&student_id=${studentId}`;
+                    if (schoolYear) pushUrl += `&school_year=${encodeURIComponent(schoolYear)}`;
+                    if (semester) pushUrl += `&semester=${encodeURIComponent(semester)}`;
+                    history.pushState(null, '', pushUrl);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;

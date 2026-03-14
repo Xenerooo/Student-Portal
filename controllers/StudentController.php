@@ -97,7 +97,7 @@ class StudentController extends BaseController {
         }
     }
 
-    public function getGradesData() {
+    public function getGradesProgress() {
         $this->checkStudent();
         header('Content-Type: application/json');
 
@@ -105,14 +105,31 @@ class StudentController extends BaseController {
         $gradeModel = new Grade($this->conn);
         
         try {
-            $data = $gradeModel->getStudentGrades($student_id);
+            $data = $gradeModel->getCurriculumProgress($student_id);
             $this->json([
                 'success' => true,
-                'data' => $data['grades'],
-                'course_id' => $data['course_id']
+                'data' => $data
             ]);
         } catch (Throwable $e) {
-            $this->json(['success' => false, 'message' => 'Failed to fetch grades: ' . $e->getMessage()], 500);
+            $this->json(['success' => false, 'message' => 'Failed to fetch progress: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getScholasticHistory() {
+        $this->checkStudent();
+        header('Content-Type: application/json');
+
+        $student_id = $_SESSION['student_id'];
+        $gradeModel = new Grade($this->conn);
+        
+        try {
+            $data = $gradeModel->getScholasticHistory($student_id);
+            $this->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (Throwable $e) {
+            $this->json(['success' => false, 'message' => 'Failed to fetch history: ' . $e->getMessage()], 500);
         }
     }
 
