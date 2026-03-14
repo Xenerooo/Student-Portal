@@ -2,7 +2,7 @@
 
 <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="index.php?page=student_dashboard">
+        <a class="navbar-brand" href="/Student-Portal/student/dashboard">
             <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="32">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -11,10 +11,10 @@
         <div class="collapse navbar-collapse" id="navbarNav">
              <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="get_student_info">Student Information</a>
+                    <a class="nav-link" href="/Student-Portal/student/dashboard?view=get_student_info" data-content="get_student_info">Student Information</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="get_student_grades">Grades</a>
+                    <a class="nav-link" href="/Student-Portal/student/dashboard?view=get_student_grades" data-content="get_student_grades">Grades</a>
                 </li>
             </ul>
             <ul class="navbar-nav">

@@ -105,16 +105,16 @@ $conn->close();
                     <form id="changePasswordForm">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
-                            <input type="text" name="username" id="username" class="form-control" required>
+                            <input type="text" name="username" id="username" class="form-control">
                         </div>
                         <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
                         <div class="mb-3">
                             <label for="oldPassword" class="form-label">Old Password</label>
-                            <input type="password" name="old_password" id="oldPassword" class="form-control" required>
+                            <input type="password" name="old_password" id="oldPassword" class="form-control" >
                         </div>
                         <div class="mb-3">
                             <label for="newPassword" class="form-label">New Password</label>
-                            <input type="password" name="new_password" id="newPassword" class="form-control" required>
+                            <input type="password" name="new_password" id="newPassword" class="form-control" >
                         </div>
                         <button type="submit" class="btn btn-success w-100 mt-2">Change Password</button>
                     </form>

@@ -4,8 +4,12 @@ require_once 'core/db_connect.php';
 class User {
     private $conn;
 
-    public function __construct() {
-        $this->conn = connect();
+    public function __construct($dbConnection = null) {
+        if ($dbConnection === null) {
+            $this->conn = connect(); // fallback if not provided for some reason
+        } else {
+            $this->conn = $dbConnection;
+        }
     }
 
     public function authenticate($username, $password) {
@@ -62,6 +66,29 @@ class User {
         }
         
         return $admin ? $admin['admin_id'] : null;
+    }
+
+    public function getUserAccountDetails($student_id) {
+        $stmt = $this->conn->prepare("CALL getUserAccountDetails(?);");
+        $stmt->bind_param('i', $student_id);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        
+        while ($this->conn->more_results()) { $this->conn->next_result(); }
+        
+        return $user;
+    }
+
+    public function updatePassword($user_id, $new_password_hash) {
+        $stmt = $this->conn->prepare('CALL UserUpdatePassword(?, ?);');
+        $stmt->bind_param('si', $new_password_hash, $user_id);
+        $success = $stmt->execute();
+        $stmt->close();
+        
+        while ($this->conn->more_results()) { $this->conn->next_result(); }
+        
+        return $success;
     }
 }
 ?>

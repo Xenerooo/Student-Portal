@@ -2,6 +2,11 @@
 require_once 'models/User.php';
 
 class AuthController {
+    private $conn;
+
+    public function __construct($dbConnection = null) {
+        $this->conn = $dbConnection;
+    }
     public function showLoginForm() {
         // If already logged in, redirect
         if (isset($_SESSION['role'])) {
@@ -23,7 +28,7 @@ class AuthController {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        $userModel = new User();
+        $userModel = new User($this->conn);
         $user = $userModel->authenticate($username, $password);
 
         if ($user) {

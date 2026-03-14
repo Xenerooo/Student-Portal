@@ -12,7 +12,7 @@ $router->setBasePath('/Student-Portal');
 /*====================================
  * PUBLIC ROUTES
  *====================================*/
-$router->map('GET', '/', 'AControlluther#showLoginForm', 'home');
+$router->map('GET', '/', 'AuthController#showLoginForm', 'home');
 $router->map('GET', '/login', 'AuthController#showLoginForm', 'login_form');
 $router->map('POST', '/login', 'AuthController#login', 'login_post');
 $router->map('GET', '/logout', 'AuthController#logout', 'logout');
@@ -45,7 +45,6 @@ $router->map('POST', '/admin/api/grades/save', 'AdminController#saveGrade', 'api
  * STUDENT ROUTES (Requires Student Role)
  *====================================*/
 $router->map('GET', '/student/dashboard', 'StudentController#dashboard', 'student_dashboard');
-// Student AJAX Routes
 $router->map('GET', '/student/api/info', 'StudentController#getStudentInfo', 'api_student_info');
 $router->map('GET', '/student/api/grades', 'StudentController#getStudentGrades', 'api_student_grades');
 $router->map('GET', '/student/api/grades/data', 'StudentController#getGradesData', 'api_student_grades_data');
@@ -66,7 +65,11 @@ if (is_array($match) && is_callable($match['target'])) {
     $controllerPath = __DIR__ . '/controllers/' . $controllerName . '.php';
     if (file_exists($controllerPath)) {
         require_once $controllerPath;
-        $controller = new $controllerName();
+        
+        // Connect to DB once and inject into controller
+        $conn = connect();
+        $controller = new $controllerName($conn);
+        
         call_user_func_array([$controller, $methodName], $match['params']);
     } else {
         http_response_code(500);
