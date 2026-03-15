@@ -23,6 +23,10 @@ function getOrdinal($number) {
     }
 }
 
-// ... your existing code ...
-
+/**
+ * Escape HTML for output.
+ */
+function h($string) {
+    return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
+}
 ?>

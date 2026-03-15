@@ -1,9 +1,27 @@
 <?php
+// Secure session settings
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_samesite', 'Lax');
+
+// Use secure cookies if HTTPS is on
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+    ini_set('session.cookie_secure', 1);
+}
+
 session_start();
 ob_start();
+
+// Security Headers
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
 define('ROOT_PATH', __DIR__ . '/..');
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../Core/db_connect.php';
+require_once __DIR__ . '/../Core/utilities.php';
 
 // Initialize AltoRouter
 $router = new AltoRouter();
@@ -44,7 +62,7 @@ $router->map('GET', '/admin/api/grades/edit', 'App\\Controllers\\AdminController
 $router->map('GET', '/admin/api/subject/history', 'App\\Controllers\\AdminController#getSubjectHistoryApi', 'api_admin_subject_history');
 $router->map('POST', '/admin/api/grades/save', 'App\\Controllers\\AdminController#saveGrade', 'api_admin_grades_save');
 
-$router->map('GET', '/admin/api/account', 'App\\Controllers\\AdminController#getManageAccount', 'admin_manage_account');
+$router->map('GET', '/admin/api/account', 'App\\Controllers\\AdminController#getManageAccount', 'api_admin_manage_account');
 $router->map('POST', '/admin/api/account/update', 'App\\Controllers\\AdminController#updateAccountProfile', 'api_admin_account_update');
 
 /*====================================

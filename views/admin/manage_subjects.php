@@ -55,16 +55,16 @@
                     <tbody id="subjects-table-body">
                         <?php foreach ($subjects as $subject): ?>
                             <tr class="subject-row" 
-                                id="subject-row-<?php echo htmlspecialchars($subject['subject_id']); ?>"
-                                data-subject-code="<?php echo htmlspecialchars(strtolower($subject['subject_code'])); ?>"
-                                data-units="<?php echo htmlspecialchars($subject['units']); ?>">
-                                <td><?php echo htmlspecialchars($subject['subject_code']); ?></td>
-                                <td><?php echo htmlspecialchars($subject['units']); ?></td>
+                                id="subject-row-<?php echo h($subject['subject_id']); ?>"
+                                data-subject-code="<?php echo h(strtolower($subject['subject_code'])); ?>"
+                                data-units="<?php echo h($subject['units']); ?>">
+                                <td><?php echo h($subject['subject_code']); ?></td>
+                                <td><?php echo h($subject['units']); ?></td>
                                 <td class="text-end">
                                     <button type="button" 
                                             class="btn btn-danger btn-sm delete-subject-btn" 
-                                            data-subject-id="<?php echo htmlspecialchars($subject['subject_id']); ?>"
-                                            data-subject-code="<?php echo htmlspecialchars($subject['subject_code']); ?>">
+                                            data-subject-id="<?php echo h($subject['subject_id']); ?>"
+                                            data-subject-code="<?php echo h($subject['subject_code']); ?>">
                                         Delete
                                     </button>
                                 </td>

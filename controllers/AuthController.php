@@ -17,12 +17,15 @@ class AuthController extends BaseController {
             }
         }
         
+        $this->generateCsrfToken();
         $this->render('auth/login');
     }
 
     public function login() {
         header('Content-Type: application/json');
         
+        $this->verifyCsrfToken();
+
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 
@@ -30,6 +33,9 @@ class AuthController extends BaseController {
         $user = $userModel->authenticate($username, $password);
 
         if ($user) {
+            // Regenerate session ID to prevent session fixation
+            session_regenerate_id(true);
+
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['role'] = $user['role'];
 

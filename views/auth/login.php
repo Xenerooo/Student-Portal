@@ -17,6 +17,7 @@
         </div>
 
         <form method="POST" action="/Student-Portal/login" id="loginForm">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
 
             <div class="form-floating mb-3">
                 <input type="text" name="username" class="form-control" id="username" placeholder="25-001" required>
@@ -62,7 +63,8 @@
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('input[name="csrf_token"]')?.value || ''
             }
         })
         .then(response => response.json())

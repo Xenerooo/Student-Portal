@@ -53,6 +53,21 @@
 
         const apiBasePath = '/Student-Portal/student/api/';
 
+        // Global Fetch Interceptor to include CSRF token in all POST/PUT/DELETE requests
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (csrfToken && options.method && ['POST', 'PUT', 'DELETE'].includes(options.method.toUpperCase())) {
+                options.headers = options.headers || {};
+                if (options.headers instanceof Headers) {
+                    options.headers.set('X-CSRF-TOKEN', csrfToken);
+                } else {
+                    options.headers['X-CSRF-TOKEN'] = csrfToken;
+                }
+            }
+            return originalFetch(url, options);
+        };
+
         async function loadContent(action, targetLink) {
             contentArea.innerHTML = `
                 <div class="d-flex justify-content-center py-5">

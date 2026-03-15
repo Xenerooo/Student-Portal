@@ -35,5 +35,36 @@ class BaseController {
         echo json_encode($data);
         exit();
     }
+
+    /**
+     * CSRF Protection: Generate a token and store it in session.
+     */
+    protected function generateCsrfToken() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    /**
+     * CSRF Protection: Verify the token from POST or headers.
+     */
+    protected function verifyCsrfToken() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        
+        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+        
+        if (!$token || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+            $this->json(['success' => false, 'message' => 'Invalid CSRF token.'], 403);
+        }
+    }
+
+    /**
+     * Helper to escape HTML in views.
+     */
+    protected function h($string) {
+        return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
+    }
 }
 ?>

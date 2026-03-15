@@ -26,7 +26,7 @@
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="get_manage_account">Manage Account (Admin)</a>
+                    <a class="nav-link" href="" data-content="admin_manage_account">Manage Account (Admin)</a>
                 </li>
                 <li class="nav-item">
                     <a class="btn btn-outline-light" href="/Student-Portal/logout">Logout (<?php echo htmlspecialchars($_SESSION['role'] ?? ''); ?>)</a>
@@ -58,10 +58,25 @@
             'get_manage_subjects': 'subjects',
             'get_manage_curriculum': 'curriculum',
             'get_create_student_form': 'students/create',
-            'get_manage_account': 'manage-account'
+            'admin_manage_account': 'account'
         };
 
         const apiBasePath = '/Student-Portal/admin/api/';
+
+        // Global Fetch Interceptor to include CSRF token in all POST/PUT/DELETE requests
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (csrfToken && options.method && ['POST', 'PUT', 'DELETE'].includes(options.method.toUpperCase())) {
+                options.headers = options.headers || {};
+                if (options.headers instanceof Headers) {
+                    options.headers.set('X-CSRF-TOKEN', csrfToken);
+                } else {
+                    options.headers['X-CSRF-TOKEN'] = csrfToken;
+                }
+            }
+            return originalFetch(url, options);
+        };
 
         async function loadContent(action, targetLink) {
             contentArea.innerHTML = `

@@ -18,6 +18,7 @@ class StudentController extends BaseController {
         $studentModel = new \App\Models\Student($this->conn);
         $student = $studentModel->getStudentDashboardData($student_id);
 
+        $this->generateCsrfToken();
         $this->render('student/dashboard', [
             'pageTitle' => "Student Dashboard | SIS",
             'student' => $student
@@ -56,11 +57,7 @@ class StudentController extends BaseController {
             $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
         }
 
-        $sentCsrf = $_POST['csrf'] ?? '';
-        $sessionCsrf = $_SESSION['csrf'] ?? '';
-        if (!$sentCsrf || !$sessionCsrf || !hash_equals($sessionCsrf, $sentCsrf)) {
-            $this->json(['success' => false, 'message' => 'Invalid CSRF token'], 419);
-        }
+        $this->verifyCsrfToken();
 
         $student_id = $_SESSION['student_id'];
         $oldPassword = (string)($_POST['old_password'] ?? '');

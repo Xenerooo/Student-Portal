@@ -20,6 +20,7 @@ class AdminController extends BaseController {
             exit();
         }
 
+        $this->generateCsrfToken();
         $this->render('admin/dashboard', [
             'pageTitle' => "Admin Dashboard | SIS"
         ]);
@@ -154,6 +155,8 @@ class AdminController extends BaseController {
             $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
         }
 
+        $this->verifyCsrfToken();
+
         $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
         $semester = trim($_POST['semester'] ?? '1st Semester');
         $school_year = trim($_POST['school_year'] ?? '2024-2025');
@@ -184,6 +187,8 @@ class AdminController extends BaseController {
     public function manageSubject() {
         $this->checkAdmin();
         header('Content-Type: application/json');
+
+        $this->verifyCsrfToken();
 
         $action = $_POST['action'] ?? 'add';
         $subjectModel = new Subject($this->conn);
@@ -239,6 +244,8 @@ class AdminController extends BaseController {
     public function manageCurriculum() {
         $this->checkAdmin();
         header('Content-Type: application/json');
+
+        $this->verifyCsrfToken();
 
         $action = $_POST['action'] ?? 'add';
         $curriculumModel = new Curriculum($this->conn);
@@ -328,6 +335,8 @@ class AdminController extends BaseController {
         $this->checkAdmin();
         header('Content-Type: application/json');
         
+        $this->verifyCsrfToken();
+
         $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
         $user_id = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
         $name = trim($_POST['student_name'] ?? '');
@@ -387,6 +396,8 @@ class AdminController extends BaseController {
         $this->checkAdmin();
         header('Content-Type: application/json');
         
+        $this->verifyCsrfToken();
+
         $studentId = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
         if (!$studentId) {
             $this->json(['success' => false, 'message' => 'Invalid or missing student ID.'], 400);
@@ -405,6 +416,8 @@ class AdminController extends BaseController {
         $this->checkAdmin();
         header('Content-Type: application/json');
         
+        $this->verifyCsrfToken();
+
         $name = trim($_POST['student_name'] ?? '');
         $number = trim($_POST['student_number'] ?? '');
         $course_id = filter_input(INPUT_POST, 'course_id', FILTER_VALIDATE_INT);
@@ -490,6 +503,8 @@ class AdminController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
         }
+
+        $this->verifyCsrfToken();
 
         $user_id = $_SESSION['user_id'];
         $admin_id = filter_input(INPUT_POST, 'admin_id', FILTER_VALIDATE_INT);
