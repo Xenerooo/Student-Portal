@@ -148,7 +148,14 @@
                     row.querySelector('.subject-code').textContent = sub.subject_code;
                     row.querySelector('.subject-name').textContent = sub.subject_name;
                     const gradeEl = row.querySelector('.subject-grade');
-                    gradeEl.textContent = sub.grade || '--';
+                    const gradeVal = sub.grade ? parseFloat(sub.grade).toFixed(2) : '--';
+                    const breakdown = (sub.prelim || sub.midterm || sub.prefinal || sub.finals) 
+                        ? `<div class="text-muted small fw-normal" style="font-size: 0.65rem">
+                             ${sub.prelim || '-'}/${sub.midterm || '-'}/${sub.prefinal || '-'}/${sub.finals || '-'}
+                           </div>` 
+                        : '';
+                    
+                    gradeEl.innerHTML = `<div>${gradeVal}</div>${breakdown}`;
                     gradeEl.className += ' ' + getRemarksColor(sub.grade);
                     tbody.appendChild(row);
                 });
@@ -177,7 +184,12 @@
                 <td class="fw-bold small">${row.subject_code}</td>
                 <td class="small">${row.subject_name || 'N/A'}</td>
                 <td class="text-center">${row.units}</td>
-                <td class="text-center fw-bold ${getRemarksColor(row.grade)}">${row.grade || '--'}</td>
+                <td class="text-center fw-bold ${getRemarksColor(row.grade)}">
+                    <div>${row.grade ? parseFloat(row.grade).toFixed(2) : '--'}</div>
+                    <div class="text-muted small fw-normal" style="font-size: 0.65rem">
+                        ${row.prelim || '-'}/${row.midterm || '-'}/${row.prefinal || '-'}/${row.finals || '-'}
+                    </div>
+                </td>
             `;
             tbody.appendChild(tr);
         });

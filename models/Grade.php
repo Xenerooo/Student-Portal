@@ -10,24 +10,43 @@ class Grade extends BaseModel {
         try {
             $this->conn->begin_transaction();
 
-            foreach ($grades as $subject_id => $grade) {
-                $grade = trim((string)$grade);
+            foreach ($grades as $subject_id => $data) {
                 if (!filter_var($subject_id, FILTER_VALIDATE_INT)) {
                     continue;
                 }
 
-                if ($grade !== '' && is_numeric($grade)) {
-                    // Call updated upsertGrade procedure with text params
-                    $stmt = $this->conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?);");
-                    $stmt->bind_param("iidss", $student_id, $subject_id, $grade, $semester, $school_year);
-                    $stmt->execute();
-                    $stmt->close();
-                } else if ($grade === '') {
-                    // Call updated deleteGrade procedure with text params
-                    $stmt = $this->conn->prepare("CALL deleteGrade(?, ?, ?, ?);");
-                    $stmt->bind_param("iiss", $student_id, $subject_id, $semester, $school_year);
-                    $stmt->execute();
-                    $stmt->close();
+                if (is_array($data)) {
+                    $grade = trim((string)($data['grade'] ?? ''));
+                    $prelim = trim((string)($data['prelim'] ?? '')) ?: null;
+                    $midterm = trim((string)($data['midterm'] ?? '')) ?: null;
+                    $prefinal = trim((string)($data['prefinal'] ?? '')) ?: null;
+                    $finals = trim((string)($data['finals'] ?? '')) ?: null;
+
+                    if ($grade !== '' && is_numeric($grade)) {
+                        $stmt = $this->conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                        $stmt->bind_param("iidddddss", 
+                            $student_id, $subject_id, $grade, 
+                            $prelim, $midterm, $prefinal, $finals, 
+                            $semester, $school_year
+                        );
+                        $stmt->execute();
+                        $stmt->close();
+                    } else if ($grade === '') {
+                        $stmt = $this->conn->prepare("CALL deleteGrade(?, ?, ?, ?);");
+                        $stmt->bind_param("iiss", $student_id, $subject_id, $semester, $school_year);
+                        $stmt->execute();
+                        $stmt->close();
+                    }
+                } else {
+                    // Fallback for simple numeric value if passed
+                    $grade = trim((string)$data);
+                    if ($grade !== '' && is_numeric($grade)) {
+                        $null = null;
+                        $stmt = $this->conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                        $stmt->bind_param("iidddddss", $student_id, $subject_id, $grade, $null, $null, $null, $null, $semester, $school_year);
+                        $stmt->execute();
+                        $stmt->close();
+                    }
                 }
             }
 
@@ -90,6 +109,10 @@ class Grade extends BaseModel {
                 c.subject_name, 
                 s.units,
                 g_latest.grade,
+                g_latest.prelim,
+                g_latest.midterm,
+                g_latest.prefinal,
+                g_latest.finals,
                 g_latest.school_year,
                 g_latest.semester as graded_semester
             FROM curriculum c
@@ -132,7 +155,11 @@ class Grade extends BaseModel {
                 s.subject_code,
                 c.subject_name,
                 s.units,
-                g.grade
+                g.grade,
+                g.prelim,
+                g.midterm,
+                g.prefinal,
+                g.finals
             FROM grades g
             JOIN subjects s ON g.subject_id = s.subject_id
             LEFT JOIN curriculum c ON g.subject_id = c.subject_id -- To get the display name if available
@@ -153,7 +180,11 @@ class Grade extends BaseModel {
             SELECT 
                 school_year,
                 semester,
-                grade
+                grade,
+                prelim,
+                midterm,
+                prefinal,
+                finals
             FROM grades
             WHERE student_id = ? AND subject_id = ?
             ORDER BY school_year DESC, semester DESC

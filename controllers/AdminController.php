@@ -101,7 +101,11 @@ class AdminController extends BaseController {
         }
 
         // Defaults for term selection if not provided in GET
-        $current_school_year = trim($_GET['school_year'] ?? "2024-2025");
+        $currMonth = (int)date('m');
+        $currYear = (int)date('Y');
+        $default_sy = ($currMonth >= 6) ? "$currYear-" . ($currYear + 1) : ($currYear - 1) . "-$currYear";
+        
+        $current_school_year = trim($_GET['school_year'] ?? $default_sy);
         $current_semester = trim($_GET['semester'] ?? "1st Semester");
 
         // Fetch curriculum progress filtered by term
@@ -158,17 +162,24 @@ class AdminController extends BaseController {
         $this->verifyCsrfToken();
 
         $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
+        $currMonth = (int)date('m');
+        $currYear = (int)date('Y');
+        $default_sy = ($currMonth >= 6) ? "$currYear-" . ($currYear + 1) : ($currYear - 1) . "-$currYear";
+        
         $semester = trim($_POST['semester'] ?? '1st Semester');
-        $school_year = trim($_POST['school_year'] ?? '2024-2025');
+        $school_year = trim($_POST['school_year'] ?? $default_sy);
 
         if (!$student_id || !isset($_POST['grades']) || !is_array($_POST['grades'])) {
             $this->json(['success' => false, 'message' => 'Invalid student ID or missing grades.'], 400);
         }
 
+        // The 'grades' array from POST might contain objects {grade, prelim, midterm, prefinal, finals}
+        $grades = $_POST['grades'];
+
         $gradeModel = new Grade($this->conn);
         try {
-            $gradeModel->upsertGrades($student_id, $_POST['grades'], $semester, $school_year);
-            $this->json(['success' => true, 'message' => "Grades for {$semester}, SY {$school_year} updated successfully!"]);
+            $gradeModel->upsertGrades($student_id, $grades, $semester, $school_year);
+            $this->json(['success' => true, 'message' => "Grades updated successfully!"]);
         } catch (Throwable $e) {
             $this->json(['success' => false, 'message' => 'Error updating grades: ' . $e->getMessage()], 500);
         }

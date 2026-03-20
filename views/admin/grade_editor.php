@@ -59,7 +59,13 @@
                         <label class="form-label fw-bold">Academic Year Filter</label>
                         <select id="filter_school_year" name="school_year" class="form-select form-select-lg shadow-sm">
                             <?php
-                            $years = ["2023-2024", "2024-2025", "2025-2026", "2026-2027"];
+                            $startYear = 2000;
+                            $endYear = (int)date('Y') + 1;
+                            $years = [];
+                            for ($i = $endYear; $i >= $startYear; $i--) {
+                                $years[] = "$i-" . ($i + 1);
+                            }
+                            
                             foreach ($years as $year) {
                                 $selected = ($year === $current_school_year) ? 'selected' : '';
                                 echo "<option value=\"$year\" $selected>$year</option>";
@@ -101,10 +107,14 @@
                             <?php if (!empty($grades_data)): ?>
                                 <?php foreach ($grades_data as $subject): ?>
                                     <tr class="subject-row" 
-                                        data-subject-id="<?= htmlspecialchars($subject['subject_id']) ?>"
-                                        data-subject-code="<?= htmlspecialchars($subject['subject_code']) ?>"
-                                        data-subject-name="<?= htmlspecialchars($subject['subject_name']) ?>"
-                                        data-current-grade="<?= htmlspecialchars($subject['grade'] ?? '') ?>">
+                                        data-subject-id="<?= h($subject['subject_id']) ?>"
+                                        data-subject-code="<?= h($subject['subject_code']) ?>"
+                                        data-subject-name="<?= h($subject['subject_name']) ?>"
+                                        data-prelim="<?= h($subject['prelim'] ?? '') ?>"
+                                        data-midterm="<?= h($subject['midterm'] ?? '') ?>"
+                                        data-prefinal="<?= h($subject['prefinal'] ?? '') ?>"
+                                        data-finals="<?= h($subject['finals'] ?? '') ?>"
+                                        data-current-grade="<?= h($subject['grade'] ?? '') ?>">
                                         <td class="ps-4">
                                             <code class="text-primary fw-bold"><?= htmlspecialchars($subject['subject_code']) ?></code>
                                         </td>
@@ -166,12 +176,33 @@
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
+                                <div class="row gx-1 mb-3">
+                                    <div class="col-3">
+                                        <label class="form-label small fw-bold" style="font-size: 0.7rem;">Prelim</label>
+                                        <input type="number" step="0.01" name="grades[prelim]" id="modal_prelim" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="form-label small fw-bold" style="font-size: 0.7rem;">Midterm</label>
+                                        <input type="number" step="0.01" name="grades[midterm]" id="modal_midterm" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="form-label small fw-bold" style="font-size: 0.7rem;">Prefinal</label>
+                                        <input type="number" step="0.01" name="grades[prefinal]" id="modal_prefinal" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="form-label small fw-bold" style="font-size: 0.7rem;">Finals</label>
+                                        <input type="number" step="0.01" name="grades[finals]" id="modal_finals" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                    </div>
+                                </div>
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold">Final Grade (1.0 - 5.0)</label>
-                                    <input type="number" step="0.1" name="grade" id="modal_grade_input" 
-                                           class="form-control form-control-lg border-primary text-center fw-bold" 
-                                           placeholder="0.0" min="1.0" max="5.0">
-                                    <div class="form-text text-muted">Use 5.0 for Failure. Leave empty to remove entry.</div>
+                                    <label class="form-label fw-bold">Average / Final Grade (1.0 - 5.0)</label>
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" name="grades[grade]" id="modal_grade_input" 
+                                               class="form-control form-control-lg border-primary text-center fw-bold" 
+                                               placeholder="0.00" min="1.0" max="5.0">
+                                        <button class="btn btn-outline-warning" type="button" id="setIncompleteBtn">INC</button>
+                                    </div>
+                                    <div class="form-text text-muted">Auto-calculated from above. 3.0 is Passing, 5.0 is Failing, 4.0 is Incomplete.</div>
                                 </div>
                                 <button type="submit" class="btn btn-primary w-100 py-3 shadow">
                                     Update Grade
@@ -236,12 +267,21 @@
                 const subjCode = this.dataset.subjectCode;
                 const subjName = this.dataset.subjectName;
                 const currentGrade = this.dataset.currentGrade;
+                const prelim = this.dataset.prelim;
+                const midterm = this.dataset.midterm;
+                const prefinal = this.dataset.prefinal;
+                const finals = this.dataset.finals;
 
                 // Setup modal form
                 modalSubjId.value = subjId;
                 modalYear.value = yearFilter.value;
                 modalSem.value = semFilter.value;
                 modalGradeInput.value = currentGrade;
+                
+                document.getElementById('modal_prelim').value = prelim;
+                document.getElementById('modal_midterm').value = midterm;
+                document.getElementById('modal_prefinal').value = prefinal;
+                document.getElementById('modal_finals').value = finals;
                 
                 document.querySelector('#editSubjectGradeModal .modal-title').textContent = `${subjCode}: ${subjName}`;
                 
@@ -251,6 +291,29 @@
                 // Fetch History
                 fetchSubjectHistory(subjId);
             });
+        });
+
+        // Auto-calculate average
+        const gradeInputs = document.querySelectorAll('.grade-input');
+        gradeInputs.forEach(input => {
+            input.addEventListener('input', calculateAverage);
+        });
+
+        function calculateAverage() {
+            const prelim = parseFloat(document.getElementById('modal_prelim').value) || 0;
+            const midterm = parseFloat(document.getElementById('modal_midterm').value) || 0;
+            const prefinal = parseFloat(document.getElementById('modal_prefinal').value) || 0;
+            const finals = parseFloat(document.getElementById('modal_finals').value) || 0;
+
+            const counts = [prelim, midterm, prefinal, finals].filter(v => v > 0).length;
+            if (counts > 0) {
+                const avg = (prelim + midterm + prefinal + finals) / counts;
+                modalGradeInput.value = avg.toFixed(2);
+            }
+        }
+
+        document.getElementById('setIncompleteBtn').addEventListener('click', () => {
+            modalGradeInput.value = '4.0';
         });
 
         function fetchSubjectHistory(subjId) {
@@ -264,7 +327,12 @@
                         data.history.forEach(h => {
                             html += `<tr>
                                         <td>${h.school_year} ${h.semester}</td>
-                                        <td class="text-center fw-bold">${h.grade}</td>
+                                        <td class="text-center fw-bold">
+                                            ${h.grade} 
+                                            <span class="text-muted small">
+                                                (${h.prelim ?? '-'}/${h.midterm ?? '-'}/${h.prefinal ?? '-'}/${h.finals ?? '-'})
+                                            </span>
+                                        </td>
                                      </tr>`;
                         });
                         html += '</tbody></table>';
@@ -289,14 +357,26 @@
 
             const formData = new FormData(modalForm);
             
-            // Note: The backend expects 'grades[subject_id]' format for the grade value
-            const gradeVal = modalGradeInput.value;
+            // The inputs are already named grades[field], but we need the subject_id as the key
+            // for the whole object in the backend.
+            // Current formData has: grades[prelim], grades[midterm], etc.
+            // We want: grades[subject_id][prelim], etc.
+            
             const subjectId = modalSubjId.value;
-            formData.append(`grades[${subjectId}]`, gradeVal);
+            const finalData = new FormData();
+            finalData.append('student_id', formData.get('student_id'));
+            finalData.append('school_year', formData.get('school_year'));
+            finalData.append('semester', formData.get('semester'));
+            
+            finalData.append(`grades[${subjectId}][grade]`, document.getElementById('modal_grade_input').value);
+            finalData.append(`grades[${subjectId}][prelim]`, document.getElementById('modal_prelim').value);
+            finalData.append(`grades[${subjectId}][midterm]`, document.getElementById('modal_midterm').value);
+            finalData.append(`grades[${subjectId}][prefinal]`, document.getElementById('modal_prefinal').value);
+            finalData.append(`grades[${subjectId}][finals]`, document.getElementById('modal_finals').value);
 
             fetch('/Student-Portal/admin/api/grades/save', {
                 method: 'POST',
-                body: formData,
+                body: finalData,
                 credentials: 'same-origin'
             })
             .then(res => res.json())
