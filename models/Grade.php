@@ -28,6 +28,7 @@ class Grade extends BaseModel {
                             $student_id, $subject_id, $grade, 
                             $prelim, $midterm, $prefinal, $finals, 
                             $semester, $school_year
+                            
                         );
                         $stmt->execute();
                         $stmt->close();
