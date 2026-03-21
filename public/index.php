@@ -62,6 +62,14 @@ $router->map('GET', '/admin/api/grades/edit', 'App\\Controllers\\AdminController
 $router->map('GET', '/admin/api/subject/history', 'App\\Controllers\\AdminController#getSubjectHistoryApi', 'api_admin_subject_history');
 $router->map('POST', '/admin/api/grades/save', 'App\\Controllers\\AdminController#saveGrade', 'api_admin_grades_save');
 
+// Enrollment routes
+$router->map('GET',  '/admin/api/students/enroll-form',       'App\\Controllers\\AdminController#getEnrollmentForm',    'api_admin_enroll_form');
+$router->map('POST', '/admin/api/students/enroll',            'App\\Controllers\\AdminController#enrollStudent',        'api_admin_enroll');
+$router->map('POST', '/admin/api/students/drop-subject',      'App\\Controllers\\AdminController#dropSubject',          'api_admin_drop_subject');
+$router->map('GET',  '/admin/api/students/enroll-form-subjects', 'App\\Controllers\\AdminController#getEnrollFormSubjects', 'api_admin_enroll_form_subjects');
+$router->map('GET',  '/admin/api/students/enrollment-history','App\\Controllers\\AdminController#getEnrollmentHistory', 'api_admin_enrollment_history');
+$router->map('GET',  '/admin/api/subjects/list',              'App\\Controllers\\AdminController#getSubjectsList',       'api_admin_subjects_list');
+
 $router->map('GET', '/admin/api/account', 'App\\Controllers\\AdminController#getManageAccount', 'api_admin_manage_account');
 $router->map('POST', '/admin/api/account/update', 'App\\Controllers\\AdminController#updateAccountProfile', 'api_admin_account_update');
 
@@ -74,6 +82,10 @@ $router->map('GET', '/student/api/grades', 'App\\Controllers\\StudentController#
 $router->map('GET', '/student/api/grades/progress', 'App\\Controllers\\StudentController#getGradesProgress', 'api_student_grades_progress');
 $router->map('GET', '/student/api/grades/history', 'App\\Controllers\\StudentController#getScholasticHistory', 'api_student_grades_history');
 $router->map('POST', '/student/api/password/change', 'App\\Controllers\\StudentController#changePassword', 'api_student_password_change');
+
+// New student API routes
+$router->map('GET', '/student/api/grades/term',  'App\\Controllers\\StudentController#getGradesByTerm',   'api_student_grades_term');
+$router->map('GET', '/student/api/grades/terms', 'App\\Controllers\\StudentController#getEnrolledTerms',  'api_student_grades_terms');
 
 /*====================================
  * MATCH AND ROUTE

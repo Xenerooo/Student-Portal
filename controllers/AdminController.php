@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Curriculum;
 use App\Models\Grade;
 use App\Models\Course;
+use App\Models\Enrollment;
 use Exception;
 use DateTime;
 use mysqli_sql_exception;
@@ -100,34 +101,35 @@ class AdminController extends BaseController {
             die("<div class='alert alert-danger'>Student not found.</div>");
         }
 
+        // Fetch enrolled terms to populate filters
+        $enrollModel = new \App\Models\Enrollment($this->conn);
+        $enrolled_terms = $enrollModel->getTermsWithEnrollment($student_id);
+
         // Defaults for term selection if not provided in GET
-        $currMonth = (int)date('m');
-        $currYear = (int)date('Y');
-        $default_sy = ($currMonth >= 6) ? "$currYear-" . ($currYear + 1) : ($currYear - 1) . "-$currYear";
+        if (!empty($enrolled_terms)) {
+            $latest = $enrolled_terms[0];
+            $default_sy = $latest['school_year'];
+            $default_sem = $latest['semester'];
+        } else {
+            $currMonth = (int)date('m');
+            $currYear = (int)date('Y');
+            $default_sy = ($currMonth >= 6) ? "$currYear-" . ($currYear + 1) : ($currYear - 1) . "-$currYear";
+            $default_sem = "1st Semester";
+        }
         
         $current_school_year = trim($_GET['school_year'] ?? $default_sy);
-        $current_semester = trim($_GET['semester'] ?? "1st Semester");
+        $current_semester = trim($_GET['semester'] ?? $default_sem);
 
-        // Fetch curriculum progress filtered by term
-        $gradeModel = new Grade($this->conn);
-        $res = $gradeModel->getCurriculumProgress($student_id, $current_semester, $current_school_year);
-        
-        // Flatten for the current simple view compatibility
-        $flattened_grades = [];
-        foreach ($res as $year => $semesters) {
-            foreach ($semesters as $sem => $subjects) {
-                foreach ($subjects as $subject) {
-                    $flattened_grades[] = $subject;
-                }
-            }
-        }
+        // Fetch enrolled subjects for the selected term
+        $grades_data = $enrollModel->getEnrollmentsByTerm($student_id, $current_school_year, $current_semester);
 
         $this->render('admin/grade_editor', [
             'student_id' => $student_id,
             'student_details' => $student_details,
-            'grades_data' => $flattened_grades,
+            'grades_data' => $grades_data,
             'current_school_year' => $current_school_year,
-            'current_semester' => $current_semester
+            'current_semester' => $current_semester,
+            'enrolled_terms' => $enrolled_terms
         ]);
     }
 
@@ -207,10 +209,11 @@ class AdminController extends BaseController {
         try {
             if ($action === 'add') {
                 $subject_code = trim($_POST['subject_code'] ?? '');
+                $subject_name = trim($_POST['subject_name'] ?? '');
                 $units = filter_input(INPUT_POST, 'units', FILTER_VALIDATE_INT);
 
-                if (empty($subject_code)) {
-                    throw new Exception('Subject code is required.');
+                if (empty($subject_code) || empty($subject_name)) {
+                    throw new Exception('Subject code and name are required.');
                 }
                 if (!$units || $units < 1 || $units > 10) {
                     throw new Exception('Units must be between 1 and 10.');
@@ -220,7 +223,7 @@ class AdminController extends BaseController {
                     throw new Exception('Subject code already exists.');
                 }
 
-                if ($subjectModel->addSubject($subject_code, $units)) {
+                if ($subjectModel->addSubject($subject_code, $subject_name, $units)) {
                     $this->json(['success' => true, 'message' => 'Subject added successfully!']);
                 } else {
                     throw new Exception('Failed to add subject.');
@@ -269,8 +272,8 @@ class AdminController extends BaseController {
                 $year_level = filter_input(INPUT_POST, 'year_level', FILTER_VALIDATE_INT);
                 $semester = filter_input(INPUT_POST, 'semester', FILTER_VALIDATE_INT);
 
-                if (!$course_id || !$subject_id || empty($subject_name)) {
-                    throw new Exception('Course, subject, and subject name are required.');
+                if (!$course_id || !$subject_id) {
+                    throw new Exception('Course and subject are required.');
                 }
                 if (!$year_level || $year_level < 1 || $year_level > 4) {
                     throw new Exception('Year level must be between 1 and 4.');
@@ -279,7 +282,7 @@ class AdminController extends BaseController {
                     throw new Exception('Semester must be 1 or 2.');
                 }
 
-                $entry = $curriculumModel->addEntry($course_id, $subject_id, $year_level, $semester, $subject_name);
+                $entry = $curriculumModel->addEntry($course_id, $subject_id, $year_level, $semester);
                 $this->json(['success' => true, 'message' => 'Curriculum entry added successfully!', 'data' => $entry]);
 
             } elseif ($action === 'update') {
@@ -290,7 +293,7 @@ class AdminController extends BaseController {
                 $year_level = filter_input(INPUT_POST, 'year_level', FILTER_VALIDATE_INT);
                 $semester = filter_input(INPUT_POST, 'semester', FILTER_VALIDATE_INT);
 
-                if (!$curriculum_id || !$course_id || !$subject_id || empty($subject_name)) {
+                if (!$curriculum_id || !$course_id || !$subject_id) {
                     throw new Exception('All fields are required.');
                 }
 
@@ -298,7 +301,7 @@ class AdminController extends BaseController {
                     throw new Exception('Curriculum entry not found.');
                 }
 
-                $entry = $curriculumModel->updateEntry($curriculum_id, $course_id, $subject_id, $year_level, $semester, $subject_name);
+                $entry = $curriculumModel->updateEntry($curriculum_id, $course_id, $subject_id, $year_level, $semester);
                 $this->json(['success' => true, 'message' => 'Curriculum entry updated successfully!', 'data' => $entry]);
 
             } elseif ($action === 'delete') {
@@ -556,6 +559,121 @@ class AdminController extends BaseController {
                 $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
             }
         }
+    }
+
+    public function getEnrollmentForm() {
+        $this->checkAdmin();
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+        if (!$student_id) die("<div class='alert alert-danger'>Invalid student ID.</div>");
+
+        $studentModel = new Student($this->conn);
+        $student = $studentModel->getStudentById($student_id);
+        if (!$student) die("<div class='alert alert-danger'>Student not found.</div>");
+
+        // Generate school years array
+        $currYear = (int)date('Y');
+        $years = [];
+        for ($i = $currYear + 1; $i >= 2000; $i--) {
+            $years[] = "$i-" . ($i + 1);
+        }
+
+        $this->render('admin/enrollment_form', [
+            'student' => $student,
+            'student_id' => $student_id,
+            'years' => $years
+        ]);
+    }
+
+    public function enrollStudent() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['success'=>false,'message'=>'Method not allowed.'],405);
+        $this->verifyCsrfToken();
+
+        $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
+        $school_year = trim($_POST['school_year'] ?? '');
+        $semester = trim($_POST['semester'] ?? '');
+        $subject_ids = array_filter(array_map('intval', (array)($_POST['subject_ids'] ?? [])));
+        $retake_ids  = array_filter(array_map('intval', (array)($_POST['retake_subject_ids'] ?? [])));
+
+        if (!$student_id) $this->json(['success'=>false,'message'=>'Invalid student ID.'],400);
+        if (empty($school_year)) $this->json(['success'=>false,'message'=>'School year required.'],400);
+        if (!in_array($semester, ['1st Semester','2nd Semester','Summer']))
+            $this->json(['success'=>false,'message'=>'Invalid semester.'],400);
+        if (empty($subject_ids)) $this->json(['success'=>false,'message'=>'No subjects selected.'],400);
+
+        try {
+            $enrollModel = new Enrollment($this->conn);
+            $count = $enrollModel->bulkEnroll($student_id, array_values($subject_ids), $school_year, $semester, array_values($retake_ids));
+            $this->json(['success'=>true,'message'=>"Enrolled in $count subject(s) successfully."]);
+        } catch (\Throwable $e) {
+            $this->json(['success'=>false,'message'=>'Enrollment failed: '.$e->getMessage()],500);
+        }
+    }
+
+    public function dropSubject() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['success'=>false,'message'=>'Method not allowed.'],405);
+        $this->verifyCsrfToken();
+
+        $enrollment_id = filter_input(INPUT_POST, 'enrollment_id', FILTER_VALIDATE_INT);
+        if (!$enrollment_id) $this->json(['success'=>false,'message'=>'Invalid enrollment ID.'],400);
+
+        try {
+            $enrollModel = new Enrollment($this->conn);
+            if ($enrollModel->dropSubject($enrollment_id))
+                $this->json(['success'=>true,'message'=>'Subject dropped.']);
+            else
+                $this->json(['success'=>false,'message'=>'Enrollment not found.'],404);
+        } catch (\Throwable $e) {
+            $this->json(['success'=>false,'message'=>$e->getMessage()],500);
+        }
+    }
+
+    public function getEnrollmentHistory() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+        if (!$student_id) $this->json(['success'=>false,'message'=>'Invalid student ID.'],400);
+
+        try {
+            $enrollModel = new Enrollment($this->conn);
+            $history = $enrollModel->getEnrollmentHistory($student_id);
+            $this->json(['success'=>true,'history'=>$history]);
+        } catch (\Throwable $e) {
+            $this->json(['success'=>false,'message'=>$e->getMessage()],500);
+        }
+    }
+
+    public function getEnrollFormSubjects() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+        $year_level = filter_input(INPUT_GET, 'year_level', FILTER_VALIDATE_INT);
+        $semester_int = filter_input(INPUT_GET, 'semester_int', FILTER_VALIDATE_INT);
+
+        if (!$student_id || !$year_level || !$semester_int) {
+            $this->json(['success' => false, 'message' => 'Invalid parameters.'], 400);
+            return;
+        }
+
+        $enrollModel = new Enrollment($this->conn);
+        try {
+            $data = $enrollModel->getSubjectsForEnrollment($student_id, $year_level, $semester_int);
+            $this->json(['success' => true, 'data' => $data]);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getSubjectsList() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        $subjectModel = new Subject($this->conn);
+        $subjects = $subjectModel->getAllSubjects();
+        $this->json(['success' => true, 'subjects' => $subjects]);
     }
 
     private function checkAdmin() {

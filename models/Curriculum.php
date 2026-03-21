@@ -6,12 +6,12 @@ use Exception;
 
 class Curriculum extends BaseModel {
 
-    public function addEntry($course_id, $subject_id, $year_level, $semester, $subject_name) {
-        $stmt = $this->conn->prepare("INSERT INTO curriculum (course_id, subject_id, year_level, semester, subject_name) VALUES (?, ?, ?, ?, ?)");
+    public function addEntry($course_id, $subject_id, $year_level, $semester) {
+        $stmt = $this->conn->prepare("INSERT INTO curriculum (course_id, subject_id, year_level, semester) VALUES (?, ?, ?, ?)");
         if (!$stmt) {
             throw new Exception('Failed to prepare insert statement.');
         }
-        $stmt->bind_param('iiiss', $course_id, $subject_id, $year_level, $semester, $subject_name);
+        $stmt->bind_param('iiii', $course_id, $subject_id, $year_level, $semester);
         $stmt->execute();
 
         if ($stmt->affected_rows < 1) {
@@ -25,12 +25,12 @@ class Curriculum extends BaseModel {
         return $this->getEntryById($curriculum_id);
     }
 
-    public function updateEntry($curriculum_id, $course_id, $subject_id, $year_level, $semester, $subject_name) {
-        $stmt = $this->conn->prepare("UPDATE curriculum SET course_id = ?, subject_id = ?, year_level = ?, semester = ?, subject_name = ? WHERE curriculum_id = ?");
+    public function updateEntry($curriculum_id, $course_id, $subject_id, $year_level, $semester) {
+        $stmt = $this->conn->prepare("UPDATE curriculum SET course_id = ?, subject_id = ?, year_level = ?, semester = ? WHERE curriculum_id = ?");
         if (!$stmt) {
             throw new Exception('Failed to prepare update statement.');
         }
-        $stmt->bind_param('iiissi', $course_id, $subject_id, $year_level, $semester, $subject_name, $curriculum_id);
+        $stmt->bind_param('iiiii', $course_id, $subject_id, $year_level, $semester, $curriculum_id);
         $stmt->execute();
 
         if ($stmt->affected_rows < 1 && $this->conn->errno !== 0) {
@@ -58,8 +58,8 @@ class Curriculum extends BaseModel {
 
     public function getEntryById($curriculum_id) {
         $stmt = $this->conn->prepare("
-            SELECT c.curriculum_id, c.course_id, c.subject_id, c.year_level, c.semester, c.subject_name,
-                   co.course_name, s.subject_code
+            SELECT c.curriculum_id, c.course_id, c.subject_id, c.year_level, c.semester,
+                   co.course_name, s.subject_code, s.subject_name
             FROM curriculum c
             LEFT JOIN courses co ON c.course_id = co.course_id
             LEFT JOIN subjects s ON c.subject_id = s.subject_id
@@ -82,22 +82,21 @@ class Curriculum extends BaseModel {
             throw new Exception('No subjects to insert.');
         }
 
-        $value_placeholder = "(?, ?, ?, ?, ?)";
+        $value_placeholder = "(?, ?, ?, ?)";
         $placeholders = implode(", ", array_fill(0, $subjects_to_insert, $value_placeholder));
         
-        $sql = "INSERT INTO curriculum (course_id, subject_id, year_level, semester, subject_name)
+        $sql = "INSERT INTO curriculum (course_id, subject_id, year_level, semester)
                 VALUES {$placeholders}
                 ON DUPLICATE KEY UPDATE
                     year_level = VALUES(year_level),
-                    semester = VALUES(semester),
-                    subject_name = VALUES(subject_name);";
+                    semester = VALUES(semester);";
 
         $stmt = $this->conn->prepare($sql);
         if (!$stmt) {
             throw new Exception('Failed to prepare bulk insert statement.');
         }
         
-        $types = str_repeat("iiiis", $subjects_to_insert);
+        $types = str_repeat("iiii", $subjects_to_insert);
         $params = array();
         
         foreach ($curriculum_data as $entry) {
@@ -105,7 +104,6 @@ class Curriculum extends BaseModel {
             $params[] = (int)($entry['subject_id'] ?? 0);
             $params[] = (int)($entry['year_level'] ?? 1);
             $params[] = (int)($entry['semester'] ?? 1);
-            $params[] = $entry['subject_name'] ?? '';
         }
         
         $stmt->bind_param($types, ...$params);
@@ -129,8 +127,8 @@ class Curriculum extends BaseModel {
     }
     public function getEntriesByCourse($course_id) {
         $stmt = $this->conn->prepare("
-            SELECT c.curriculum_id, c.course_id, c.subject_id, c.year_level, c.semester, c.subject_name,
-                   co.course_name, s.subject_code
+            SELECT c.curriculum_id, c.course_id, c.subject_id, c.year_level, c.semester,
+                   co.course_name, s.subject_code, s.subject_name
             FROM curriculum c
             LEFT JOIN courses co ON c.course_id = co.course_id
             LEFT JOIN subjects s ON c.subject_id = s.subject_id

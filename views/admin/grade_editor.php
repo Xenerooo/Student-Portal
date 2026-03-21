@@ -59,14 +59,8 @@
                         <label class="form-label fw-bold">Academic Year Filter</label>
                         <select id="filter_school_year" name="school_year" class="form-select form-select-lg shadow-sm">
                             <?php
-                            $startYear = 2000;
-                            $endYear = (int)date('Y') + 1;
-                            $years = [];
-                            for ($i = $endYear; $i >= $startYear; $i--) {
-                                $years[] = "$i-" . ($i + 1);
-                            }
-                            
-                            foreach ($years as $year) {
+                            $unique_years = !empty($enrolled_terms) ? array_unique(array_column($enrolled_terms, 'school_year')) : [$current_school_year];
+                            foreach ($unique_years as $year) {
                                 $selected = ($year === $current_school_year) ? 'selected' : '';
                                 echo "<option value=\"$year\" $selected>$year</option>";
                             }
@@ -77,8 +71,13 @@
                         <label class="form-label fw-bold">Semester Filter</label>
                         <select id="filter_semester" name="semester" class="form-select form-select-lg shadow-sm">
                             <?php
-                            $sems = ["1st Semester", "2nd Semester", "Summer"];
-                            foreach ($sems as $sem) {
+                            $available_sems = !empty($enrolled_terms) 
+                                ? array_unique(array_column(array_filter($enrolled_terms, function($t) use ($current_school_year) {
+                                    return $t['school_year'] === $current_school_year;
+                                }), 'semester'))
+                                : [$current_semester];
+                                
+                            foreach ($available_sems as $sem) {
                                 $selected = ($sem === $current_semester) ? 'selected' : '';
                                 echo "<option value=\"$sem\" $selected>$sem</option>";
                             }
@@ -170,16 +169,16 @@
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Academic Year</label>
                                     <select id="modal_school_year" name="school_year" class="form-select">
-                                        <?php foreach ($years as $year): ?>
-                                            <option value="<?= $year ?>"><?= $year ?></option>
+                                        <?php foreach ($unique_years as $year): ?>
+                                            <option value="<?= $year ?>" <?= $year === $current_school_year ? 'selected' : '' ?>><?= $year ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Semester</label>
                                     <select id="modal_semester" name="semester" class="form-select">
-                                        <?php foreach ($sems as $sem): ?>
-                                            <option value="<?= $sem ?>"><?= $sem ?></option>
+                                        <?php foreach ($available_sems as $sem): ?>
+                                            <option value="<?= $sem ?>" <?= $sem === $current_semester ? 'selected' : '' ?>><?= $sem ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>

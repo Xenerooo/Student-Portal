@@ -60,7 +60,7 @@
             </div>
             
             <button type="submit" class="btn btn-primary w-100 mt-4">Create Student</button>
-            <button type="button" class="btn btn-secondary w-100 mt-2" onclick="loadContent('get_student_list', document.querySelector('[data-content=\"get_student_list\"]'))">Cancel</button>
+            <button type="button" class="btn btn-secondary w-100 mt-2" onclick="window.location.href='/Student-Portal/admin/dashboard'">Cancel</button>
         </form>
     </div>
 </div>

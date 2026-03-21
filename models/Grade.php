@@ -70,6 +70,13 @@ class Grade extends BaseModel {
                     );
                     $stmt->execute();
                     $stmt->close();
+
+                    // Sync enrollment status
+                    $enrollmentModel = new \App\Models\Enrollment($this->conn);
+                    $enrollmentModel->updateStatusFromGrade(
+                        $student_id, $subject_id, $school_year, $semester,
+                        $semester_grade, $remarks
+                    );
                 }
             }
 
@@ -119,8 +126,8 @@ class Grade extends BaseModel {
                     ) g2 ON g1.grade_id = g2.max_id
                 ) g_latest ON s.subject_id = g_latest.subject_id
             ";
-            $params = [$student_id, $course_id];
-            $types = "ii";
+            $params = [$student_id, $student_id, $student_id, $course_id];
+            $types = "iiii";
         }
 
         $sql = "
@@ -129,7 +136,7 @@ class Grade extends BaseModel {
                 c.semester as curriculum_semester, 
                 s.subject_id,
                 s.subject_code, 
-                c.subject_name, 
+                s.subject_name, 
                 s.units,
                 g_latest.semester_grade as grade,
                 g_latest.average_grade,
@@ -139,7 +146,13 @@ class Grade extends BaseModel {
                 g_latest.prefinal,
                 g_latest.finals,
                 g_latest.school_year,
-                g_latest.semester as graded_semester
+                g_latest.semester as graded_semester,
+                (SELECT e2.status FROM enrollments e2
+                 WHERE e2.student_id = ? AND e2.subject_id = s.subject_id
+                 ORDER BY e2.enrollment_id DESC LIMIT 1) as enrollment_status,
+                (SELECT COUNT(*) FROM enrollments e2
+                 WHERE e2.student_id = ? AND e2.subject_id = s.subject_id
+                 AND e2.is_retake = 1) as retake_count
             FROM curriculum c
             JOIN subjects s ON c.subject_id = s.subject_id
             $joinSql
@@ -178,7 +191,7 @@ class Grade extends BaseModel {
                 g.school_year,
                 g.semester,
                 s.subject_code,
-                c.subject_name,
+                s.subject_name,
                 s.units,
                 g.semester_grade as grade,
                 g.average_grade,
@@ -189,7 +202,6 @@ class Grade extends BaseModel {
                 g.finals
             FROM grades g
             JOIN subjects s ON g.subject_id = s.subject_id
-            LEFT JOIN curriculum c ON g.subject_id = c.subject_id -- To get the display name if available
             WHERE g.student_id = ?
             ORDER BY g.school_year DESC, g.semester DESC, s.subject_code ASC
         ";

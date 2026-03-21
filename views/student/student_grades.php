@@ -1,256 +1,597 @@
 <?php
-// student_grades.php - View for student to see their own grades
+/**
+ * views/student/student_grades.php
+ * Updated student grades view with term selection and curriculum tracking.
+ */
 ?>
-
-<div class="container-fluid mt-4 mb-4 px-0">
+<div class="container-fluid p-0" id="grades-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Academic Records</h2>
-        <button type="button" id="btnExportGradesPdf" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-file-earmark-pdf"></i> Export as PDF
-        </button>
+        <div>
+            <h1 class="h3 mb-1">My Academic Grades</h1>
+            <p class="text-muted">View your performance per term, curriculum progress, and full scholastic history.</p>
+        </div>
+        <div>
+            <button id="exportPdfBtn" class="btn btn-primary d-flex align-items-center">
+                <i class="bi bi-file-earmark-pdf me-2"></i> Export to PDF
+            </button>
+        </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <ul class="nav nav-tabs mb-4" id="gradeTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress-pane" type="button" role="tab">
-                Curriculum Progress
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button" role="tab">
-                Scholastic History
-            </button>
-        </li>
-    </ul>
-
-    <div class="tab-content" id="gradeTabsContent">
-        <!-- Progress Pane -->
-        <div class="tab-pane fade show active" id="progress-pane" role="tabpanel" tabindex="0">
-            <div class="mb-3">
-                <input type="text" id="searchProgress" class="form-control" placeholder="Search subjects in curriculum..." autocomplete="off">
-            </div>
-            
-            <div id="progressLoading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <div class="mt-2 text-muted">Loading curriculum...</div>
-            </div>
-            
-            <div id="progressError" class="alert alert-danger" style="display: none;"></div>
-            <div id="progressContent" style="display: none;">
-                <!-- PDF Area uses this container -->
-                <div id="gradesPdfArea"></div>
+    <!-- Summary Metrics -->
+    <div class="row g-3 mb-4" id="overall-summary">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-primary border-4">
+                <div class="card-body py-3">
+                    <h6 class="text-muted small text-uppercase mb-2 fw-bold">Overall GWA</h6>
+                    <div class="h4 mb-0 fw-bold" id="overall-gwa">--</div>
+                </div>
             </div>
         </div>
-
-        <!-- History Pane -->
-        <div class="tab-pane fade" id="history-pane" role="tabpanel" tabindex="0">
-            <div class="mb-3">
-                <input type="text" id="searchHistory" class="form-control" placeholder="Search entire history..." autocomplete="off">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-success border-4">
+                <div class="card-body py-3">
+                    <h6 class="text-muted small text-uppercase mb-2 fw-bold">Units Earned</h6>
+                    <div class="h4 mb-0 fw-bold" id="total-units">0</div>
+                </div>
             </div>
-
-            <div id="historyLoading" class="text-center py-5">
-                <div class="spinner-border text-secondary" role="status"></div>
-                <div class="mt-2 text-muted">Loading history...</div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-info border-4">
+                <div class="card-body py-3">
+                    <h6 class="text-muted small text-uppercase mb-2 fw-bold">Subjects Passed</h6>
+                    <div class="h4 mb-0 fw-bold" id="subjects-passed">0</div>
+                </div>
             </div>
-
-            <div id="historyError" class="alert alert-danger" style="display: none;"></div>
-            <div id="historyContent" style="display: none;">
-                <div class="table-responsive shadow-sm rounded">
-                    <table class="table table-hover align-middle mb-0" id="table-history">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Term</th>
-                                <th>Code</th>
-                                <th>Subject</th>
-                                <th>Units</th>
-                                <th class="text-center">Grade</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-list"></tbody>
-                    </table>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-dark border-4">
+                <div class="card-body py-3">
+                    <h6 class="text-muted small text-uppercase mb-2 fw-bold">Academic Standing</h6>
+                    <div class="h4 mb-0 fw-bold small" id="standing-text">Calculating...</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Hidden Templates for Progress -->
-    <template id="templateYearSection">
-        <div class="year-section mb-5">
-            <h4 class="border-bottom pb-2 text-primary year-title"></h4>
-            <div class="row year-semesters"></div>
-        </div>
-    </template>
+    <!-- Main Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4 px-2" id="gradeTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="tab-term" data-bs-toggle="tab" data-bs-target="#pane-term" type="button" role="tab">This Term</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="tab-progress" data-bs-toggle="tab" data-bs-target="#pane-progress" type="button" role="tab">Curriculum Progress</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="tab-history" data-bs-toggle="tab" data-bs-target="#pane-history" type="button" role="tab">Full History</button>
+        </li>
+    </ul>
 
-    <template id="templateSemesterSection">
-        <div class="col-lg-6 mb-4 semester-section">
-            <h6 class="text-muted fw-bold semester-title"></h6>
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Code</th>
-                            <th>Subject</th>
-                            <th class="text-center">Grade</th>
-                        </tr>
-                    </thead>
-                    <tbody class="semester-subjects"></tbody>
-                </table>
+    <div class="tab-content" id="gradeTabsContent">
+        <!-- TAB 1: THIS TERM -->
+        <div class="tab-pane fade show active" id="pane-term" role="tabpanel" aria-labelledby="tab-term">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body bg-light border-bottom">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">School Year</label>
+                            <select id="termYear" class="form-select border-0 shadow-none bg-white"></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Semester</label>
+                            <select id="termSem" class="form-select border-0 shadow-none bg-white"></select>
+                        </div>
+                        <div class="col-md-4 text-center text-md-end">
+                            <div class="mb-2 input-group input-group-sm">
+                                <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                                <input type="text" id="termSearch" class="form-control border-0 shadow-none" placeholder="Filter this term...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="term-context-bar" class="px-4 py-2 border-bottom small text-muted d-flex justify-content-between align-items-center" style="display: none !important;">
+                        <span id="term-info"></span>
+                        <span id="term-count-badge" class="badge bg-primary"></span>
+                    </div>
+                    
+                    <div class="px-4 py-4" id="term-loading">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">Loading enrollment data...</p>
+                        </div>
+                    </div>
+
+                    <div id="term-content" style="display: none;">
+                        <div id="term-alert-container" class="px-4 pt-4"></div>
+                        
+                        <div class="row g-3 px-4 pt-3 pb-4">
+                            <div class="col-3">
+                                <div class="bg-white border rounded p-2 text-center">
+                                    <div class="text-muted small">Term GWA</div>
+                                    <div class="h6 mb-0 fw-bold" id="term-gwa">--</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="bg-white border rounded p-2 text-center">
+                                    <div class="text-muted small">Units</div>
+                                    <div class="h6 mb-0 fw-bold" id="term-units">0</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="bg-white border rounded p-2 text-center">
+                                    <div class="text-muted small">Graded</div>
+                                    <div class="h6 mb-0 fw-bold" id="term-graded">0/0</div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="bg-white border rounded p-2 text-center">
+                                    <div class="text-muted small">Status</div>
+                                    <div class="h6 mb-0 fw-bold" id="term-status-badge">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive mb-8">
+                            <table class="table table-hover align-middle mb-0" id="term-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4" style="width: 15%;">Code</th>
+                                        <th style="width: 45%;">Subject</th>
+                                        <th class="text-center" style="width: 10%;">Units</th>
+                                        <th class="text-center" style="width: 15%;">Average</th>
+                                        <th class="text-center pe-4" style="width: 15%;">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody><!-- Loaded via JS --></tbody>
+                            </table>
+                        </div>
+                        <div id="term-empty" class="p-5 text-center text-muted d-none">
+                            <i class="bi bi-journal-x h1 d-block mb-3 opacity-25"></i>
+                            <p class="mb-0">No enrollment records found for this term.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </template>
 
-    <template id="templateSubjectRow">
-        <tr>
-            <td class="subject-code fw-bold small"></td>
-            <td class="subject-name small"></td>
-            <td class="text-center subject-grade fw-bold"></td>
-        </tr>
-    </template>
+        <!-- TAB 2: PROGRESS -->
+        <div class="tab-pane fade" id="pane-progress" role="tabpanel" aria-labelledby="tab-progress">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Curriculum Road Map</h6>
+                    <div class="input-group input-group-sm w-auto">
+                        <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="progressSearch" class="form-control border-0 shadow-none border-bottom" placeholder="Filter curriculum...">
+                    </div>
+                </div>
+                <div class="card-body p-0" id="progress-container">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: HISTORY -->
+        <div class="tab-pane fade" id="pane-history" role="tabpanel" aria-labelledby="tab-history">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Scholastic Records</h6>
+                    <div class="input-group input-group-sm w-auto">
+                        <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="historySearch" class="form-control border-0 shadow-none border-bottom" placeholder="Search records...">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="history-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                    <div class="table-responsive mb-8">
+                        <table class="table table-hover align-middle mb-0" id="history-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 15%;">Term</th>
+                                    <th style="width: 45%;">Subject</th>
+                                    <th class="text-center" style="width: 10%;">Units</th>
+                                    <th class="text-center pe-4" style="width: 30%;">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody><!-- Loaded via JS --></tbody>
+                        </table>
+                    </div>
+                    <div id="history-empty" class="p-5 text-center text-muted d-none">
+                        <p>No academic records found.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <script>
-(function(){
-    const getOrdinal = (n) => {
-        const s = ["th", "st", "nd", "rd"], v = n % 100;
-        return n + (s[(v - 20) % 10] || s[v] || s[0]);
-    };
+(function() {
+    let termsList = [];
+    let currentTerm = null;
+    let scholasticHistory = [];
 
-    const getRemarksColor = (remarks) => {
-        if (!remarks) return 'text-muted';
-        const r = remarks.toLowerCase();
-        if (r === 'passed') return 'text-success';
-        if (r === 'incomplete') return 'text-warning';
-        if (r === 'failed') return 'text-danger';
-        return 'text-muted';
-    };
+    // Summary Elements
+    const overallGwaEl = document.getElementById('overall-gwa');
+    const totalUnitsEl = document.getElementById('total-units');
+    const subjectsPassedEl = document.getElementById('subjects-passed');
+    const standingTextEl = document.getElementById('standing-text');
 
-    function renderProgress(data) {
-        const container = document.getElementById('gradesPdfArea');
-        const yearTempl = document.getElementById('templateYearSection');
-        const semTempl = document.getElementById('templateSemesterSection');
-        const rowTempl = document.getElementById('templateSubjectRow');
-        
-        container.innerHTML = '';
-        
-        Object.keys(data).sort().forEach(year => {
-            const yearNode = yearTempl.content.cloneNode(true);
-            yearNode.querySelector('.year-title').textContent = getOrdinal(year) + ' Year';
-            const semestersContainer = yearNode.querySelector('.year-semesters');
+    // Term Elements
+    const termYearSelect = document.getElementById('termYear');
+    const termSemSelect = document.getElementById('termSem');
+    const termContent = document.getElementById('term-content');
+    const termLoading = document.getElementById('term-loading');
+    const termTableBody = document.querySelector('#term-table tbody');
+    const termEmpty = document.getElementById('term-empty');
+    const termAlertContainer = document.getElementById('term-alert-container');
+
+    // Tab Lazy Loading
+    let progressLoaded = false;
+    let historyLoaded = false;
+
+    // 1. Initial Data Fetch
+    async function init() {
+        try {
+            // Fetch History immediately for summary calculations
+            const histRes = await fetch('/Student-Portal/student/api/grades/history');
+            const histData = await histRes.json();
+            scholasticHistory = histData.data || [];
+            updateOverallSummary();
+
+            // Fetch Terms
+            const termsRes = await fetch('/Student-Portal/student/api/grades/terms');
+            const data = await termsRes.json();
+            termsList = data.terms || [];
+
+            if (termsList.length === 0) {
+                termLoading.innerHTML = '<div class="p-5 text-center text-muted">You have no enrollment records yet.</div>';
+                return;
+            }
+
+            // Group terms for selection dropdown
+            const years = [...new Set(termsList.map(t => t.school_year))];
+            termYearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
             
-            Object.keys(data[year]).sort().forEach(sem => {
-                const semNode = semTempl.content.cloneNode(true);
-                semNode.querySelector('.semester-title').textContent = getOrdinal(sem) + ' Semester';
-                const tbody = semNode.querySelector('.semester-subjects');
-                
-                data[year][sem].forEach(sub => {
-                    const row = rowTempl.content.cloneNode(true);
-                    row.querySelector('.subject-code').textContent = sub.subject_code;
-                    row.querySelector('.subject-name').textContent = sub.subject_name;
-                    const gradeEl = row.querySelector('.subject-grade');
-                    const gradeVal = sub.grade ? parseFloat(sub.grade).toFixed(2) : '--';
-                    const breakdown = (sub.prelim || sub.midterm || sub.prefinal || sub.finals) 
-                        ? `<div class="text-muted small fw-normal" style="font-size: 0.65rem">
-                             ${sub.prelim || '-'}/${sub.midterm || '-'}/${sub.prefinal || '-'}/${sub.finals || '-'}
-                             <br>Avg: ${sub.average_grade ? parseFloat(sub.average_grade).toFixed(1) : '-'}
-                           </div>` 
-                        : '';
-                    
-                    gradeEl.innerHTML = `<div>${gradeVal}</div><div class="small ${getRemarksColor(sub.remarks)}">${sub.remarks || ''}</div>${breakdown}`;
-                    tbody.appendChild(row);
-                });
-                semestersContainer.appendChild(semNode);
-            });
-            container.appendChild(yearNode);
-        });
+            // Listen for changes
+            termYearSelect.addEventListener('change', updateSemesterDropdown);
+            termSemSelect.addEventListener('change', loadTermData);
+
+            // Set initial state
+            updateSemesterDropdown();
+        } catch (err) {
+            console.error(err);
+        }
     }
 
-    function renderHistory(data) {
-        const tbody = document.getElementById('history-list');
-        tbody.innerHTML = '';
+    function updateSemesterDropdown() {
+        const year = termYearSelect.value;
+        const semesters = termsList.filter(t => t.school_year === year).map(t => t.semester);
+        termSemSelect.innerHTML = semesters.map(s => `<option value="${s}">${s}</option>`).join('');
+        loadTermData();
+    }
+
+    async function loadTermData() {
+        const year = termYearSelect.value;
+        const sem = termSemSelect.value;
         
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No records found.</td></tr>';
+        termLoading.classList.remove('d-none');
+        termContent.style.opacity = '0.3';
+        termContent.style.display = 'block';
+
+        try {
+            const res = await fetch(`/Student-Portal/student/api/grades/term?school_year=${encodeURIComponent(year)}&semester=${encodeURIComponent(sem)}`);
+            const data = await res.json();
+            renderTerm(data.data || [], year, sem);
+        } catch (err) {
+            alert('Failed to load term grades.');
+        } finally {
+            termLoading.classList.add('d-none');
+            termContent.style.opacity = '1';
+        }
+    }
+
+    function renderTerm(subjects, year, sem) {
+        termAlertContainer.innerHTML = '';
+        if (subjects.length === 0) {
+            termTableBody.closest('table').classList.add('d-none');
+            termEmpty.classList.remove('d-none');
+            document.getElementById('term-units').textContent = '0';
+            document.getElementById('term-gwa').textContent = '--';
             return;
         }
 
-        data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="small">
-                    <div class="fw-bold">${row.school_year}</div>
-                    <div class="text-muted" style="font-size: 0.75rem">${row.semester}</div>
-                </td>
-                <td class="fw-bold small">${row.subject_code}</td>
-                <td class="small">${row.subject_name || 'N/A'}</td>
-                <td class="text-center">${row.units}</td>
-                <td class="text-center fw-bold">
-                    <div class="${getRemarksColor(row.remarks)}">${row.grade ? parseFloat(row.grade).toFixed(2) : '--'}</div>
-                    <div class="small ${getRemarksColor(row.remarks)}" style="font-size: 0.7rem;">${row.remarks || ''}</div>
-                    <div class="text-muted small fw-normal" style="font-size: 0.65rem">
-                        ${row.prelim || '-'}/${row.midterm || '-'}/${row.prefinal || '-'}/${row.finals || '-'}
-                        <br>Avg: ${row.average_grade ? parseFloat(row.average_grade).toFixed(1) : '-'}
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+        termTableBody.closest('table').classList.remove('d-none');
+        termEmpty.classList.add('d-none');
 
-    async function loadData(url, loadingId, contentId, errorId, renderFn) {
-        const loading = document.getElementById(loadingId);
-        const content = document.getElementById(contentId);
-        const error = document.getElementById(errorId);
-        
-        try {
-            const res = await fetch(url);
-            const json = await res.json();
+        let totalUnits = 0;
+        let weightedSum = 0;
+        let unitsForGwa = 0;
+        let gradedCount = 0;
+        let hasIncomplete = false;
+
+        termTableBody.innerHTML = subjects.map(s => {
+            const units = parseInt(s.units);
+            totalUnits += units;
             
-            loading.style.display = 'none';
-            if (json.success) {
-                renderFn(json.data);
-                content.style.display = 'block';
-            } else {
-                error.textContent = json.message;
-                error.style.display = 'block';
+            const grade = s.grade ? parseFloat(s.grade) : null;
+            const remarks = s.remarks || '';
+            const status = s.status || 'enrolled';
+            
+            if (grade !== null) gradedCount++;
+            if (remarks === 'Incomplete' || status === 'incomplete') hasIncomplete = true;
+
+            if (grade !== null && (remarks === 'Passed' || grade <= 3.00)) {
+                weightedSum += (grade * units);
+                unitsForGwa += units;
             }
-        } catch (e) {
-            loading.style.display = 'none';
-            error.textContent = "Failed to fetch data: " + e.message;
-            error.style.display = 'block';
+
+            // Grade cell logic
+            let gradeBadge = '';
+            if (remarks === 'Passed' || (grade !== null && grade <= 3.00)) {
+                gradeBadge = `<span class="badge bg-success">${grade.toFixed(2)}</span>`;
+            } else if (grade === 5.00 || remarks === 'Failed') {
+                gradeBadge = `<span class="badge bg-danger">5.00</span>`;
+            } else if (remarks === 'Incomplete' || status === 'incomplete') {
+                gradeBadge = `<span class="badge bg-warning text-dark">INC</span>`;
+            } else if (status === 'dropped') {
+                gradeBadge = `<span class="text-muted text-decoration-line-through">Dropped</span>`;
+            } else {
+                gradeBadge = `<span class="text-muted small">Pending</span>`;
+            }
+
+            // Pips
+            const pips = [s.prelim, s.midterm, s.prefinal, s.finals].map(p => 
+                `<span class="${p !== null ? 'text-primary' : 'text-muted opacity-50'}" title="${p || ''}">●</span>`
+            ).join(' ');
+
+            return `
+                <tr class="grade-row">
+                    <td class="ps-4">
+                        <code class="text-primary fw-bold">${s.subject_code}</code>
+                        ${s.is_retake == 1 ? '<span class="badge bg-warning text-dark ms-1" style="font-size: 0.6rem;">Retake</span>' : ''}
+                    </td>
+                    <td>
+                        <div>${s.subject_name}</div>
+                        <div style="font-size: 0.75rem;">${pips}</div>
+                    </td>
+                    <td class="text-center">${units}</td>
+                    <td class="text-center">${s.average_grade ? parseFloat(s.average_grade).toFixed(1) : '—'}</td>
+                    <td class="text-center pe-4">${gradeBadge}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // Update term metrics
+        document.getElementById('term-units').textContent = totalUnits;
+        document.getElementById('term-gwa').textContent = unitsForGwa > 0 ? (weightedSum / unitsForGwa).toFixed(2) : '--';
+        document.getElementById('term-graded').textContent = `${gradedCount}/${subjects.length}`;
+        
+        const statusBadge = document.getElementById('term-status-badge');
+        if (hasIncomplete) {
+            statusBadge.innerHTML = '<span class="badge bg-warning text-dark">Has INC</span>';
+            termAlertContainer.innerHTML = `<div class="alert alert-warning py-2 small mb-0"><i class="bi bi-exclamation-circle me-2"></i>You have an incomplete subject this term. Contact your instructor for resolution.</div>`;
+        } else if (gradedCount > 0) {
+            statusBadge.innerHTML = '<span class="badge bg-success">In Progress</span>';
+        } else {
+            statusBadge.innerHTML = '<span class="text-muted">No grades</span>';
         }
     }
 
-    // Initialize
-    loadData('/Student-Portal/student/api/grades/progress', 'progressLoading', 'progressContent', 'progressError', renderProgress);
-    loadData('/Student-Portal/student/api/grades/history', 'historyLoading', 'historyContent', 'historyError', renderHistory);
+    function updateOverallSummary() {
+        if (scholasticHistory.length === 0) return;
 
-    // Search filters
-    const setupSearch = (inputId, tableId) => {
+        let totalUnitsPassed = 0;
+        let weightedSum = 0;
+        let subjectsPassed = 0;
+        const subjectOutcomes = {}; // Latest outcome per subject code
+
+        scholasticHistory.forEach(h => {
+            const units = parseInt(h.units);
+            const grade = h.grade ? parseFloat(h.grade) : null;
+            const remarks = h.remarks || '';
+            const scode = h.subject_code;
+
+            if (remarks === 'Passed' || (grade !== null && grade <= 3.00)) {
+                totalUnitsPassed += units;
+                weightedSum += (grade * units);
+                subjectsPassed++;
+            }
+
+            // Track for standing: sort results by SY/Sem? 
+            // The API returns most recent first, so the first encounter is the most recent.
+            if (!subjectOutcomes[scode]) {
+                subjectOutcomes[scode] = remarks;
+            }
+        });
+
+        overallGwaEl.textContent = totalUnitsPassed > 0 ? (weightedSum / totalUnitsPassed).toFixed(2) : '--';
+        totalUnitsEl.textContent = totalUnitsPassed;
+        subjectsPassedEl.textContent = subjectsPassed;
+
+        let hasFailing = false;
+        for (const code in subjectOutcomes) {
+            if (subjectOutcomes[code] === 'Failed') {
+                hasFailing = true;
+                break;
+            }
+        }
+
+        standingTextEl.innerHTML = hasFailing ? 
+            '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Failing Subject(s)</span>' : 
+            '<span class="text-success"><i class="bi bi-check-circle"></i> Good Standing</span>';
+    }
+
+    // Lazy load Progress
+    document.getElementById('tab-progress').addEventListener('click', async function() {
+        if (progressLoaded) return;
+        const container = document.getElementById('progress-container');
+        
+        try {
+            const res = await fetch('/Student-Portal/student/api/grades/progress');
+            const data = await res.json();
+            renderProgress(data.data || {});
+            progressLoaded = true;
+        } catch (err) {
+            container.innerHTML = '<div class="p-4 text-danger">Error loading progress.</div>';
+        }
+    });
+
+    function renderProgress(groupedData) {
+        const container = document.getElementById('progress-container');
+        let html = '';
+
+        for (const year in groupedData) {
+            for (const sem in groupedData[year]) {
+                const subjects = groupedData[year][sem];
+                const yearLabels = {1:'1st Year', 2:'2nd Year', 3:'3rd Year', 4:'4th Year'};
+                const semLabels = {1:'1st Semester', 2:'2nd Semester'};
+
+                html += `
+                    <div class="px-3 py-2 bg-light small fw-bold text-primary border-bottom border-top mt-3 first:mt-0">
+                        ${yearLabels[year] || year} — ${semLabels[sem] || sem}
+                    </div>
+                    <div class="table-responsive mb-8">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4" style="width: 15%;">Code</th>
+                                    <th style="width: 45%;">Subject</th>
+                                    <th class="text-center" style="width: 10%;">Units</th>
+                                    <th class="text-center" style="width: 15%;">Average</th>
+                                    <th class="text-center pe-4" style="width: 15%;">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                subjects.forEach(s => {
+                    const grade = s.grade ? parseFloat(s.grade) : null;
+                    const remarks = s.remarks || '';
+                    const status = s.enrollment_status;
+                    const isRetake = parseInt(s.retake_count || 0) > 0;
+
+                    let gradeCell = '';
+                    if (remarks === 'Passed' || (grade !== null && grade <= 3.00)) {
+                        gradeCell = `<span class="badge bg-success">${grade.toFixed(2)}${isRetake ? ' (retake)' : ''}</span>`;
+                    } else if (grade === 5.00) {
+                        if (isRetake) {
+                            gradeCell = `<span class="badge bg-danger">5.00</span> <span class="badge bg-warning text-dark">Retake in progress</span>`;
+                        } else {
+                            gradeCell = `<span class="badge bg-danger">5.00</span> <span class="badge bg-danger">Needs retake</span>`;
+                        }
+                    } else if (status === 'incomplete') {
+                        gradeCell = `<span class="badge bg-warning text-dark">INC</span>`;
+                    } else if (status === 'enrolled' && grade === null) {
+                        gradeCell = `<span class="text-muted small">Pending</span>`;
+                    } else if (status === 'dropped') {
+                        gradeCell = `<span class="text-muted text-decoration-line-through">Dropped</span>`;
+                    } else {
+                        gradeCell = `<span class="text-muted small">Not yet enrolled</span>`;
+                    }
+
+                    html += `
+                        <tr class="curriculum-row">
+                            <td class="ps-4"><code class="text-primary fw-bold">${s.subject_code}</code></td>
+                            <td>${s.subject_name}</td>
+                            <td class="text-center">${s.units}</td>
+                            <td class="text-center">${s.average_grade ? parseFloat(s.average_grade).toFixed(1) : '—'}</td>
+                            <td class="text-center pe-4">${gradeCell}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+            }
+        }
+        container.innerHTML = html || '<div class="p-5 text-center text-muted">No curriculum data found.</div>';
+    }
+
+    // Lazy load History
+    document.getElementById('tab-history').addEventListener('click', function() {
+        if (historyLoaded) return;
+        renderHistory();
+        historyLoaded = true;
+    });
+
+    function renderHistory() {
+        const loading = document.getElementById('history-loading');
+        const table = document.getElementById('history-table');
+        const tbody = table.querySelector('tbody');
+        const empty = document.getElementById('history-empty');
+
+        loading.classList.add('d-none');
+        if (scholasticHistory.length === 0) {
+            table.classList.add('d-none');
+            empty.classList.remove('d-none');
+            return;
+        }
+
+        table.classList.remove('d-none');
+        tbody.innerHTML = scholasticHistory.map(h => {
+            const grade = h.grade ? parseFloat(h.grade) : null;
+            const remarks = h.remarks || '';
+            const statusClass = remarks === 'Passed' ? 'success' : (remarks === 'Failed' ? 'danger' : (remarks === 'Incomplete' ? 'warning text-dark' : 'secondary'));
+
+            return `
+                <tr class="history-row">
+                    <td class="ps-4">
+                        <span class="badge bg-secondary opacity-75">${h.school_year}</span><br>
+                        <span class="small text-muted">${h.semester}</span>
+                    </td>
+                    <td>
+                        <div class="fw-bold">${h.subject_code}</div>
+                        <div class="small text-muted">${h.subject_name}</div>
+                    </td>
+                    <td class="text-center">${h.units}</td>
+                    <td class="text-center pe-4">
+                        <div class="badge bg-${statusClass}">${grade ? grade.toFixed(2) : '--'}</div>
+                        <div class="text-muted" style="font-size: 0.65rem;">
+                            Avg: ${h.average_grade ? parseFloat(h.average_grade).toFixed(1) : '—'} | 
+                            ${[h.prelim, h.midterm, h.prefinal, h.finals].map(p => p !== null ? parseFloat(p).toFixed(0) : '—').join('/')}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Global Search Filter
+    function setupFilter(inputId, rowClass) {
         document.getElementById(inputId).addEventListener('input', function() {
             const term = this.value.toLowerCase();
-            const rows = document.querySelectorAll(`${tableId} tbody tr`);
-            rows.forEach(row => {
+            document.querySelectorAll('.' + rowClass).forEach(row => {
                 row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
             });
         });
-    };
-    setupSearch('searchProgress', '#gradesPdfArea');
-    setupSearch('searchHistory', '#table-history');
+    }
+    setupFilter('termSearch', 'grade-row');
+    setupFilter('progressSearch', 'curriculum-row');
+    setupFilter('historySearch', 'history-row');
 
     // PDF Export
-    document.getElementById('btnExportGradesPdf').addEventListener('click', () => {
-        const element = document.getElementById('gradesPdfArea');
+    document.getElementById('exportPdfBtn').addEventListener('click', function() {
+        const element = document.getElementById('grades-container');
         const opt = {
-            margin: 10,
-            filename: 'My_Grades.pdf',
+            margin: 0.5,
+            filename: 'My_Academic_Grades.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
-        html2pdf().set(opt).from(element).save();
+        if (window.html2pdf) {
+            window.html2pdf().set(opt).from(element).save();
+        } else {
+            alert('PDF library not loaded.');
+        }
     });
 
+    init();
 })();
 </script>
+<style>
+    .first\:mt-0:first-of-type { margin-top: 0 !important; }
+</style>

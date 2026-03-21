@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\BaseController;
 use App\Models\Grade;
 use App\Models\User;
+use App\Models\Enrollment;
 use Throwable;
 
 class StudentController extends BaseController {
@@ -127,6 +128,37 @@ class StudentController extends BaseController {
             ]);
         } catch (Throwable $e) {
             $this->json(['success' => false, 'message' => 'Failed to fetch history: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    public function getGradesByTerm() {
+        $this->checkStudent();
+        header('Content-Type: application/json');
+        $school_year = trim($_GET['school_year'] ?? '');
+        $semester    = trim($_GET['semester'] ?? '');
+        if (!$school_year || !$semester)
+            $this->json(['success'=>false,'message'=>'school_year and semester are required.'],400);
+
+        $student_id = $_SESSION['student_id'];
+        try {
+            $enrollModel = new Enrollment($this->conn);
+            $data = $enrollModel->getEnrollmentsByTerm($student_id, $school_year, $semester);
+            $this->json(['success'=>true,'data'=>$data]);
+        } catch (\Throwable $e) {
+            $this->json(['success'=>false,'message'=>$e->getMessage()],500);
+        }
+    }
+
+    public function getEnrolledTerms() {
+        $this->checkStudent();
+        header('Content-Type: application/json');
+        $student_id = $_SESSION['student_id'];
+        try {
+            $enrollModel = new Enrollment($this->conn);
+            $terms = $enrollModel->getTermsWithEnrollment($student_id);
+            $this->json(['success'=>true,'terms'=>$terms]);
+        } catch (\Throwable $e) {
+            $this->json(['success'=>false,'message'=>$e->getMessage()],500);
         }
     }
 
