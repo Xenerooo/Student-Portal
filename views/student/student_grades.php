@@ -117,12 +117,13 @@
         return n + (s[(v - 20) % 10] || s[v] || s[0]);
     };
 
-    const getRemarksColor = (grade) => {
-        if (!grade || isNaN(grade)) return 'text-muted';
-        const g = parseFloat(grade);
-        if (g <= 3.0) return 'text-success';
-        if (g <= 4.0) return 'text-warning';
-        return 'text-danger';
+    const getRemarksColor = (remarks) => {
+        if (!remarks) return 'text-muted';
+        const r = remarks.toLowerCase();
+        if (r === 'passed') return 'text-success';
+        if (r === 'incomplete') return 'text-warning';
+        if (r === 'failed') return 'text-danger';
+        return 'text-muted';
     };
 
     function renderProgress(data) {
@@ -152,11 +153,11 @@
                     const breakdown = (sub.prelim || sub.midterm || sub.prefinal || sub.finals) 
                         ? `<div class="text-muted small fw-normal" style="font-size: 0.65rem">
                              ${sub.prelim || '-'}/${sub.midterm || '-'}/${sub.prefinal || '-'}/${sub.finals || '-'}
+                             <br>Avg: ${sub.average_grade ? parseFloat(sub.average_grade).toFixed(1) : '-'}
                            </div>` 
                         : '';
                     
-                    gradeEl.innerHTML = `<div>${gradeVal}</div>${breakdown}`;
-                    gradeEl.className += ' ' + getRemarksColor(sub.grade);
+                    gradeEl.innerHTML = `<div>${gradeVal}</div><div class="small ${getRemarksColor(sub.remarks)}">${sub.remarks || ''}</div>${breakdown}`;
                     tbody.appendChild(row);
                 });
                 semestersContainer.appendChild(semNode);
@@ -184,10 +185,12 @@
                 <td class="fw-bold small">${row.subject_code}</td>
                 <td class="small">${row.subject_name || 'N/A'}</td>
                 <td class="text-center">${row.units}</td>
-                <td class="text-center fw-bold ${getRemarksColor(row.grade)}">
-                    <div>${row.grade ? parseFloat(row.grade).toFixed(2) : '--'}</div>
+                <td class="text-center fw-bold">
+                    <div class="${getRemarksColor(row.remarks)}">${row.grade ? parseFloat(row.grade).toFixed(2) : '--'}</div>
+                    <div class="small ${getRemarksColor(row.remarks)}" style="font-size: 0.7rem;">${row.remarks || ''}</div>
                     <div class="text-muted small fw-normal" style="font-size: 0.65rem">
                         ${row.prelim || '-'}/${row.midterm || '-'}/${row.prefinal || '-'}/${row.finals || '-'}
+                        <br>Avg: ${row.average_grade ? parseFloat(row.average_grade).toFixed(1) : '-'}
                     </div>
                 </td>
             `;

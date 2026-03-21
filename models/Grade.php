@@ -16,37 +16,60 @@ class Grade extends BaseModel {
                 }
 
                 if (is_array($data)) {
-                    $grade = trim((string)($data['grade'] ?? ''));
-                    $prelim = trim((string)($data['prelim'] ?? '')) ?: null;
-                    $midterm = trim((string)($data['midterm'] ?? '')) ?: null;
-                    $prefinal = trim((string)($data['prefinal'] ?? '')) ?: null;
-                    $finals = trim((string)($data['finals'] ?? '')) ?: null;
-
-                    if ($grade !== '' && is_numeric($grade)) {
-                        $stmt = $this->conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?, ?, ?, ?, ?);");
-                        $stmt->bind_param("iidddddss", 
-                            $student_id, $subject_id, $grade, 
-                            $prelim, $midterm, $prefinal, $finals, 
-                            $semester, $school_year
-                        );
-                        $stmt->execute();
-                        $stmt->close();
-                    } else if ($grade === '') {
+                    $grade_val = trim((string)($data['grade'] ?? ''));
+                    if ($grade_val === '') {
                         $stmt = $this->conn->prepare("CALL deleteGrade(?, ?, ?, ?);");
                         $stmt->bind_param("iiss", $student_id, $subject_id, $semester, $school_year);
                         $stmt->execute();
                         $stmt->close();
+                        continue;
                     }
-                } else {
-                    // Fallback for simple numeric value if passed
-                    $grade = trim((string)$data);
-                    if ($grade !== '' && is_numeric($grade)) {
-                        $null = null;
-                        $stmt = $this->conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?, ?, ?, ?, ?);");
-                        $stmt->bind_param("iidddddss", $student_id, $subject_id, $grade, $null, $null, $null, $null, $semester, $school_year);
-                        $stmt->execute();
-                        $stmt->close();
+
+                    $prelim = (isset($data['prelim']) && $data['prelim'] !== '' && is_numeric($data['prelim'])) ? (float)$data['prelim'] : null;
+                    $midterm = (isset($data['midterm']) && $data['midterm'] !== '' && is_numeric($data['midterm'])) ? (float)$data['midterm'] : null;
+                    $prefinal = (isset($data['prefinal']) && $data['prefinal'] !== '' && is_numeric($data['prefinal'])) ? (float)$data['prefinal'] : null;
+                    $finals = (isset($data['finals']) && $data['finals'] !== '' && is_numeric($data['finals'])) ? (float)$data['finals'] : null;
+
+                    // Use provided average or calculate it
+                    if (isset($data['average_grade']) && $data['average_grade'] !== '' && is_numeric($data['average_grade'])) {
+                        $average_grade = (float)$data['average_grade'];
+                    } else {
+                        $sum = ($prelim ?? 0) + ($midterm ?? 0) + ($prefinal ?? 0) + ($finals ?? 0);
+                        $average_grade = $sum / 4;
                     }
+
+                    // Equivalence logic
+                    $semester_grade = (isset($data['grade']) && $data['grade'] !== '' && is_numeric($data['grade'])) ? (float)$data['grade'] : null;
+                    $remarks = (isset($data['remarks']) && $data['remarks'] !== '') ? (string)$data['remarks'] : "";
+
+                    if ($remarks === "Incomplete") {
+                        $semester_grade = null; 
+                    } else if ($semester_grade === null && $average_grade !== null) {
+                        // Calculate equivalence if not provided
+                        if ($average_grade >= 98) $semester_grade = 1.00;
+                        else if ($average_grade >= 95) $semester_grade = 1.25;
+                        else if ($average_grade >= 92) $semester_grade = 1.50;
+                        else if ($average_grade >= 89) $semester_grade = 1.75;
+                        else if ($average_grade >= 86) $semester_grade = 2.00;
+                        else if ($average_grade >= 83) $semester_grade = 2.25;
+                        else if ($average_grade >= 80) $semester_grade = 2.50;
+                        else if ($average_grade >= 77) $semester_grade = 2.75;
+                        else if ($average_grade >= 75) $semester_grade = 3.00;
+                        else $semester_grade = 5.00;
+
+                        if ($remarks === "") {
+                            $remarks = ($semester_grade <= 3.0) ? "Passed" : "Failed";
+                        }
+                    }
+
+                    $stmt = $this->conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    $stmt->bind_param("iidddddssss", 
+                        $student_id, $subject_id, $semester_grade, $average_grade, 
+                        $prelim, $midterm, $prefinal, $finals, 
+                        $remarks, $semester, $school_year
+                    );
+                    $stmt->execute();
+                    $stmt->close();
                 }
             }
 
@@ -108,7 +131,9 @@ class Grade extends BaseModel {
                 s.subject_code, 
                 c.subject_name, 
                 s.units,
-                g_latest.grade,
+                g_latest.semester_grade as grade,
+                g_latest.average_grade,
+                g_latest.remarks,
                 g_latest.prelim,
                 g_latest.midterm,
                 g_latest.prefinal,
@@ -155,7 +180,9 @@ class Grade extends BaseModel {
                 s.subject_code,
                 c.subject_name,
                 s.units,
-                g.grade,
+                g.semester_grade as grade,
+                g.average_grade,
+                g.remarks,
                 g.prelim,
                 g.midterm,
                 g.prefinal,
@@ -180,7 +207,9 @@ class Grade extends BaseModel {
             SELECT 
                 school_year,
                 semester,
-                grade,
+                semester_grade as grade,
+                average_grade,
+                remarks,
                 prelim,
                 midterm,
                 prefinal,

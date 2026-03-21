@@ -114,6 +114,8 @@
                                         data-midterm="<?= h($subject['midterm'] ?? '') ?>"
                                         data-prefinal="<?= h($subject['prefinal'] ?? '') ?>"
                                         data-finals="<?= h($subject['finals'] ?? '') ?>"
+                                        data-average-grade="<?= h($subject['average_grade'] ?? '') ?>"
+                                        data-remarks="<?= h($subject['remarks'] ?? '') ?>"
                                         data-current-grade="<?= h($subject['grade'] ?? '') ?>">
                                         <td class="ps-4">
                                             <code class="text-primary fw-bold"><?= htmlspecialchars($subject['subject_code']) ?></code>
@@ -121,10 +123,15 @@
                                         <td><?= htmlspecialchars($subject['subject_name']) ?></td>
                                         <td class="text-center"><?= htmlspecialchars($subject['units'] ?? '3.0') ?></td>
                                         <td class="text-end pe-4">
-                                            <?php if ($subject['grade']): ?>
-                                                <span class="grade-badge text-primary fw-bold">
-                                                    <?= number_format($subject['grade'], 1) ?>
-                                                </span>
+                                            <?php if ($subject['grade'] !== null): ?>
+                                                <div class="d-flex flex-column align-items-end">
+                                                    <span class="grade-badge text-primary fw-bold">
+                                                        <?= number_format($subject['grade'], 2) ?>
+                                                    </span>
+                                                    <span class="small text-muted" style="font-size: 0.75rem;">
+                                                        Avg: <?= number_format($subject['average_grade'], 1) ?> - <?= $subject['remarks'] ?>
+                                                    </span>
+                                                </div>
                                             <?php else: ?>
                                                 <span class="grade-badge bg-light text-muted">
                                                     --
@@ -179,30 +186,41 @@
                                 <div class="row gx-1 mb-3">
                                     <div class="col-3">
                                         <label class="form-label small fw-bold" style="font-size: 0.7rem;">Prelim</label>
-                                        <input type="number" step="0.01" name="grades[prelim]" id="modal_prelim" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                        <input type="number" step="0.01" name="grades[prelim]" id="modal_prelim" class="form-control form-control-sm grade-input" min="0" max="100">
                                     </div>
                                     <div class="col-3">
                                         <label class="form-label small fw-bold" style="font-size: 0.7rem;">Midterm</label>
-                                        <input type="number" step="0.01" name="grades[midterm]" id="modal_midterm" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                        <input type="number" step="0.01" name="grades[midterm]" id="modal_midterm" class="form-control form-control-sm grade-input" min="0" max="100">
                                     </div>
                                     <div class="col-3">
                                         <label class="form-label small fw-bold" style="font-size: 0.7rem;">Prefinal</label>
-                                        <input type="number" step="0.01" name="grades[prefinal]" id="modal_prefinal" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                        <input type="number" step="0.01" name="grades[prefinal]" id="modal_prefinal" class="form-control form-control-sm grade-input" min="0" max="100">
                                     </div>
                                     <div class="col-3">
                                         <label class="form-label small fw-bold" style="font-size: 0.7rem;">Finals</label>
-                                        <input type="number" step="0.01" name="grades[finals]" id="modal_finals" class="form-control form-control-sm grade-input" min="1.0" max="5.0">
+                                        <input type="number" step="0.01" name="grades[finals]" id="modal_finals" class="form-control form-control-sm grade-input" min="0" max="100">
                                     </div>
                                 </div>
-                                <div class="mb-4">
-                                    <label class="form-label fw-bold">Average / Final Grade (1.0 - 5.0)</label>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Average Grade (0-100)</label>
                                     <div class="input-group">
-                                        <input type="number" step="0.01" name="grades[grade]" id="modal_grade_input" 
+                                        <input type="number" step="0.01" id="modal_average_display" name="grades[average_grade]"
                                                class="form-control form-control-lg border-primary text-center fw-bold" 
-                                               placeholder="0.00" min="1.0" max="5.0">
+                                               placeholder="0.00">
                                         <button class="btn btn-outline-warning" type="button" id="setIncompleteBtn">INC</button>
                                     </div>
-                                    <div class="form-text text-muted">Auto-calculated from above. 3.0 is Passing, 5.0 is Failing, 4.0 is Incomplete.</div>
+                                </div>
+                                <div class="row g-2 mb-4">
+                                    <div class="col-6 text-center border-end">
+                                        <div class="small text-muted text-uppercase fw-bold">Semester Grade</div>
+                                        <div id="modal_equivalence_display" class="h4 mb-0 fw-bold text-primary">--</div>
+                                        <input type="hidden" name="grades[grade]" id="modal_grade_input">
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <div class="small text-muted text-uppercase fw-bold">Remarks</div>
+                                        <div id="modal_remarks_display" class="h4 mb-0 fw-bold">--</div>
+                                        <input type="hidden" name="grades[remarks]" id="modal_remarks_input">
+                                    </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary w-100 py-3 shadow">
                                     Update Grade
@@ -271,6 +289,8 @@
                 const midterm = this.dataset.midterm;
                 const prefinal = this.dataset.prefinal;
                 const finals = this.dataset.finals;
+                const averageGrade = this.dataset.averageGrade;
+                const remarks = this.dataset.remarks;
 
                 // Setup modal form
                 modalSubjId.value = subjId;
@@ -283,10 +303,15 @@
                 document.getElementById('modal_prefinal').value = prefinal;
                 document.getElementById('modal_finals').value = finals;
                 
+                document.getElementById('modal_average_display').value = averageGrade ? parseFloat(averageGrade).toFixed(2) : '';
+                
                 document.querySelector('#editSubjectGradeModal .modal-title').textContent = `${subjCode}: ${subjName}`;
                 
                 // Show modal
                 gradeModal.show();
+                
+                // Trigger calculation to update displays
+                calculateAverage();
                 
                 // Fetch History
                 fetchSubjectHistory(subjId);
@@ -296,24 +321,77 @@
         // Auto-calculate average
         const gradeInputs = document.querySelectorAll('.grade-input');
         gradeInputs.forEach(input => {
-            input.addEventListener('input', calculateAverage);
+            input.addEventListener('input', () => calculateAverage(true));
         });
 
-        function calculateAverage() {
-            const prelim = parseFloat(document.getElementById('modal_prelim').value) || 0;
-            const midterm = parseFloat(document.getElementById('modal_midterm').value) || 0;
-            const prefinal = parseFloat(document.getElementById('modal_prefinal').value) || 0;
-            const finals = parseFloat(document.getElementById('modal_finals').value) || 0;
+        document.getElementById('modal_average_display').addEventListener('input', function() {
+            calculateAverage(false);
+        });
 
-            const counts = [prelim, midterm, prefinal, finals].filter(v => v > 0).length;
-            if (counts > 0) {
-                const avg = (prelim + midterm + prefinal + finals) / counts;
-                modalGradeInput.value = avg.toFixed(2);
+        function calculateAverage(isAutomatic) {
+            const prelimVal = document.getElementById('modal_prelim').value;
+            const midtermVal = document.getElementById('modal_midterm').value;
+            const prefinalVal = document.getElementById('modal_prefinal').value;
+            const finalsVal = document.getElementById('modal_finals').value;
+            const avgDisplay = document.getElementById('modal_average_display');
+            const remarksInput = document.getElementById('modal_remarks_input');
+
+            let avg = 0;
+            if (isAutomatic) {
+                const prelim = parseFloat(prelimVal) || 0;
+                const midterm = parseFloat(midtermVal) || 0;
+                const prefinal = parseFloat(prefinalVal) || 0;
+                const finals = parseFloat(finalsVal) || 0;
+                avg = (prelim + midterm + prefinal + finals) / 4;
+                avgDisplay.value = avg.toFixed(2);
+                remarksInput.value = ''; // Reset manual remarks on auto calc
+            } else {
+                avg = parseFloat(avgDisplay.value) || 0;
+                remarksInput.value = ''; // Reset manual remarks on manual avg
             }
+            
+            const equivDisplay = document.getElementById('modal_equivalence_display');
+            const remarksDisplay = document.getElementById('modal_remarks_display');
+            const gradeInput = document.getElementById('modal_grade_input');
+
+            if (remarksInput.value === 'Incomplete') {
+                equivDisplay.textContent = '--';
+                remarksDisplay.textContent = 'Incomplete';
+                remarksDisplay.className = 'h4 mb-0 fw-bold text-warning';
+                gradeInput.value = '';
+                return;
+            }
+
+            let equiv = 5.0;
+            if (avg >= 98) equiv = 1.00;
+            else if (avg >= 95) equiv = 1.25;
+            else if (avg >= 92) equiv = 1.50;
+            else if (avg >= 89) equiv = 1.75;
+            else if (avg >= 86) equiv = 2.00;
+            else if (avg >= 83) equiv = 2.25;
+            else if (avg >= 80) equiv = 2.50;
+            else if (avg >= 77) equiv = 2.75;
+            else if (avg >= 75) equiv = 3.00;
+            
+            equivDisplay.textContent = equiv.toFixed(2);
+            gradeInput.value = equiv.toFixed(2);
+            
+            const passed = equiv <= 3.0;
+            remarksDisplay.textContent = passed ? 'Passed' : 'Failed';
+            remarksDisplay.className = passed ? 'h4 mb-0 fw-bold text-success' : 'h4 mb-0 fw-bold text-danger';
         }
 
         document.getElementById('setIncompleteBtn').addEventListener('click', () => {
-            modalGradeInput.value = '4.0';
+            const remarksInput = document.getElementById('modal_remarks_input');
+            const remarksDisplay = document.getElementById('modal_remarks_display');
+            const equivDisplay = document.getElementById('modal_equivalence_display');
+            const gradeInput = document.getElementById('modal_grade_input');
+
+            remarksInput.value = 'Incomplete';
+            remarksDisplay.textContent = 'Incomplete';
+            remarksDisplay.className = 'h4 mb-0 fw-bold text-warning';
+            equivDisplay.textContent = '--';
+            gradeInput.value = '';
         });
 
         function fetchSubjectHistory(subjId) {
@@ -373,6 +451,8 @@
             finalData.append(`grades[${subjectId}][midterm]`, document.getElementById('modal_midterm').value);
             finalData.append(`grades[${subjectId}][prefinal]`, document.getElementById('modal_prefinal').value);
             finalData.append(`grades[${subjectId}][finals]`, document.getElementById('modal_finals').value);
+            finalData.append(`grades[${subjectId}][average_grade]`, document.getElementById('modal_average_display').value);
+            finalData.append(`grades[${subjectId}][remarks]`, document.getElementById('modal_remarks_input').value);
 
             fetch('/Student-Portal/admin/api/grades/save', {
                 method: 'POST',
