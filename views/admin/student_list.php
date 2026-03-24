@@ -128,34 +128,19 @@
                         </td>
                         <td>${escapeHtml(student.course_name)}</td>
                         <td>
-                            <div class="container">
-                                <div class="row">
-                                    <div class="col-sm">
-                                        <button type="button" class="btn btn-outline-secondary w-100 edit-grades-btn m-1"
-                                            data-student-id="${studentId}">
-                                            <svg class="bi" height="16px" width="16px" fill="current" role="img" aria-label="Tools">
-                                                <use xlink:href="/Student-Portal/assets/images/pencil-fill.svg"/>
-                                            </svg>
-                                            Edit Grades
-                                        </button>
-                                    </div>
-                                    <div class="col-sm">
-                                        <button type="button" class="btn btn-outline-secondary w-100 edit-info-btn m-1"
-                                            data-student-id="${studentId}">
-                                            <svg class="bi" height="16px" width="16px" fill="current" role="img" aria-label="Tools">
-                                                <use xlink:href="/Student-Portal/assets/images/pencil-fill.svg"/>
-                                            </svg>
-                                            Edit Info
-                                        </button>
-                                    </div>
-                                    <div class="col-sm">
-                                        <button type="button" class="btn btn-outline-primary w-100 enroll-btn m-1"
-                                            data-student-id="${studentId}">
-                                            <i class="bi bi-journal-plus"></i>
-                                            Enroll
-                                        </button>
-                                    </div>
-                                </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary btn-sm edit-grades-btn"
+                                    style="width: 110px;" data-student-id="${studentId}">
+                                    <i class="bi bi-pencil-square"></i> Grades
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm edit-info-btn"
+                                    style="width: 110px;" data-student-id="${studentId}">
+                                    <i class="bi bi-person-gear"></i> Info
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm enroll-btn"
+                                    style="width: 110px;" data-student-id="${studentId}">
+                                    <i class="bi bi-journal-plus"></i> Enroll
+                                </button>
                             </div>
                         </td>
                     </tr>

@@ -41,12 +41,26 @@ $course_id = (int)($student['course_id'] ?? 0);
         </div>
     </div>
 
-    <div class="row">
-        <!-- Enrollment Form -->
-        <div class="col-lg-8">
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-4" id="enrollmentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="enroll-tab" data-bs-toggle="tab" data-bs-target="#enroll-panel" type="button" role="tab">
+                <i class="bi bi-plus-circle me-1"></i> New Enrollment
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-panel" type="button" role="tab">
+                <i class="bi bi-clock-history me-1"></i> Enrollment History
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="enrollmentTabsContent">
+        <!-- New Enrollment Panel -->
+        <div class="tab-pane fade show active" id="enroll-panel" role="tabpanel" aria-labelledby="enroll-tab">
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white py-3">
-                    <h6 class="mb-0 fw-bold">New Enrollment</h6>
+                    <h6 class="mb-0 fw-bold">Select Term and Subjects</h6>
                 </div>
                 <div class="card-body">
                     <form id="enrollmentForm">
@@ -81,11 +95,22 @@ $course_id = (int)($student['course_id'] ?? 0);
 
                         <div class="d-grid mb-4">
                             <button type="button" class="btn btn-primary" id="loadSubjectsBtn">
-                                <i class="bi bi-arrow-repeat me-1"></i> Load Subjects
+                                <i class="bi bi-arrow-repeat me-1"></i> Load Available Subjects
                             </button>
                         </div>
 
                         <div id="subjectChecklistArea" style="display: none;">
+                            <!-- Subject Search Box -->
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="subjectSearch" class="form-control border-start-0 ps-0" placeholder="Search subjects by code or name...">
+                                </div>
+                                <div id="search-feedback" class="small text-muted mt-1" style="display:none;"></div>
+                            </div>
+
                             <div id="regularChecklist">
                                 <div class="mb-3">
                                     <h6 class="small fw-bold text-uppercase text-muted border-bottom pb-2">Curriculum Subjects</h6>
@@ -97,7 +122,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                                 <div class="accordion mb-4" id="othersAccordion">
                                     <div class="accordion-item border-0">
                                         <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed px-0 bg-transparent shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOthers">
+                                            <button class="accordion-button collapsed px-3 py-2 bg-light rounded shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOthers">
                                                 <span class="small fw-bold text-uppercase text-muted">Add Other Subjects</span>
                                             </button>
                                         </h2>
@@ -125,7 +150,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                                 </div>
                             </div>
 
-                            <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4 p-3 rounded-3">
+                            <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4 p-3 rounded-3 sticky-bottom bg-white shadow-sm" style="bottom: 1rem; z-index: 100;">
                                 <div>
                                     <span class="text-muted small">Total Units:</span>
                                     <span id="unitTotal" class="h5 mb-0 ms-2 fw-bold">0</span>
@@ -133,8 +158,8 @@ $course_id = (int)($student['course_id'] ?? 0);
                                 <div id="unitStatus" class="small"></div>
                             </div>
 
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-success btn-lg" id="submitEnrollment" disabled>
+                            <div class="d-grid shadow-sm rounded-pill overflow-hidden">
+                                <button type="submit" class="btn btn-success btn-lg py-3 fw-bold" id="submitEnrollment" disabled>
                                     Confirm Enrollment
                                 </button>
                             </div>
@@ -144,54 +169,56 @@ $course_id = (int)($student['course_id'] ?? 0);
             </div>
         </div>
 
-        <!-- Enrollment Confirmation Modal -->
-        <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-sm">
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark">Confirm enrollment</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body py-3">
-                        <p class="text-secondary mb-0">Are you sure you want to proceed with the enrollment for this student? This action cannot be undone once confirmed.</p>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0">
-                        <button type="button" class="btn btn-secondary px-4 py-2 border-0" data-bs-dismiss="modal" style="background-color: #6c757d;">Cancel</button>
-                        <button type="button" id="btnActualSubmit" class="btn btn-success px-4 py-2 border-0" style="background-color: #28a745;">Confirm</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Notification Modal -->
-        <div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-sm">
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark" id="statusModalTitleHeader">Notification</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body py-3">
-                        <p id="statusMsg" class="text-secondary mb-0"></p>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0">
-                        <button type="button" class="btn btn-secondary px-4 py-2 border-0" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- History Sidebar -->
-        <div class="col-lg-4">
+        <!-- Enrollment History Panel -->
+        <div class="tab-pane fade" id="history-panel" role="tabpanel" aria-labelledby="history-tab">
             <div class="card shadow-sm">
-                <div class="card-header bg-white py-3">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold">Enrollment History</h6>
+                    <button class="btn btn-outline-primary btn-sm" onclick="reloadHistory()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
                 </div>
                 <div class="card-body p-0" id="historyContainer">
-                    <div class="p-4 text-center text-muted">
+                    <div class="p-5 text-center text-muted">
                         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
                         Loading history...
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Enrollment Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark">Confirm enrollment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p class="text-secondary mb-0">Are you sure you want to proceed with the enrollment for this student? This action cannot be undone once confirmed.</p>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary px-4 py-2 border-0" data-bs-dismiss="modal" style="background-color: #6c757d;">Cancel</button>
+                    <button type="button" id="btnActualSubmit" class="btn btn-success px-4 py-2 border-0" style="background-color: #28a745;">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Notification Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark" id="statusModalTitleHeader">Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p id="statusMsg" class="text-secondary mb-0"></p>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary px-4 py-2 border-0" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -215,10 +242,106 @@ $course_id = (int)($student['course_id'] ?? 0);
     const historyContainer = document.getElementById('historyContainer');
     const semesterSelect = document.getElementById('semester');
     const yearLevelContainer = document.getElementById('yearLevelContainer');
+    const subjectSearch = document.getElementById('subjectSearch');
 
     let allSubjects = [];
     let curriculumData = [];
+    let allOtherSubjects = []; // For optimized loading
+    let selectedSubjects = new Map(); // id -> units (for persistent tracking)
     let enrollmentHistory = [];
+
+    // --- Search Functionality ---
+    function filterSubjects(searchTerm) {
+        const query = searchTerm.toLowerCase().trim();
+        const items = checklistArea.querySelectorAll('.list-group-item');
+        let visibleCount = 0;
+
+        // 1. Filter existing items (Curriculum, Retakes)
+        items.forEach(item => {
+            if (item.closest('#curriculumList') || item.closest('#retakeList') || item.closest('#summerAllList')) {
+                const code = item.querySelector('.fw-bold')?.textContent.toLowerCase() || '';
+                const name = item.querySelector('.small')?.textContent.toLowerCase() || '';
+                
+                if (code.includes(query) || name.includes(query)) {
+                    item.classList.remove('d-none');
+                    item.classList.add('d-flex');
+                    visibleCount++;
+                } else {
+                    item.classList.add('d-none');
+                    item.classList.remove('d-flex');
+                }
+            }
+        });
+
+        // 2. Perform Optimized Rendering for "Others"
+        if (query.length >= 2) {
+            const matches = allOtherSubjects.filter(s => 
+                s.subject_code.toLowerCase().includes(query) || 
+                s.subject_name.toLowerCase().includes(query)
+            );
+            
+            visibleCount += matches.length;
+            renderOptimizedOthers(matches);
+            
+            // Auto-expand "Others" if matches found
+            const othersCollapse = document.getElementById('collapseOthers');
+            if (othersCollapse && matches.length > 0 && !othersCollapse.classList.contains('show')) {
+                if (window.bootstrap && bootstrap.Collapse) {
+                    const bsCollapse = bootstrap.Collapse.getInstance(othersCollapse) || new bootstrap.Collapse(othersCollapse);
+                    bsCollapse.show();
+                } else {
+                    othersCollapse.classList.add('show');
+                }
+            }
+        } else {
+            othersList.innerHTML = '<div class="p-3 text-center text-muted small">Type at least 2 characters to search other subjects...</div>';
+        }
+
+        // Show feedback if searching
+        const feedback = document.getElementById('search-feedback');
+        if (query.length > 0) {
+            feedback.style.display = 'block';
+            feedback.textContent = `Found ${visibleCount} matches`;
+        } else {
+            feedback.style.display = 'none';
+        }
+    }
+
+    function renderOptimizedOthers(subjects) {
+        if (subjects.length === 0) {
+            othersList.innerHTML = '<div class="p-3 text-center text-muted small">No other subjects found.</div>';
+            return;
+        }
+        
+        // Only render first 50 to keep it snappy
+        const toRender = subjects.slice(0, 50);
+        othersList.innerHTML = toRender.map(s => {
+            const isChecked = selectedSubjects.has(s.subject_id.toString());
+            return `
+                <label class="list-group-item d-flex align-items-center">
+                    <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${s.subject_id}" 
+                           data-units="${s.units}" ${isChecked ? 'checked' : ''}>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="white-space: normal; word-break: break-word;">
+                                <span class="fw-bold">${s.subject_code}</span>
+                                <div class="small">${s.subject_name}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-secondary rounded-pill">${s.units} Units</span>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            `;
+        }).join('') + (subjects.length > 50 ? `<div class="p-2 text-center text-muted small">Showing 50 of ${subjects.length} results. Refine search for more.</div>` : '');
+        
+        attachCbHandlers();
+    }
+
+    if (subjectSearch) {
+        subjectSearch.addEventListener('input', (e) => filterSubjects(e.target.value));
+    }
 
     // Toggle year level based on semester
     semesterSelect.addEventListener('change', function() {
@@ -238,6 +361,13 @@ $course_id = (int)($student['course_id'] ?? 0);
         loadBtn.disabled = true;
         loadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
         
+        selectedSubjects.clear(); // Reset selection on reload
+        
+        // Reset search
+        if (subjectSearch) {
+            subjectSearch.value = '';
+        }
+        
         try {
             if (semester === 'Summer') {
                 const subRes = await fetch('/Student-Portal/admin/api/subjects/list');
@@ -254,7 +384,7 @@ $course_id = (int)($student['course_id'] ?? 0);
             alert('Error loading subjects: ' + err.message);
         } finally {
             loadBtn.disabled = false;
-            loadBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Load Subjects';
+            loadBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Load Available Subjects';
         }
     });
 
@@ -268,17 +398,22 @@ $course_id = (int)($student['course_id'] ?? 0);
         if (!enrollSubData.success) throw new Error(enrollSubData.message);
         
         const { curriculum, others } = enrollSubData.data;
+        allOtherSubjects = others; // Store for optimized searching
 
         // Render Curriculum
         curriculumList.innerHTML = curriculum.map(e => {
             const isPassed = parseInt(e.already_passed) > 0;
+            if (!isPassed) {
+                // Pre-select curriculum subjects if not passed
+                selectedSubjects.set(e.subject_id.toString(), parseInt(e.units));
+            }
             return `
                 <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${e.subject_id}" 
                            data-units="${e.units}" ${isPassed ? 'disabled' : 'checked'}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
+                            <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${e.subject_code}</span>
                                 <div class="small">${e.subject_name}</div>
                             </div>
@@ -292,24 +427,8 @@ $course_id = (int)($student['course_id'] ?? 0);
             `;
         }).join('') || '<div class="p-3 text-center text-muted small">No curriculum subjects for this term.</div>';
 
-        // Render Others
-        othersList.innerHTML = others.map(s => `
-            <label class="list-group-item d-flex align-items-center">
-                <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${s.subject_id}" 
-                       data-units="${s.units}">
-                <div class="flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="fw-bold">${s.subject_code}</span>
-                            <div class="small">${s.subject_name}</div>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-secondary rounded-pill">${s.units} Units</span>
-                        </div>
-                    </div>
-                </div>
-            </label>
-        `).join('') || '<div class="p-3 text-center text-muted small">No other subjects available.</div>';
+        // Clear Others render
+        othersList.innerHTML = '<div class="p-3 text-center text-muted small">Type to search other subjects...</div>';
 
         attachCbHandlers();
     }
@@ -340,7 +459,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                 <input type="hidden" class="retake-flag" name="retake_subject_ids[]" value="${r.subject_id}" disabled>
                 <div class="flex-grow-1">
                     <div class="d-flex justify-content-between">
-                        <div>
+                        <div style="white-space: normal; word-break: break-word;">
                             <span class="fw-bold">${r.subject_code}</span>
                             <div class="small">${r.subject_name}</div>
                             <div class="small text-danger">Failed in ${r.school_year} ${r.semester}</div>
@@ -365,7 +484,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                            data-units="${s.units}" ${isPassed ? 'disabled' : ''}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
+                            <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${s.subject_code}</span>
                                 <div class="small">${s.subject_name}</div>
                             </div>
@@ -384,23 +503,30 @@ $course_id = (int)($student['course_id'] ?? 0);
 
     function attachCbHandlers() {
         document.querySelectorAll('.subject-cb').forEach(cb => {
-            cb.addEventListener('change', function() {
+            cb.onclick = function() {
+                const sid = this.value;
+                const units = parseInt(this.getAttribute('data-units') || 0);
+                
+                if (this.checked) {
+                    selectedSubjects.set(sid, units);
+                } else {
+                    selectedSubjects.delete(sid);
+                }
+
                 // Handle retake hidden input sync
                 const retakeFlag = this.parentElement.querySelector('.retake-flag');
                 if (retakeFlag) {
                     retakeFlag.disabled = !this.checked;
                 }
                 updateUnitCount();
-            });
+            };
         });
     }
 
     function updateUnitCount() {
         let total = 0;
-        let count = 0;
-        document.querySelectorAll('.subject-cb:checked:not(:disabled)').forEach(cb => {
-            total += parseInt(cb.getAttribute('data-units') || 0);
-            count++;
+        selectedSubjects.forEach(units => {
+            total += units;
         });
 
         unitTotalEl.textContent = total;
@@ -420,6 +546,20 @@ $course_id = (int)($student['course_id'] ?? 0);
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // Ensure all selected subjects are included, even those not currently rendered!
+        // We'll append hidden inputs for subjects in selectedSubjects that are NOT already in the form.
+        const existingInputs = new Set([...form.querySelectorAll('input[name="subject_ids[]"]')].map(i => i.value));
+        
+        selectedSubjects.forEach((units, sid) => {
+            if (!existingInputs.has(sid)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'subject_ids[]';
+                input.value = sid;
+                form.appendChild(input);
+            }
+        });
+
         // Show Bootstrap Modal
         const modalEl = document.getElementById('confirmModal');
         const modal = new bootstrap.Modal(modalEl);
@@ -449,6 +589,9 @@ $course_id = (int)($student['course_id'] ?? 0);
                 showStatus(res.message, true);
                 reloadHistory();
                 checklistArea.style.display = 'none';
+                
+                // Remove the hidden inputs we added
+                form.querySelectorAll('input[type="hidden"][name="subject_ids[]"]').forEach(i => i.remove());
             } else {
                 showStatus('Enrollment failed: ' + res.message, false);
             }
@@ -512,10 +655,10 @@ $course_id = (int)($student['course_id'] ?? 0);
                         <table class="table table-sm table-hover mb-0 align-middle" style="font-size: 0.85rem;">
                             <thead class="bg-white">
                                 <tr class="text-muted small">
-                                    <th class="ps-3 border-0">Subject</th>
-                                    <th class="text-center border-0">Units</th>
-                                    <th class="text-center border-0">Status</th>
-                                    <th class="text-center border-0">Action</th>
+                                    <th class="ps-3 border-0" style="width: 50%;">Subject</th>
+                                    <th class="text-center border-0" style="width: 16.6%;">Units</th>
+                                    <th class="text-center border-0" style="width: 16.6%;">Status</th>
+                                    <th class="text-center border-0" style="width: 16.6%;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -532,7 +675,7 @@ $course_id = (int)($student['course_id'] ?? 0);
 
                 html += `
                     <tr>
-                        <td class="ps-3">
+                        <td class="ps-3" style="white-space: normal; word-break: break-word;">
                             <div class="fw-bold">${h.subject_code}</div>
                             <div class="text-muted" style="font-size: 0.75rem;">${h.subject_name}</div>
                             ${h.is_retake == 1 ? '<span class="badge bg-warning text-dark" style="font-size: 0.6rem;">Retake</span>' : ''}
