@@ -7,30 +7,45 @@
     
     <title>Portal Login</title>
     <link href="/Student-Portal/assets/css/bootstrap.css" rel="stylesheet" >
+    <link href="/Student-Portal/assets/css/app.css" rel="stylesheet">
 
 </head>
-<body class="bg-dark d-flex align-items-center justify-content-center vh-100" style="height: 100%;">
+<body>
+    <div class="login-shell">
+        <div class="login-panel">
+            <section class="login-brand">
+                <img src="/Student-Portal/assets/images/icon.png" alt="Portal icon">
+                <div class="text-uppercase small fw-semibold opacity-75 mb-2">Student Information System</div>
+                <h1>Clearer access to student and admin workflows.</h1>
+                <p class="mt-3">Sign in to review grades, manage records, and handle enrollment work from one streamlined portal.</p>
+                <div class="mt-4">
+                    <span class="login-feature">Secure sign-in</span>
+                    <span class="login-feature">Student records</span>
+                    <span class="login-feature">Enrollment tools</span>
+                </div>
+            </section>
 
-    <div class="card shadow p-3" style="width: 350px;">
-        <div class="d-flex align-items-center justify-content-center m-1" >
-            <img src="/Student-Portal/assets/images/icon.png" alt="" width="96" height="96">
+            <section class="login-form-panel">
+                <h2>Welcome back</h2>
+                <p class="text-muted mb-4">Use your portal credentials to continue.</p>
+
+                <form method="POST" action="/Student-Portal/login" id="loginForm">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+
+                    <div class="form-floating mb-3">
+                        <input type="text" name="username" class="form-control" id="username" placeholder="25-001" required>
+                        <label for="username">Username</label>
+                    </div>
+                    
+                    <div class="form-floating mb-4">
+                        <input type="password" name="password" class="form-control" id="password" placeholder="Password" required>
+                        <label for="password">Password</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+            </section>
         </div>
-
-        <form method="POST" action="/Student-Portal/login" id="loginForm">
-            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-
-            <div class="form-floating mb-3">
-                <input type="text" name="username" class="form-control" id="username" placeholder="25-001" required>
-                <label for="username">Username</label>
-            </div>
-            
-            <div class="form-floating mb-3">
-                <input type="password" name="password" class="form-control" id="password" placeholder="Password" required>
-                <label for="password">Password</label>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
     </div>
 
     <!-- Error Modal -->

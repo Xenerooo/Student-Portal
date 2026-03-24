@@ -1,48 +1,93 @@
 <?php require ROOT_PATH . '/views/layouts/header.php'; ?>
 
-<nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/Student-Portal/admin/dashboard">
-            <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="32">
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="get_student_list">Student List</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="get_manage_subjects">Manage Subjects</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="get_manage_curriculum">Manage Curriculum</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-content="get_create_student_form">Create Student</a>
-                </li>
+<div class="portal-shell">
+    <div class="portal-page">
+        <aside class="portal-sidebar d-flex flex-column">
+            <a class="portal-brand" href="/Student-Portal/admin/dashboard">
+                <span class="portal-brand-mark">
+                    <img src="/Student-Portal/assets/images/icon.png" alt="School Logo">
+                </span>
+                <span class="portal-brand-copy">
+                    <strong>Student Portal</strong>
+                    <small>Administration</small>
+                </span>
+            </a>
 
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="" data-content="admin_manage_account">Manage Account (Admin)</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-outline-light" href="/Student-Portal/logout">Logout (<?php echo htmlspecialchars($_SESSION['role'] ?? ''); ?>)</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+            <nav class="portal-nav">
+                <a class="nav-link" href="#" data-content="get_student_list">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 4h7v7H4V4Zm9 0h7v4h-7V4ZM13 10h7v10h-7V10ZM4 13h7v7H4v-7Z" fill="currentColor"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-link" href="#" data-content="get_manage_subjects">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M6 4.5A2.5 2.5 0 0 0 3.5 7v10A2.5 2.5 0 0 0 6 19.5h12a2.5 2.5 0 0 0 2.5-2.5V7A2.5 2.5 0 0 0 18 4.5H6Zm1.5 3h9v1.5h-9V7.5Zm0 4h9V13h-9v-1.5Zm0 4H13V17H7.5v-1.5Z" fill="currentColor"/>
+                    </svg>
+                    <span>Subjects</span>
+                </a>
+                <a class="nav-link" href="#" data-content="get_manage_curriculum">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M6 4h11a3 3 0 0 1 3 3v11H9a3 3 0 0 0-3 3V4Zm0 0a3 3 0 0 0-3 3v13h2a3 3 0 0 1 3-3h10V7a1 1 0 0 0-1-1H6Z" fill="currentColor"/>
+                    </svg>
+                    <span>Curriculum</span>
+                </a>
+                <a class="nav-link" href="#" data-content="get_create_student_form">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm-6 13a6 6 0 0 1 12 0H6Zm13-8V7h-2v3h-3v2h3v3h2v-3h3v-2h-3Z" fill="currentColor"/>
+                    </svg>
+                    <span>Create Student</span>
+                </a>
+                <a class="nav-link" href="" data-content="admin_manage_account">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8 8a8 8 0 1 0-16 0h16Z" fill="currentColor"/>
+                    </svg>
+                    <span>Account</span>
+                </a>
+            </nav>
 
-<div class="container mt-5">
-    <div id="main-content-area">
-        <div class="d-flex justify-content-center">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+            <div class="portal-sidebar-footer">
+                <a class="btn btn-outline-light" href="/Student-Portal/logout"><span>Log out</span></a>
             </div>
-        </div>
+        </aside>
+
+        <main class="portal-main">
+            <div class="portal-canvas">
+                <div class="portal-topbar">
+                    <div class="portal-breadcrumb">
+                        <button class="portal-toggle" type="button" id="sidebar-toggle" aria-label="Toggle sidebar">&#9776;</button>
+                        <span class="dot"></span>
+                        <span>Current module</span>
+                        <span>&rsaquo;</span>
+                        <span class="current" id="admin-current-view">Dashboard</span>
+                    </div>
+                    <div class="portal-tools">
+                        <input class="portal-search" type="text" value="Search" readonly aria-label="Search">
+                        <span class="portal-avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['role'] ?? 'A', 0, 1))) ?></span>
+                    </div>
+                </div>
+
+                <section class="portal-hero">
+                    <div class="eyebrow">Admin Workspace</div>
+                    <h2>Manage records with less clutter</h2>
+                    <p>Search students faster, update curriculum cleanly, and handle enrollment work from a calmer, more focused dashboard.</p>
+                    <div class="portal-hero-meta">
+                        <span class="portal-pill">Role: <?= htmlspecialchars($_SESSION['role'] ?? 'admin'); ?></span>
+                        <span class="portal-pill">Modules: Students, Subjects, Curriculum</span>
+                    </div>
+                </section>
+
+                <div class="portal-surface">
+                    <div id="main-content-area">
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
@@ -53,6 +98,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         const contentArea = document.getElementById('main-content-area');
         const navLinks = document.querySelectorAll('.nav-link[data-content]');
+        const currentViewLabel = document.getElementById('admin-current-view');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const collapsedStorageKey = 'portal-sidebar-collapsed';
         const ajaxActionMap = {
             'get_student_list': 'students',
             'get_manage_subjects': 'subjects',
@@ -62,6 +110,20 @@
         };
 
         const apiBasePath = '/Student-Portal/admin/api/';
+
+        function applySidebarState(isCollapsed) {
+            document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+        }
+
+        applySidebarState(localStorage.getItem(collapsedStorageKey) === 'true');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                const nextState = !document.body.classList.contains('sidebar-collapsed');
+                applySidebarState(nextState);
+                localStorage.setItem(collapsedStorageKey, String(nextState));
+            });
+        }
 
         // Global Fetch Interceptor to include CSRF token in all POST/PUT/DELETE requests
         const originalFetch = window.fetch;
@@ -127,6 +189,9 @@
                     navLinks.forEach(link => link.classList.remove('active'));
                     if (targetLink) {
                         targetLink.classList.add('active');
+                        if (currentViewLabel) {
+                            currentViewLabel.textContent = targetLink.textContent.trim();
+                        }
                     }
                     
                     history.pushState(null, '', `/Student-Portal/admin/dashboard?view=${action}`);
@@ -136,6 +201,8 @@
                     console.error('AJAX Error:', error);
                 });
         }
+
+        window.loadContent = loadContent;
 
         navLinks.forEach(link => {
             link.addEventListener('click', function(e) {
@@ -147,6 +214,9 @@
 
         if(defaultLink) {
              defaultLink.classList.add('active');
+             if (currentViewLabel) {
+                 currentViewLabel.textContent = defaultLink.textContent.trim();
+             }
         }
         loadContent(defaultContentAction, defaultLink);
     });

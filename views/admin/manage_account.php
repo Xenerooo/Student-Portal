@@ -3,10 +3,10 @@
 // Data provided by AdminController: $admin
 ?>
 
-<h1 class="mb-4 col-12 col-md-8 mx-auto">Manage My Account</h1>
-<div id="account-submission-message" class="mb-4 col-12 col-md-8 mx-auto"></div>
+<h1 class="mb-4">Manage My Account</h1>
+<div id="account-submission-message" class="mb-4"></div>
 
-<div class="card shadow col-12 col-md-8 mx-auto">
+<div class="card shadow">
     <div class="card-header bg-primary text-white">
         Account Settings
     </div>
