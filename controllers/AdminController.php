@@ -604,6 +604,14 @@ class AdminController extends BaseController {
 
         try {
             $enrollModel = new Enrollment($this->conn);
+            $allowedRetakeIds = array_map(
+                'intval',
+                array_column($enrollModel->getLatestFailedRetakeCandidates($student_id, $school_year, $semester), 'subject_id')
+            );
+            $invalidRetakes = array_diff($retake_ids, $allowedRetakeIds);
+            if (!empty($invalidRetakes)) {
+                $this->json(['success'=>false,'message'=>'Some retake subjects are not valid for the selected term.'],400);
+            }
             $count = $enrollModel->bulkEnroll($student_id, array_values($subject_ids), $school_year, $semester, array_values($retake_ids));
             $this->json(['success'=>true,'message'=>"Enrolled in $count subject(s) successfully."]);
         } catch (\Throwable $e) {
@@ -646,6 +654,27 @@ class AdminController extends BaseController {
         }
     }
 
+    public function getRetakeCandidates() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+        $school_year = trim($_GET['school_year'] ?? '');
+        $semester = trim($_GET['semester'] ?? '');
+        if (!$student_id) $this->json(['success'=>false,'message'=>'Invalid student ID.'],400);
+
+        try {
+            $enrollModel = new Enrollment($this->conn);
+            $candidates = $enrollModel->getLatestFailedRetakeCandidates(
+                $student_id,
+                $school_year !== '' ? $school_year : null,
+                $semester !== '' ? $semester : null
+            );
+            $this->json(['success'=>true,'retake_candidates'=>$candidates]);
+        } catch (\Throwable $e) {
+            $this->json(['success'=>false,'message'=>$e->getMessage()],500);
+        }
+    }
+
     public function getEnrollFormSubjects() {
         $this->checkAdmin();
         header('Content-Type: application/json');
@@ -653,6 +682,8 @@ class AdminController extends BaseController {
         $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
         $year_level = filter_input(INPUT_GET, 'year_level', FILTER_VALIDATE_INT);
         $semester_int = filter_input(INPUT_GET, 'semester_int', FILTER_VALIDATE_INT);
+        $school_year = trim($_GET['school_year'] ?? '');
+        $semester = trim($_GET['semester'] ?? '');
 
         if (!$student_id || !$year_level || !$semester_int) {
             $this->json(['success' => false, 'message' => 'Invalid parameters.'], 400);
@@ -661,7 +692,13 @@ class AdminController extends BaseController {
 
         $enrollModel = new Enrollment($this->conn);
         try {
-            $data = $enrollModel->getSubjectsForEnrollment($student_id, $year_level, $semester_int);
+            $data = $enrollModel->getSubjectsForEnrollment(
+                $student_id,
+                $year_level,
+                $semester_int,
+                $school_year !== '' ? $school_year : null,
+                $semester !== '' ? $semester : null
+            );
             $this->json(['success' => true, 'data' => $data]);
         } catch (\Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);

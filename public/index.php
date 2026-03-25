@@ -68,6 +68,7 @@ $router->map('POST', '/admin/api/students/enroll',            'App\\Controllers\
 $router->map('POST', '/admin/api/students/drop-subject',      'App\\Controllers\\AdminController#dropSubject',          'api_admin_drop_subject');
 $router->map('GET',  '/admin/api/students/enroll-form-subjects', 'App\\Controllers\\AdminController#getEnrollFormSubjects', 'api_admin_enroll_form_subjects');
 $router->map('GET',  '/admin/api/students/enrollment-history','App\\Controllers\\AdminController#getEnrollmentHistory', 'api_admin_enrollment_history');
+$router->map('GET',  '/admin/api/students/retake-candidates', 'App\\Controllers\\AdminController#getRetakeCandidates', 'api_admin_retake_candidates');
 $router->map('GET',  '/admin/api/subjects/list',              'App\\Controllers\\AdminController#getSubjectsList',       'api_admin_subjects_list');
 
 $router->map('GET', '/admin/api/account', 'App\\Controllers\\AdminController#getManageAccount', 'api_admin_manage_account');

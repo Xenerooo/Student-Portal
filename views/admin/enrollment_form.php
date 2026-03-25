@@ -9,6 +9,91 @@ $student_number = htmlspecialchars($student['student_number'] ?? '');
 $course_name = htmlspecialchars($student['course_name'] ?? '');
 $course_id = (int)($student['course_id'] ?? 0);
 ?>
+<style>
+    .enrollment-section-card {
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+    }
+    .enrollment-section-card + .enrollment-section-card {
+        margin-top: 1rem;
+    }
+    .retake-section-card {
+        border-color: #f5c2c7;
+        background: linear-gradient(180deg, #fff8f8 0%, #fffdfd 100%);
+        box-shadow: 0 0.5rem 1.25rem rgba(220, 53, 69, 0.08);
+    }
+    .section-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 1rem;
+    }
+    .section-helper {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .workspace-nav {
+        margin-bottom: 1rem;
+    }
+    .workspace-nav .workspace-tab {
+        border: 1px solid transparent !important;
+        border-top-left-radius: 0.375rem !important;
+        border-top-right-radius: 0.375rem !important;
+        color: #212529 !important;
+        font-weight: 700 !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+    }
+    .workspace-nav .workspace-tab:not(.active),
+    .workspace-nav .workspace-tab:not(.active):hover,
+    .workspace-nav .workspace-tab:not(.active):focus,
+    .workspace-nav .workspace-tab.nav-link:not(.active),
+    .workspace-nav .workspace-tab.nav-link:not(.active):hover,
+    .workspace-nav .workspace-tab.nav-link:not(.active):focus {
+        color: #212529 !important;
+    }
+    .workspace-nav .workspace-tab:hover,
+    .workspace-nav .workspace-tab:focus {
+        color: #212529 !important;
+        background-color: #f8f9fa !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+    }
+    .workspace-nav .workspace-tab.active {
+        color: #212529 !important;
+        background-color: #ffffff !important;
+        border-color: #dee2e6 #dee2e6 #ffffff !important;
+        box-shadow: none !important;
+    }
+    .workspace-count {
+        margin-left: 0.35rem;
+        font-weight: 700;
+    }
+    .workspace-count-retake {
+        color: #dc3545;
+    }
+    .workspace-count-curriculum {
+        color: #0d6efd;
+    }
+    .workspace-count-other {
+        color: #6c757d;
+    }
+    .workspace-nav .workspace-tab.active .workspace-count {
+        font-weight: 800;
+    }
+    .workspace-pane {
+        display: none;
+    }
+    .workspace-pane.active {
+        display: block;
+    }
+    .subject-workspace-loading {
+        opacity: 0.65;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+</style>
 <div class="container-fluid p-0">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -42,7 +127,7 @@ $course_id = (int)($student['course_id'] ?? 0);
     </div>
 
     <!-- Tab Navigation -->
-    <ul class="nav nav-tabs mb-4" id="enrollmentTabs" role="tablist">
+    <ul class="nav nav-tabs" id="enrollmentTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active fw-bold" id="enroll-tab" data-bs-toggle="tab" data-bs-target="#enroll-panel" type="button" role="tab">
                 <i class="bi bi-plus-circle me-1"></i> New Enrollment
@@ -93,59 +178,110 @@ $course_id = (int)($student['course_id'] ?? 0);
                             </div>
                         </div>
 
-                        <div class="d-grid mb-4">
-                            <button type="button" class="btn btn-primary" id="loadSubjectsBtn">
-                                <i class="bi bi-arrow-repeat me-1"></i> Load Available Subjects
-                            </button>
-                        </div>
-
                         <div id="subjectChecklistArea" style="display: none;">
-                            <!-- Subject Search Box -->
-                            <div class="mb-3">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0">
-                                        <i class="bi bi-search text-muted"></i>
-                                    </span>
-                                    <input type="text" id="subjectSearch" class="form-control border-start-0 ps-0" placeholder="Search subjects by code or name...">
-                                </div>
-                                <div id="search-feedback" class="small text-muted mt-1" style="display:none;"></div>
-                            </div>
-
                             <div id="regularChecklist">
-                                <div class="mb-3">
-                                    <h6 class="small fw-bold text-uppercase text-muted border-bottom pb-2">Curriculum Subjects</h6>
-                                    <div id="curriculumList" class="list-group list-group-flush mb-3">
-                                        <!-- Curriculum subjects injected here -->
+                                <ul class="nav nav-tabs workspace-nav" id="regularWorkspaceNav" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" class="nav-link workspace-tab" data-workspace-group="regular" data-workspace-target="regularRetakePane">Retakes <span class="workspace-count workspace-count-retake" id="retakeCandidateCount">0</span></button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" class="nav-link workspace-tab" data-workspace-group="regular" data-workspace-target="regularCurriculumPane">Curriculum <span class="workspace-count workspace-count-curriculum" id="curriculumSubjectCount">0</span></button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" class="nav-link workspace-tab" data-workspace-group="regular" data-workspace-target="regularOthersPane">Other Subjects <span class="workspace-count workspace-count-other" id="otherSubjectCount">0</span></button>
+                                    </li>
+                                </ul>
+                                <div class="m-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-muted" viewBox="0 0 16 16" aria-hidden="true">
+                                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.398 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.866-3.834zM12 6.5a5.5 5.5 0 1 1-11 0a5.5 5.5 0 0 1 11 0"/>
+                                            </svg>
+                                        </span>
+                                        <input type="text" id="subjectSearch" class="form-control border-start-0 ps-0" placeholder="Search subjects by code or name...">
+                                    </div>
+                                    <div id="search-feedback" class="small text-muted mt-1" style="display:none;"></div>
+                                    <div id="subject-loading-feedback" class="small text-primary mt-1" style="display:none;"></div>
+                                </div>
+
+                                <div class="workspace-pane" id="regularRetakePane" hidden aria-hidden="true" style="display:none;">
+                                    <div class="enrollment-section-card retake-section-card p-3 mb-3">
+                                        <div class="section-title-row mb-2">
+                                        <div>
+                                            <h6 class="small fw-bold text-uppercase text-danger mb-1">Failed Subjects (Retake Candidates)</h6>
+                                            <div class="section-helper">Latest failed takes are highlighted here and selected first so they are easy to review.</div>
+                                        </div>
+                                    </div>
+                                        <div id="regularRetakeList" class="list-group list-group-flush mb-0">
+                                            <!-- Regular retake candidates injected here -->
+                                        </div>
                                     </div>
                                 </div>
-                                
-                                <div class="accordion mb-4" id="othersAccordion">
-                                    <div class="accordion-item border-0">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed px-3 py-2 bg-light rounded shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOthers">
-                                                <span class="small fw-bold text-uppercase text-muted">Add Other Subjects</span>
-                                            </button>
-                                        </h2>
-                                        <div id="collapseOthers" class="accordion-collapse collapse" data-bs-parent="#othersAccordion">
-                                            <div id="othersList" class="list-group list-group-flush pt-2">
-                                                <!-- Other subjects injected here -->
-                                            </div>
+
+                                <div class="workspace-pane" id="regularCurriculumPane" hidden aria-hidden="true" style="display:none;">
+                                    <div class="enrollment-section-card p-3 mb-3">
+                                        <div class="section-title-row mb-2">
+                                        <div>
+                                            <h6 class="small fw-bold text-uppercase text-primary mb-1">Recommended Curriculum Subjects</h6>
+                                            <div class="section-helper">Core subjects for the selected year level and semester.</div>
+                                        </div>
+                                    </div>
+                                        <div id="curriculumList" class="list-group list-group-flush mb-0">
+                                            <!-- Curriculum subjects injected here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="workspace-pane" id="regularOthersPane" hidden aria-hidden="true" style="display:none;">
+                                    <div class="enrollment-section-card p-3 mb-4">
+                                        <div class="section-title-row mb-2">
+                                        <div>
+                                            <h6 class="small fw-bold text-uppercase text-muted mb-1">Other Subjects</h6>
+                                            <div class="section-helper">Search by code or name to add electives or non-curriculum subjects.</div>
+                                        </div>
+                                    </div>
+                                        <div id="othersList" class="list-group list-group-flush pt-2">
+                                            <!-- Other subjects injected here -->
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div id="summerChecklist" style="display: none;">
-                                <div class="mb-3">
-                                    <h6 class="small fw-bold text-uppercase text-muted border-bottom pb-2">Failed Subjects (Retake Candidates)</h6>
-                                    <div id="retakeList" class="list-group list-group-flush mb-3">
-                                        <!-- Retake candidates injected here -->
+                                <ul class="nav nav-tabs workspace-nav" id="summerWorkspaceNav" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" class="nav-link workspace-tab" data-workspace-group="summer" data-workspace-target="summerRetakePane">Retakes <span class="workspace-count workspace-count-retake" id="summerRetakeCount">0</span></button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" class="nav-link workspace-tab" data-workspace-group="summer" data-workspace-target="summerAvailablePane">Available <span class="workspace-count workspace-count-other" id="summerAvailableCount">0</span></button>
+                                    </li>
+                                </ul>
+
+                                <div class="workspace-pane" id="summerRetakePane" hidden aria-hidden="true" style="display:none;">
+                                    <div class="enrollment-section-card retake-section-card p-3 mb-3">
+                                        <div class="section-title-row mb-2">
+                                        <div>
+                                            <h6 class="small fw-bold text-uppercase text-danger mb-1">Failed Subjects (Retake Candidates)</h6>
+                                            <div class="section-helper">These are the subjects whose latest recorded take is still failed.</div>
+                                        </div>
+                                    </div>
+                                        <div id="retakeList" class="list-group list-group-flush mb-0">
+                                            <!-- Retake candidates injected here -->
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mb-4">
-                                    <h6 class="small fw-bold text-uppercase text-muted border-bottom pb-2">Available Subjects</h6>
-                                    <div id="summerAllList" class="list-group list-group-flush">
-                                        <!-- All subjects for summer injected here -->
+
+                                <div class="workspace-pane" id="summerAvailablePane" hidden aria-hidden="true" style="display:none;">
+                                    <div class="enrollment-section-card p-3 mb-4">
+                                        <div class="section-title-row mb-2">
+                                        <div>
+                                            <h6 class="small fw-bold text-uppercase text-primary mb-1">Other Available Subjects</h6>
+                                            <div class="section-helper">Use summer for additional load only after reviewing retake needs above.</div>
+                                        </div>
+                                    </div>
+                                        <div id="summerAllList" class="list-group list-group-flush">
+                                            <!-- All subjects for summer injected here -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -158,8 +294,8 @@ $course_id = (int)($student['course_id'] ?? 0);
                                 <div id="unitStatus" class="small"></div>
                             </div>
 
-                            <div class="d-grid shadow-sm rounded-pill overflow-hidden">
-                                <button type="submit" class="btn btn-success btn-lg py-3 fw-bold" id="submitEnrollment" disabled>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success w-100" id="submitEnrollment" disabled>
                                     Confirm Enrollment
                                 </button>
                             </div>
@@ -230,25 +366,39 @@ $course_id = (int)($student['course_id'] ?? 0);
     const studentId = <?= $student_id ?>;
     const courseId = <?= $course_id ?>;
     const form = document.getElementById('enrollmentForm');
-    const loadBtn = document.getElementById('loadSubjectsBtn');
     const checklistArea = document.getElementById('subjectChecklistArea');
     const curriculumList = document.getElementById('curriculumList');
     const othersList = document.getElementById('othersList');
+    const regularRetakeList = document.getElementById('regularRetakeList');
     const retakeList = document.getElementById('retakeList');
     const summerAllList = document.getElementById('summerAllList');
     const unitTotalEl = document.getElementById('unitTotal');
     const unitStatusEl = document.getElementById('unitStatus');
     const submitBtn = document.getElementById('submitEnrollment');
     const historyContainer = document.getElementById('historyContainer');
+    const schoolYearSelect = document.getElementById('schoolYear');
     const semesterSelect = document.getElementById('semester');
     const yearLevelContainer = document.getElementById('yearLevelContainer');
+    const yearLevelSelect = document.getElementById('yearLevel');
     const subjectSearch = document.getElementById('subjectSearch');
+    const subjectLoadingFeedback = document.getElementById('subject-loading-feedback');
+    const retakeCandidateCountEl = document.getElementById('retakeCandidateCount');
+    const curriculumSubjectCountEl = document.getElementById('curriculumSubjectCount');
+    const otherSubjectCountEl = document.getElementById('otherSubjectCount');
+    const summerRetakeCountEl = document.getElementById('summerRetakeCount');
+    const summerAvailableCountEl = document.getElementById('summerAvailableCount');
 
     let allSubjects = [];
     let curriculumData = [];
     let allOtherSubjects = []; // For optimized loading
     let selectedSubjects = new Map(); // id -> units (for persistent tracking)
     let enrollmentHistory = [];
+    let retakeCandidates = [];
+    let latestEnrollmentBySubject = new Map();
+    let isAutoLoadingSubjects = false;
+    let latestEnrollmentLoaded = false;
+    let subjectCatalogLoaded = false;
+    let lastSelectionKey = '';
 
     // --- Search Functionality ---
     function filterSubjects(searchTerm) {
@@ -258,7 +408,7 @@ $course_id = (int)($student['course_id'] ?? 0);
 
         // 1. Filter existing items (Curriculum, Retakes)
         items.forEach(item => {
-            if (item.closest('#curriculumList') || item.closest('#retakeList') || item.closest('#summerAllList')) {
+            if (item.closest('#curriculumList') || item.closest('#regularRetakeList') || item.closest('#retakeList') || item.closest('#summerAllList')) {
                 const code = item.querySelector('.fw-bold')?.textContent.toLowerCase() || '';
                 const name = item.querySelector('.small')?.textContent.toLowerCase() || '';
                 
@@ -282,15 +432,12 @@ $course_id = (int)($student['course_id'] ?? 0);
             
             visibleCount += matches.length;
             renderOptimizedOthers(matches);
-            
-            // Auto-expand "Others" if matches found
-            const othersCollapse = document.getElementById('collapseOthers');
-            if (othersCollapse && matches.length > 0 && !othersCollapse.classList.contains('show')) {
-                if (window.bootstrap && bootstrap.Collapse) {
-                    const bsCollapse = bootstrap.Collapse.getInstance(othersCollapse) || new bootstrap.Collapse(othersCollapse);
-                    bsCollapse.show();
+
+            if (matches.length > 0) {
+                if (semesterSelect.value === 'Summer') {
+                    setWorkspace('summer', 'summerAvailablePane');
                 } else {
-                    othersCollapse.classList.add('show');
+                    setWorkspace('regular', 'regularOthersPane');
                 }
             }
         } else {
@@ -316,11 +463,13 @@ $course_id = (int)($student['course_id'] ?? 0);
         // Only render first 50 to keep it snappy
         const toRender = subjects.slice(0, 50);
         othersList.innerHTML = toRender.map(s => {
+            const latestTake = latestEnrollmentBySubject.get(parseInt(s.subject_id));
+            const isPassed = latestTake && latestTake.status === 'passed';
             const isChecked = selectedSubjects.has(s.subject_id.toString());
             return `
-                <label class="list-group-item d-flex align-items-center">
+                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${s.subject_id}" 
-                           data-units="${s.units}" ${isChecked ? 'checked' : ''}>
+                           data-units="${s.units}" ${isChecked && !isPassed ? 'checked' : ''} ${isPassed ? 'disabled' : ''}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="white-space: normal; word-break: break-word;">
@@ -329,6 +478,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-secondary rounded-pill">${s.units} Units</span>
+                                ${isPassed ? '<span class="d-block small text-success">Already passed</span>' : ''}
                             </div>
                         </div>
                     </div>
@@ -339,69 +489,197 @@ $course_id = (int)($student['course_id'] ?? 0);
         attachCbHandlers();
     }
 
+    function setText(el, value) {
+        if (el) el.textContent = value;
+    }
+
+    async function loadLatestEnrollmentMap() {
+        if (latestEnrollmentLoaded) return;
+
+        const histRes = await fetch(`/Student-Portal/admin/api/students/enrollment-history?student_id=${studentId}`);
+        const histData = await histRes.json();
+        if (!histData.success) throw new Error(histData.message);
+
+        latestEnrollmentBySubject = new Map();
+        (histData.history || []).forEach(h => {
+            const sid = parseInt(h.subject_id);
+            if (!latestEnrollmentBySubject.has(sid)) {
+                latestEnrollmentBySubject.set(sid, h);
+            }
+        });
+        latestEnrollmentLoaded = true;
+    }
+
+    async function loadAllSubjectsCatalog() {
+        if (subjectCatalogLoaded) return;
+
+        const subRes = await fetch('/Student-Portal/admin/api/subjects/list');
+        const subData = await subRes.json();
+        if (!subData.success) throw new Error(subData.message || 'Failed to load subjects.');
+        allSubjects = subData.subjects || [];
+        subjectCatalogLoaded = true;
+    }
+
+    function setSubjectLoadingState(isLoading, message = 'Updating subject recommendations...') {
+        checklistArea.classList.toggle('subject-workspace-loading', isLoading);
+        if (subjectLoadingFeedback) {
+            subjectLoadingFeedback.style.display = isLoading ? 'block' : 'none';
+            subjectLoadingFeedback.innerHTML = isLoading
+                ? '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' + message
+                : '';
+        }
+    }
+
+    function setWorkspace(group, targetId) {
+        document.querySelectorAll(`[data-workspace-group="${group}"]`).forEach(btn => {
+            const isActiveButton = btn.getAttribute('data-workspace-target') === targetId;
+            btn.classList.toggle('active', isActiveButton);
+            btn.setAttribute('aria-selected', isActiveButton ? 'true' : 'false');
+            btn.style.color = '#212529';
+            btn.style.backgroundColor = isActiveButton ? '#ffffff' : 'transparent';
+            btn.style.borderColor = isActiveButton ? '#dee2e6 #dee2e6 #ffffff' : 'transparent';
+            btn.style.boxShadow = 'none';
+        });
+        const prefix = group === 'regular' ? 'regular' : 'summer';
+        document.querySelectorAll(`[id^="${prefix}"][id$="Pane"]`).forEach(pane => {
+            const isActive = pane.id === targetId;
+            pane.classList.toggle('active', isActive);
+            pane.hidden = !isActive;
+            pane.style.display = isActive ? 'block' : 'none';
+            pane.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        });
+    }
+
+    function updateSubjectSummary({ retakes = 0, curriculum = 0, others = 0 }) {
+        setText(retakeCandidateCountEl, `(${retakes})`);
+        setText(curriculumSubjectCountEl, `(${curriculum})`);
+        setText(otherSubjectCountEl, `(${others})`);
+        setText(summerRetakeCountEl, `(${retakes})`);
+        setText(summerAvailableCountEl, `(${others})`);
+
+        if (retakeCandidateCountEl) retakeCandidateCountEl.style.color = '#dc3545';
+        if (summerRetakeCountEl) summerRetakeCountEl.style.color = '#dc3545';
+        if (curriculumSubjectCountEl) curriculumSubjectCountEl.style.color = '#0d6efd';
+        if (otherSubjectCountEl) otherSubjectCountEl.style.color = '#6c757d';
+        if (summerAvailableCountEl) summerAvailableCountEl.style.color = '#6c757d';
+    }
+
     if (subjectSearch) {
         subjectSearch.addEventListener('input', (e) => filterSubjects(e.target.value));
     }
 
+    document.querySelectorAll('[data-workspace-group][data-workspace-target]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            setWorkspace(this.getAttribute('data-workspace-group'), this.getAttribute('data-workspace-target'));
+        });
+    });
+
+    async function loadSubjectsForCurrentSelection() {
+        if (isAutoLoadingSubjects) return;
+
+        const semester = semesterSelect.value;
+        const schoolYear = schoolYearSelect.value;
+        const yearLevel = yearLevelSelect.value;
+        const selectionKey = `${schoolYear}|${semester}|${yearLevel}`;
+        if (selectionKey === lastSelectionKey && checklistArea.style.display !== 'none') return;
+        isAutoLoadingSubjects = true;
+        selectedSubjects.clear();
+
+        if (subjectSearch) {
+            subjectSearch.value = '';
+        }
+
+        try {
+            await loadLatestEnrollmentMap();
+            checklistArea.style.display = 'block';
+            setSubjectLoadingState(true);
+
+            if (semester === 'Summer') {
+                await loadAllSubjectsCatalog();
+                const retakeRes = await fetch(`/Student-Portal/admin/api/students/retake-candidates?student_id=${studentId}&school_year=${encodeURIComponent(schoolYear)}&semester=${encodeURIComponent(semester)}`);
+                const retakeData = await retakeRes.json();
+                if (!retakeData.success) throw new Error(retakeData.message);
+                retakeCandidates = retakeData.retake_candidates || [];
+                await renderSummerChecklist();
+            } else {
+                await renderRegularChecklist(yearLevel, semester === '1st Semester' ? 1 : 2, schoolYear, semester);
+            }
+
+            lastSelectionKey = selectionKey;
+            updateUnitCount();
+        } catch (err) {
+            alert('Error loading subjects: ' + err.message);
+        } finally {
+            setSubjectLoadingState(false);
+            isAutoLoadingSubjects = false;
+        }
+    }
+
     // Toggle year level based on semester
-    semesterSelect.addEventListener('change', function() {
+    semesterSelect.addEventListener('change', async function() {
         if (this.value === 'Summer') {
             yearLevelContainer.style.display = 'none';
         } else {
             yearLevelContainer.style.display = 'block';
         }
-        checklistArea.style.display = 'none';
+        await loadSubjectsForCurrentSelection();
     });
 
-    // Load Subjects Action
-    loadBtn.addEventListener('click', async function() {
-        const semester = semesterSelect.value;
-        const yearLevel = document.getElementById('yearLevel').value;
-        
-        loadBtn.disabled = true;
-        loadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
-        
-        selectedSubjects.clear(); // Reset selection on reload
-        
-        // Reset search
-        if (subjectSearch) {
-            subjectSearch.value = '';
-        }
-        
-        try {
-            if (semester === 'Summer') {
-                const subRes = await fetch('/Student-Portal/admin/api/subjects/list');
-                const subData = await subRes.json();
-                allSubjects = subData.subjects || [];
-                await renderSummerChecklist();
-            } else {
-                await renderRegularChecklist(yearLevel, semester === '1st Semester' ? 1 : 2);
-            }
-            
-            checklistArea.style.display = 'block';
-            updateUnitCount();
-        } catch (err) {
-            alert('Error loading subjects: ' + err.message);
-        } finally {
-            loadBtn.disabled = false;
-            loadBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Load Available Subjects';
+    yearLevelSelect.addEventListener('change', async function() {
+        if (semesterSelect.value !== 'Summer') {
+            await loadSubjectsForCurrentSelection();
         }
     });
 
-    async function renderRegularChecklist(yearLevel, semInt) {
+    schoolYearSelect.addEventListener('change', async function() {
+        await loadSubjectsForCurrentSelection();
+    });
+
+    async function renderRegularChecklist(yearLevel, semInt, schoolYear, semesterLabel) {
         document.getElementById('regularChecklist').style.display = 'block';
         document.getElementById('summerChecklist').style.display = 'none';
         
-        const enrollSubRes = await fetch(`/Student-Portal/admin/api/students/enroll-form-subjects?student_id=${studentId}&year_level=${yearLevel}&semester_int=${semInt}`);
+        const enrollSubRes = await fetch(`/Student-Portal/admin/api/students/enroll-form-subjects?student_id=${studentId}&year_level=${yearLevel}&semester_int=${semInt}&school_year=${encodeURIComponent(schoolYear)}&semester=${encodeURIComponent(semesterLabel)}`);
         const enrollSubData = await enrollSubRes.json();
         
         if (!enrollSubData.success) throw new Error(enrollSubData.message);
         
-        const { curriculum, others } = enrollSubData.data;
-        allOtherSubjects = others; // Store for optimized searching
+        const { curriculum, others, retake_candidates } = enrollSubData.data;
+        retakeCandidates = retake_candidates || [];
+        const retakeIds = new Set(retakeCandidates.map(r => parseInt(r.subject_id)));
+        allOtherSubjects = (others || []).filter(s => !retakeIds.has(parseInt(s.subject_id)));
+        const regularCurriculum = (curriculum || []).filter(e => !retakeIds.has(parseInt(e.subject_id)));
+
+        retakeCandidates.forEach(r => {
+            selectedSubjects.set(r.subject_id.toString(), parseInt(r.units));
+        });
+
+        regularRetakeList.innerHTML = retakeCandidates.map(r => `
+            <label class="list-group-item d-flex align-items-center">
+                <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${r.subject_id}" 
+                       data-units="${r.units}" data-retake="1" checked>
+                <input type="hidden" class="retake-flag" name="retake_subject_ids[]" value="${r.subject_id}">
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                        <div style="white-space: normal; word-break: break-word;">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="fw-bold">${r.subject_code}</span>
+                                <span class="badge text-bg-danger">Latest take: Failed</span>
+                                <span class="badge text-bg-warning text-dark">Recommended</span>
+                            </div>
+                            <div class="small">${r.subject_name}</div>
+                            <div class="small text-danger">Latest take failed in ${r.school_year} ${r.semester}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-secondary rounded-pill">${r.units} Units</span>
+                        </div>
+                    </div>
+                </div>
+            </label>
+        `).join('') || '<div class="p-3 text-center text-muted small">No failed subjects for retake.</div>';
 
         // Render Curriculum
-        curriculumList.innerHTML = curriculum.map(e => {
+        curriculumList.innerHTML = regularCurriculum.map(e => {
             const isPassed = parseInt(e.already_passed) > 0;
             if (!isPassed) {
                 // Pre-select curriculum subjects if not passed
@@ -427,6 +705,18 @@ $course_id = (int)($student['course_id'] ?? 0);
             `;
         }).join('') || '<div class="p-3 text-center text-muted small">No curriculum subjects for this term.</div>';
 
+        updateSubjectSummary({
+            retakes: retakeCandidates.length,
+            curriculum: regularCurriculum.length,
+            others: allOtherSubjects.length
+        });
+
+        if (retakeCandidates.length > 0) {
+            setWorkspace('regular', 'regularRetakePane');
+        } else {
+            setWorkspace('regular', 'regularCurriculumPane');
+        }
+
         // Clear Others render
         othersList.innerHTML = '<div class="p-3 text-center text-muted small">Type to search other subjects...</div>';
 
@@ -437,30 +727,26 @@ $course_id = (int)($student['course_id'] ?? 0);
         document.getElementById('regularChecklist').style.display = 'none';
         document.getElementById('summerChecklist').style.display = 'block';
 
-        // 1. Fetch history for retakes
-        const histRes = await fetch(`/Student-Portal/admin/api/students/enrollment-history?student_id=${studentId}`);
-        const histData = await histRes.json();
-        
-        // Failed subjects without subsequent pass
-        const passedIds = (histData.history || []).filter(h => h.status === 'passed').map(h => parseInt(h.subject_id));
-        const failedMap = {};
-        (histData.history || []).filter(h => h.status === 'failed').forEach(h => {
-             const sid = parseInt(h.subject_id);
-             if (!passedIds.includes(sid)) {
-                 failedMap[sid] = h;
-             }
+        const retakes = retakeCandidates || [];
+        const retakeIds = new Set(retakes.map(r => parseInt(r.subject_id)));
+
+        retakes.forEach(r => {
+            selectedSubjects.set(r.subject_id.toString(), parseInt(r.units));
         });
 
-        const retakes = Object.values(failedMap);
         retakeList.innerHTML = retakes.map(r => `
             <label class="list-group-item d-flex align-items-center">
                 <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${r.subject_id}" 
-                       data-units="${r.units}" data-retake="1">
-                <input type="hidden" class="retake-flag" name="retake_subject_ids[]" value="${r.subject_id}" disabled>
+                       data-units="${r.units}" data-retake="1" checked>
+                <input type="hidden" class="retake-flag" name="retake_subject_ids[]" value="${r.subject_id}">
                 <div class="flex-grow-1">
                     <div class="d-flex justify-content-between">
                         <div style="white-space: normal; word-break: break-word;">
-                            <span class="fw-bold">${r.subject_code}</span>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="fw-bold">${r.subject_code}</span>
+                                <span class="badge text-bg-danger">Latest take: Failed</span>
+                                <span class="badge text-bg-warning text-dark">Recommended</span>
+                            </div>
                             <div class="small">${r.subject_name}</div>
                             <div class="small text-danger">Failed in ${r.school_year} ${r.semester}</div>
                         </div>
@@ -473,10 +759,11 @@ $course_id = (int)($student['course_id'] ?? 0);
         `).join('') || '<div class="p-3 text-center text-muted small">No failed subjects for retake.</div>';
 
         // 2. All available
-        summerAllList.innerHTML = allSubjects.map(s => {
-            const isPassed = passedIds.includes(parseInt(s.subject_id));
-            const isFailed = failedMap[parseInt(s.subject_id)];
-            if (isFailed) return ''; // Skip if in retake list above
+        const summerAvailableSubjects = allSubjects.filter(s => !retakeIds.has(parseInt(s.subject_id)));
+        summerAllList.innerHTML = summerAvailableSubjects.map(s => {
+            const sid = parseInt(s.subject_id);
+            const latestTake = latestEnrollmentBySubject.get(sid);
+            const isPassed = latestTake && latestTake.status === 'passed';
             
             return `
                 <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''}">
@@ -496,7 +783,19 @@ $course_id = (int)($student['course_id'] ?? 0);
                     </div>
                 </label>
             `;
-        }).join('');
+        }).join('') || '<div class="p-3 text-center text-muted small">No additional summer subjects available.</div>';
+
+        updateSubjectSummary({
+            retakes: retakes.length,
+            curriculum: 0,
+            others: summerAvailableSubjects.length
+        });
+
+        if (retakes.length > 0) {
+            setWorkspace('summer', 'summerRetakePane');
+        } else {
+            setWorkspace('summer', 'summerAvailablePane');
+        }
 
         attachCbHandlers();
     }
@@ -731,6 +1030,7 @@ $course_id = (int)($student['course_id'] ?? 0);
 
     // Initialize
     reloadHistory();
+    loadSubjectsForCurrentSelection();
 
 
 })();

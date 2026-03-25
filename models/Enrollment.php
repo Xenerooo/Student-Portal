@@ -34,7 +34,7 @@ class Enrollment extends BaseModel {
   // Returns curriculum subjects for pre-filling enrollment checklist
   // AND all other subjects not in that curriculum position for "Add others"
   // semester_int is 1 or 2 (INT from curriculum table)
-  public function getSubjectsForEnrollment($student_id, $year_level, $semester_int): array {
+  public function getSubjectsForEnrollment($student_id, $year_level, $semester_int, $target_school_year = null, $target_semester = null): array {
     // Part A — curriculum subjects (pre-fill)
     $sqlA = "SELECT c.subject_id, s.subject_code, s.subject_name, s.units,
                    (SELECT COUNT(*) FROM enrollments
@@ -66,33 +66,92 @@ class Enrollment extends BaseModel {
     $stmtB->execute();
     $others = $stmtB->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    return ['curriculum' => $curriculum, 'others' => $others];
+    return [
+      'curriculum' => $curriculum,
+      'others' => $others,
+      'retake_candidates' => $this->getLatestFailedRetakeCandidates($student_id, $target_school_year, $target_semester)
+    ];
   }
 
-  // Returns failed subjects with no subsequent passing enrollment
-  // Used for: Summer enrollment retake candidates, irregular detection
-  public function getFailedSubjectsWithoutRetake($student_id): array {
-    $sql = "SELECT e.subject_id, s.subject_code,
+  // Returns subjects whose latest take is currently failed.
+  // Used for: retake candidates during subject loading.
+  public function getLatestFailedRetakeCandidates($student_id, $target_school_year = null, $target_semester = null): array {
+    $sql = "SELECT e.subject_id,
+                   s.subject_code,
                    s.subject_name,
-                   s.units, e.school_year, e.semester,
-                   g.semester_grade as grade, g.remarks
+                   s.units,
+                   e.school_year,
+                   e.semester,
+                   e.status,
+                   g.semester_grade as grade,
+                   g.remarks
             FROM enrollments e
             JOIN subjects s ON s.subject_id = e.subject_id
-            LEFT JOIN curriculum c ON c.subject_id = e.subject_id
-              AND c.course_id = (SELECT course_id FROM students WHERE student_id = ?)
             LEFT JOIN grades g ON g.student_id = e.student_id
               AND g.subject_id = e.subject_id
-              AND g.school_year = e.school_year AND g.semester = e.semester
+              AND g.school_year = e.school_year
+              AND g.semester = e.semester
             WHERE e.student_id = ?
               AND e.status = 'failed'
-              AND e.subject_id NOT IN (
-                SELECT subject_id FROM enrollments
-                WHERE student_id = ? AND status = 'passed'
+              AND (
+                ? IS NULL
+                OR ? IS NULL
+                OR CAST(SUBSTRING_INDEX(e.school_year, '-', 1) AS UNSIGNED) < CAST(SUBSTRING_INDEX(?, '-', 1) AS UNSIGNED)
+                OR (
+                  CAST(SUBSTRING_INDEX(e.school_year, '-', 1) AS UNSIGNED) = CAST(SUBSTRING_INDEX(?, '-', 1) AS UNSIGNED)
+                  AND (
+                    CASE e.semester
+                      WHEN '1st Semester' THEN 1
+                      WHEN '2nd Semester' THEN 2
+                      WHEN 'Summer' THEN 3
+                      ELSE 0
+                    END
+                  ) < (
+                    CASE ?
+                      WHEN '1st Semester' THEN 1
+                      WHEN '2nd Semester' THEN 2
+                      WHEN 'Summer' THEN 3
+                      ELSE 0
+                    END
+                  )
+                )
+              )
+              AND NOT EXISTS (
+                SELECT 1
+                FROM enrollments newer
+                WHERE newer.student_id = e.student_id
+                  AND newer.subject_id = e.subject_id
+                  AND (
+                    CAST(SUBSTRING_INDEX(newer.school_year, '-', 1) AS UNSIGNED) > CAST(SUBSTRING_INDEX(e.school_year, '-', 1) AS UNSIGNED)
+                    OR (
+                      CAST(SUBSTRING_INDEX(newer.school_year, '-', 1) AS UNSIGNED) = CAST(SUBSTRING_INDEX(e.school_year, '-', 1) AS UNSIGNED)
+                      AND (
+                        CASE newer.semester
+                          WHEN '1st Semester' THEN 1
+                          WHEN '2nd Semester' THEN 2
+                          WHEN 'Summer' THEN 3
+                          ELSE 0
+                        END
+                      ) > (
+                        CASE e.semester
+                          WHEN '1st Semester' THEN 1
+                          WHEN '2nd Semester' THEN 2
+                          WHEN 'Summer' THEN 3
+                          ELSE 0
+                        END
+                      )
+                    )
+                    OR (
+                      newer.school_year = e.school_year
+                      AND newer.semester = e.semester
+                      AND newer.enrollment_id > e.enrollment_id
+                    )
+                  )
               )
             ORDER BY s.subject_code";
-    
+
     $stmt = $this->conn->prepare($sql);
-    $stmt->bind_param("iii", $student_id, $student_id, $student_id);
+    $stmt->bind_param("isssss", $student_id, $target_school_year, $target_semester, $target_school_year, $target_school_year, $target_semester);
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
   }
@@ -142,7 +201,7 @@ class Enrollment extends BaseModel {
   // Returns all enrollment history for a student grouped by term
   // Used for: enrollment form history section, admin history view
   public function getEnrollmentHistory($student_id): array {
-    $sql = "SELECT e.enrollment_id, e.school_year, e.semester, e.status, e.is_retake,
+    $sql = "SELECT e.enrollment_id, e.subject_id, e.school_year, e.semester, e.status, e.is_retake,
                    s.subject_code, s.units,
                    s.subject_name,
                    g.semester_grade as grade, g.remarks
@@ -152,7 +211,15 @@ class Enrollment extends BaseModel {
               AND g.subject_id = e.subject_id
               AND g.school_year = e.school_year AND g.semester = e.semester
             WHERE e.student_id = ?
-            ORDER BY e.school_year DESC, e.semester DESC, s.subject_code";
+            ORDER BY CAST(SUBSTRING_INDEX(e.school_year, '-', 1) AS UNSIGNED) DESC,
+                     CASE e.semester
+                       WHEN 'Summer' THEN 3
+                       WHEN '2nd Semester' THEN 2
+                       WHEN '1st Semester' THEN 1
+                       ELSE 0
+                     END DESC,
+                     e.enrollment_id DESC,
+                     s.subject_code";
     
     $stmt = $this->conn->prepare($sql);
     $stmt->bind_param("i", $student_id);
@@ -184,7 +251,13 @@ class Enrollment extends BaseModel {
     $sql = "SELECT DISTINCT school_year, semester
             FROM enrollments
             WHERE student_id = ?
-            ORDER BY school_year DESC, semester DESC";
+            ORDER BY CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) DESC,
+                     CASE semester
+                       WHEN 'Summer' THEN 3
+                       WHEN '2nd Semester' THEN 2
+                       WHEN '1st Semester' THEN 1
+                       ELSE 0
+                     END DESC";
     $stmt = $this->conn->prepare($sql);
     $stmt->bind_param("i", $student_id);
     $stmt->execute();
