@@ -48,6 +48,7 @@
                     <thead>
                         <tr>
                             <th>Subject Code</th>
+                            <th>Subject Name</th>
                             <th>Units</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -57,9 +58,11 @@
                             <tr class="subject-row" 
                                 id="subject-row-<?php echo h($subject['subject_id']); ?>"
                                 data-subject-code="<?php echo h(strtolower($subject['subject_code'])); ?>"
+                                data-subject-name="<?php echo h(strtolower($subject['subject_name'] ?? '')); ?>"
                                 data-units="<?php echo h($subject['units']); ?>">
-                                <td><?php echo h($subject['subject_code']); ?></td>
-                                <td><?php echo h($subject['units']); ?></td>
+                                <td class="subject-code-cell"><?php echo h($subject['subject_code']); ?></td>
+                                <td class="subject-name-cell"><?php echo h($subject['subject_name'] ?? ''); ?></td>
+                                <td class="units-cell"><?php echo h($subject['units']); ?></td>
                                 <td class="text-end">
                                     <button type="button" 
                                             class="btn btn-danger btn-sm delete-subject-btn" 
@@ -91,6 +94,11 @@
                         <label for="subject_code" class="form-label">Subject Code <span class="text-danger">*</span></label>
                         <input type="text" name="subject_code" id="subject_code" class="form-control" 
                                placeholder="e.g., CS101, MATH102" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject_name" class="form-label">Subject Name <span class="text-danger">*</span></label>
+                        <input type="text" name="subject_name" id="subject_name" class="form-control" 
+                               placeholder="e.g., Introduction to Computing" required>
                     </div>
                     <div class="mb-3">
                         <label for="units" class="form-label">Units <span class="text-danger">*</span></label>
@@ -211,9 +219,10 @@
             // Filter rows
             rows.forEach(row => {
                 const subjectCode = row.getAttribute('data-subject-code') || '';
+                const subjectName = row.getAttribute('data-subject-name') || '';
                 const units = row.getAttribute('data-units') || '';
                 
-                if (subjectCode.includes(searchLower) || units.includes(searchLower)) {
+                if (subjectCode.includes(searchLower) || subjectName.includes(searchLower) || units.includes(searchLower)) {
                     row.style.display = '';
                     visibleCount++;
                 } else {

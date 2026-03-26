@@ -1,0 +1,123 @@
+.profile-shell {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.profile-hero {
+    position: relative;
+    overflow: hidden;
+    border: 0;
+    background:
+        radial-gradient(circle at top right, rgba(13, 110, 253, 0.22), transparent 34%),
+        linear-gradient(135deg, #0f172a 0%, #1d4ed8 45%, #2563eb 100%);
+    color: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 1.25rem 2.75rem rgba(15, 23, 42, 0.18);
+}
+
+.profile-hero::after {
+    content: "";
+    position: absolute;
+    inset: auto -8rem -8rem auto;
+    width: 16rem;
+    height: 16rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    filter: blur(2px);
+}
+
+.profile-avatar,
+.profile-avatar-fallback {
+    width: 108px;
+    height: 108px;
+    border-radius: 1rem;
+    border: 5px solid #ffffff;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.35),
+        0 0.75rem 1.5rem rgba(15, 23, 42, 0.18);
+}
+
+.profile-avatar {
+    object-fit: cover;
+    background: #fff;
+}
+
+.profile-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.profile-card {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 1.25rem;
+    box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.08);
+}
+
+.section-label {
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.info-item {
+    padding: 0.9rem 1rem;
+    border-radius: 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    height: 100%;
+}
+
+.info-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.security-panel {
+    background:
+        linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 1));
+}
+
+.password-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.initial-chip {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}

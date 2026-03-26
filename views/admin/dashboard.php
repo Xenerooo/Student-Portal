@@ -2,7 +2,7 @@
 
 <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="index.php?page=admin_dashboard">
+        <a class="navbar-brand" href="/Student-Portal/admin/dashboard">
             <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="32">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

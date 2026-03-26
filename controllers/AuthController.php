@@ -9,6 +9,10 @@ class AuthController extends BaseController {
         // If already logged in, redirect
         if (isset($_SESSION['role'])) {
             if ($_SESSION['role'] === 'student') {
+                if (!empty($_SESSION['must_change_password'])) {
+                    header("Location: /Student-Portal/student/change-password");
+                    exit();
+                }
                 header("Location: /Student-Portal/student/dashboard");
                 exit();
             } elseif ($_SESSION['role'] === 'admin') {
@@ -38,6 +42,8 @@ class AuthController extends BaseController {
 
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['role'] = $user['role'];
+            $_SESSION['username'] = $user['username'] ?? $username;
+            $_SESSION['must_change_password'] = !empty($user['must_change_password']) ? 1 : 0;
 
             $redirect_page = '';
 
@@ -45,7 +51,9 @@ class AuthController extends BaseController {
                 $student_id = $userModel->getStudentIdByUserId($user['user_id']);
                 if ($student_id) {
                     $_SESSION['student_id'] = $student_id;
-                    $redirect_page = '/Student-Portal/student/dashboard';
+                    $redirect_page = !empty($user['must_change_password'])
+                        ? '/Student-Portal/student/change-password'
+                        : '/Student-Portal/student/dashboard';
                 }
             } elseif ($user['role'] === 'admin') {
                 $admin_id = $userModel->getAdminIdByUserId($user['user_id']);

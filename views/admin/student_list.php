@@ -128,27 +128,19 @@
                         </td>
                         <td>${escapeHtml(student.course_name)}</td>
                         <td>
-                            <div class="container">
-                                <div class="row">
-                                    <div class="col-sm">
-                                        <button type="button" class="btn btn-outline-secondary w-100 edit-grades-btn m-1"
-                                            data-student-id="${studentId}">
-                                            <svg class="bi" height="16px" width="16px" fill="current" role="img" aria-label="Tools">
-                                                <use xlink:href="/Student-Portal/assets/images/pencil-fill.svg"/>
-                                            </svg>
-                                            Edit Grades
-                                        </button>
-                                    </div>
-                                    <div class="col-sm">
-                                        <button type="button" class="btn btn-outline-secondary w-100 edit-info-btn m-1"
-                                            data-student-id="${studentId}">
-                                            <svg class="bi" height="16px" width="16px" fill="current" role="img" aria-label="Tools">
-                                                <use xlink:href="/Student-Portal/assets/images/pencil-fill.svg"/>
-                                            </svg>
-                                            Edit Info
-                                        </button>
-                                    </div>
-                                </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary btn-sm edit-grades-btn"
+                                    style="width: 110px;" data-student-id="${studentId}">
+                                    <i class="bi bi-pencil-square"></i> Grades
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm edit-info-btn"
+                                    style="width: 110px;" data-student-id="${studentId}">
+                                    <i class="bi bi-person-gear"></i> Info
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm enroll-btn"
+                                    style="width: 110px;" data-student-id="${studentId}">
+                                    <i class="bi bi-journal-plus"></i> Enroll
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -178,12 +170,10 @@
             });
         }
         
-        // Initialize edit buttons
         function initializeEditButtons() {
-            // Get all edit info buttons
             const editInfoButtons = document.querySelectorAll('.edit-info-btn');
-            // Get all edit grades buttons
             const editGradesButtons = document.querySelectorAll('.edit-grades-btn');
+            const enrollButtons = document.querySelectorAll('.enroll-btn');
             
             // Attach event listeners to all edit info buttons
             editInfoButtons.forEach(button => {
@@ -198,6 +188,14 @@
                 button.addEventListener('click', function() {
                     const studentId = this.getAttribute('data-student-id');
                     loadGradeEditor(studentId);
+                });
+            });
+
+            // Attach event listeners to all enroll buttons
+            enrollButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-student-id');
+                    loadEnrollmentForm(studentId);
                 });
             });
         }
@@ -316,6 +314,52 @@
                     if (schoolYear) pushUrl += `&school_year=${encodeURIComponent(schoolYear)}`;
                     if (semester) pushUrl += `&semester=${encodeURIComponent(semester)}`;
                     history.pushState(null, '', pushUrl);
+                })
+                .catch(error => {
+                    contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;
+                    console.error('AJAX Error:', error);
+                });
+        }
+
+        function loadEnrollmentForm(studentId) {
+            const contentArea = document.getElementById('main-content-area');
+            
+            const url = `/Student-Portal/admin/api/students/enroll-form?student_id=${studentId}`;
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok. Status: ' + response.status);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.body;
+                    const scripts = doc.querySelectorAll('script');
+
+                    contentArea.innerHTML = newContent.innerHTML;
+
+                    const existingExternalScripts = new Set(
+                        Array.from(document.querySelectorAll('script[src]')).map(s => s.src)
+                    );
+                    scripts.forEach(script => {
+                        const newScript = document.createElement('script');
+                        if (script.src) {
+                            if (existingExternalScripts.has(script.src)) {
+                                return;
+                            }
+                            newScript.src = script.src;
+                            existingExternalScripts.add(script.src);
+                        } else {
+                            newScript.textContent = `(function(){\n${script.textContent}\n})();`;
+                        }
+                        document.body.appendChild(newScript);
+                        newScript.remove();
+                    });
+                    
+                    history.pushState(null, '', `/Student-Portal/admin/dashboard?view=enroll_form&student_id=${studentId}`);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;

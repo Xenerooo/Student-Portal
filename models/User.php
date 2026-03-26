@@ -13,7 +13,12 @@ class User extends BaseModel {
     }
 
     public function authenticate($username, $password) {
-        $stmt = $this->conn->prepare("CALL getUserDetailByUsername(?)");
+        $stmt = $this->conn->prepare("
+            SELECT user_id, username, password_hash, role, must_change_password
+            FROM users
+            WHERE username = ? AND is_active = 1
+            LIMIT 1
+        ");
         if (!$stmt) return false;
         
         $stmt->bind_param("s", $username);
@@ -24,11 +29,6 @@ class User extends BaseModel {
         $result->close();
         $stmt->close();
         
-        // This is a stored procedure that might return multiple result sets, clean them up
-        while ($this->conn->more_results()) {
-            $this->conn->next_result();
-        }
-
         if ($user && password_verify($password, $user['password_hash'])) {
             return $user;
         }
@@ -69,24 +69,28 @@ class User extends BaseModel {
     }
 
     public function getUserAccountDetails($student_id) {
-        $stmt = $this->conn->prepare("CALL getUserAccountDetails(?);");
+        $stmt = $this->conn->prepare("
+            SELECT u.user_id, u.password_hash, u.username, u.must_change_password
+            FROM students st
+            JOIN users u ON st.user_id = u.user_id
+            WHERE st.student_id = ?
+            LIMIT 1
+        ");
         $stmt->bind_param('i', $student_id);
         $stmt->execute();
-        $user = $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+        $result->close();
         $stmt->close();
-        
-        while ($this->conn->more_results()) { $this->conn->next_result(); }
         
         return $user;
     }
 
     public function updatePassword($user_id, $new_password_hash) {
-        $stmt = $this->conn->prepare('CALL UserUpdatePassword(?, ?);');
+        $stmt = $this->conn->prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE user_id = ?');
         $stmt->bind_param('si', $new_password_hash, $user_id);
         $success = $stmt->execute();
         $stmt->close();
-        
-        while ($this->conn->more_results()) { $this->conn->next_result(); }
         
         return $success;
     }

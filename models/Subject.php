@@ -36,12 +36,12 @@ class Subject extends BaseModel {
         return $exists;
     }
 
-    public function addSubject($subject_code, $units) {
-        $stmt = $this->conn->prepare("INSERT INTO subjects (subject_code, units) VALUES (?, ?)");
+    public function addSubject($subject_code, $subject_name, $units) {
+        $stmt = $this->conn->prepare("INSERT INTO subjects (subject_code, subject_name, units) VALUES (?, ?, ?)");
         if (!$stmt) {
             throw new Exception('Failed to prepare insert statement.');
         }
-        $stmt->bind_param('si', $subject_code, $units);
+        $stmt->bind_param('ssi', $subject_code, $subject_name, $units);
         $stmt->execute();
 
         $success = ($stmt->affected_rows > 0);
@@ -86,7 +86,7 @@ class Subject extends BaseModel {
         }
     }
     public function getAllSubjects() {
-        $result = $this->conn->query("SELECT subject_id, subject_code, units FROM subjects ORDER BY subject_code");
+        $result = $this->conn->query("SELECT subject_id, subject_code, subject_name, units FROM subjects ORDER BY subject_code");
         if (!$result) {
             return [];
         }

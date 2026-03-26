@@ -27,10 +27,10 @@
 </nav>
 
 <div class="container-fluid mt-4">
-    <div class="mb-3">
+    <!-- <div class="mb-3">
         <h2>Welcome, <?= htmlspecialchars($student['student_name'] ?? '') ?></h2>
         <p class="text-muted">Course: <?= htmlspecialchars($student['course_name'] ?? '') ?></p>
-    </div>
+    </div> -->
     
     <div id="main-content-area">
         <div class="d-flex justify-content-center py-5">
