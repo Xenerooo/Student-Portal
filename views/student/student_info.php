@@ -39,7 +39,27 @@
                         <div class="col-md-9">                                                                                                        
                             <?= htmlspecialchars(empty($student['birthday']) ? 'null' : date('F j, Y ', strtotime($student['birthday']))) ?>
                         </div>
-                    </div> 
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>Place of Birth:</strong></div>
+                        <div class="col-md-9"><?= htmlspecialchars($student['place_of_birth'] ?? 'N/A') ?></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>Address:</strong></div>
+                        <div class="col-md-9"><?= nl2br(htmlspecialchars($student['address'] ?? 'N/A')) ?></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>School Last Attended:</strong></div>
+                        <div class="col-md-9"><?= htmlspecialchars($student['last_school_attended'] ?? 'N/A') ?></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>Contact Number:</strong></div>
+                        <div class="col-md-9"><?= htmlspecialchars($student['contact_number'] ?? 'N/A') ?></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>Email:</strong></div>
+                        <div class="col-md-9"><?= htmlspecialchars($student['email'] ?? 'N/A') ?></div>
+                    </div>
                 </div>
             </div>
         </div>

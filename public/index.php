@@ -82,6 +82,8 @@ $router->map('GET', '/student/api/info', 'App\\Controllers\\StudentController#ge
 $router->map('GET', '/student/api/grades', 'App\\Controllers\\StudentController#getStudentGrades', 'api_student_grades');
 $router->map('GET', '/student/api/grades/progress', 'App\\Controllers\\StudentController#getGradesProgress', 'api_student_grades_progress');
 $router->map('GET', '/student/api/grades/history', 'App\\Controllers\\StudentController#getScholasticHistory', 'api_student_grades_history');
+$router->map('GET', '/student/printables/academic-record', 'App\\Controllers\\StudentController#exportAcademicRecord', 'student_print_academic_record');
+$router->map('GET', '/student/printables/curriculum-progress', 'App\\Controllers\\StudentController#exportCurriculumProgress', 'student_print_curriculum_progress');
 $router->map('POST', '/student/api/password/change', 'App\\Controllers\\StudentController#changePassword', 'api_student_password_change');
 
 // New student API routes

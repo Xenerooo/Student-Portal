@@ -10,11 +10,6 @@
             <h1 class="h3 mb-1">My Academic Grades</h1>
             <p class="text-muted">View your performance per term, curriculum progress, and full scholastic history.</p>
         </div>
-        <div>
-            <button id="exportPdfBtn" class="btn btn-primary d-flex align-items-center">
-                <i class="bi bi-file-earmark-pdf me-2"></i> Export to PDF
-            </button>
-        </div>
     </div>
 
     <!-- Summary Metrics -->
@@ -70,6 +65,12 @@
         <!-- TAB 1: THIS TERM -->
         <div class="tab-pane fade show active" id="pane-term" role="tabpanel" aria-labelledby="tab-term">
             <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h6 class="mb-0 fw-bold">This Term</h6>
+                    <button id="exportPdfBtn" class="btn btn-primary btn-sm d-flex align-items-center">
+                        <i class="bi bi-file-earmark-pdf me-2"></i> Export PDF
+                    </button>
+                </div>
                 <div class="card-body bg-light border-bottom">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-4">
@@ -81,10 +82,6 @@
                             <select id="termSem" class="form-select border-0 shadow-none bg-white"></select>
                         </div>
                         <div class="col-md-4 text-center text-md-end">
-                            <div class="mb-2 input-group input-group-sm">
-                                <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                                <input type="text" id="termSearch" class="form-control border-0 shadow-none" placeholder="Filter this term...">
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -104,11 +101,11 @@
                     <div id="term-content" style="display: none;">
                         <div id="term-alert-container" class="px-4 pt-4"></div>
                         
-                        <div class="row g-3 px-4 pt-3 pb-4">
-                            <div class="col-3">
-                                <div class="bg-white border rounded p-2 text-center">
-                                    <div class="text-muted small">Term GWA</div>
-                                    <div class="h6 mb-0 fw-bold" id="term-gwa">--</div>
+                    <div class="row g-3 px-4 pt-3 pb-4">
+                        <div class="col-3">
+                            <div class="bg-white border rounded p-2 text-center">
+                                <div class="text-muted small">Term GWA</div>
+                                <div class="h6 mb-0 fw-bold" id="term-gwa">--</div>
                                 </div>
                             </div>
                             <div class="col-3">
@@ -123,13 +120,25 @@
                                     <div class="h6 mb-0 fw-bold" id="term-graded">0/0</div>
                                 </div>
                             </div>
-                            <div class="col-3">
-                                <div class="bg-white border rounded p-2 text-center">
-                                    <div class="text-muted small">Status</div>
-                                    <div class="h6 mb-0 fw-bold" id="term-status-badge">--</div>
-                                </div>
+                        <div class="col-3">
+                            <div class="bg-white border rounded p-2 text-center">
+                                <div class="text-muted small">Status</div>
+                                <div class="h6 mb-0 fw-bold" id="term-status-badge">--</div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="px-4 pb-3">
+                        <div class="mb-3 input-group">
+                            <span class="input-group-text">
+                                <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Search">
+                                    <use xlink:href="/Student-Portal/assets/images/search.svg"/>
+                                </svg>
+                            </span>
+                            <label for="termSearch" class="form-label"></label>
+                            <input type="text" id="termSearch" class="form-control" placeholder="Filter this term..." autocomplete="off">
+                        </div>
+                    </div>
 
                         <div class="table-responsive mb-8">
                             <table class="table table-hover align-middle mb-0" id="term-table">
@@ -156,14 +165,31 @@
 
         <!-- TAB 2: PROGRESS -->
         <div class="tab-pane fade" id="pane-progress" role="tabpanel" aria-labelledby="tab-progress">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold">Curriculum Road Map</h6>
-                    <div class="input-group input-group-sm w-auto">
-                        <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                        <input type="text" id="progressSearch" class="form-control border-0 shadow-none border-bottom" placeholder="Filter curriculum...">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3 border-0">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold">Curriculum Road Map</h6>
+                                <div class="text-muted small">Review your complete curriculum progress by year and semester.</div>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <button id="exportCurriculumPdfBtn" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="mb-3 input-group">
+                                <span class="input-group-text">
+                                    <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Search">
+                                        <use xlink:href="/Student-Portal/assets/images/search.svg"/>
+                                    </svg>
+                                </span>
+                                <label for="progressSearch" class="form-label"></label>
+                                <input type="text" id="progressSearch" class="form-control" placeholder="Filter curriculum..." autocomplete="off">
+                            </div>
+                        </div>
                     </div>
-                </div>
                 <div class="card-body p-0" id="progress-container">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary" role="status"></div>
@@ -175,11 +201,20 @@
         <!-- TAB 3: HISTORY -->
         <div class="tab-pane fade" id="pane-history" role="tabpanel" aria-labelledby="tab-history">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold">Scholastic Records</h6>
-                    <div class="input-group input-group-sm w-auto">
-                        <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                        <input type="text" id="historySearch" class="form-control border-0 shadow-none border-bottom" placeholder="Search records...">
+                <div class="card-header bg-white py-3 border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Scholastic Records</h6>
+                    </div>
+                    <div class="mt-3">
+                        <div class="mb-3 input-group">
+                            <span class="input-group-text">
+                                <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Search">
+                                    <use xlink:href="/Student-Portal/assets/images/search.svg"/>
+                                </svg>
+                            </span>
+                            <label for="historySearch" class="form-label"></label>
+                            <input type="text" id="historySearch" class="form-control" placeholder="Search records..." autocomplete="off">
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -574,19 +609,26 @@
 
     // PDF Export
     document.getElementById('exportPdfBtn').addEventListener('click', function() {
-        const element = document.getElementById('grades-container');
-        const opt = {
-            margin: 0.5,
-            filename: 'My_Academic_Grades.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        if (window.html2pdf) {
-            window.html2pdf().set(opt).from(element).save();
-        } else {
-            alert('PDF library not loaded.');
+        const year = termYearSelect.value;
+        const sem = termSemSelect.value;
+
+        if (!year || !sem) {
+            alert('Please wait for the term data to load before exporting.');
+            return;
         }
+
+        const exportUrl = new URL('/Student-Portal/student/printables/academic-record', window.location.origin);
+        exportUrl.searchParams.set('school_year', year);
+        exportUrl.searchParams.set('semester', sem);
+        exportUrl.searchParams.set('return_to', '/Student-Portal/student/dashboard?view=get_student_grades');
+
+        window.location.href = exportUrl.toString();
+    });
+
+    document.getElementById('exportCurriculumPdfBtn').addEventListener('click', function() {
+        const exportUrl = new URL('/Student-Portal/student/printables/curriculum-progress', window.location.origin);
+        exportUrl.searchParams.set('return_to', '/Student-Portal/student/dashboard?view=get_student_grades');
+        window.location.href = exportUrl.toString();
     });
 
     init();

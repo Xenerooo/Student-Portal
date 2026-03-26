@@ -130,6 +130,87 @@ class StudentController extends BaseController {
             $this->json(['success' => false, 'message' => 'Failed to fetch history: ' . $e->getMessage()], 500);
         }
     }
+
+    public function exportAcademicRecord() {
+        $this->checkStudent();
+
+        $student_id = $_SESSION['student_id'];
+        $studentModel = new \App\Models\Student($this->conn);
+        $gradeModel = new Grade($this->conn);
+        $enrollModel = new Enrollment($this->conn);
+
+        $student = $studentModel->getStudentById($student_id);
+        if (!$student) {
+            http_response_code(404);
+            die("<div class='alert alert-danger'>Student info not found.</div>");
+        }
+
+        $terms = $enrollModel->getTermsWithEnrollment($student_id);
+        $latestTerm = $terms[0] ?? null;
+
+        $currMonth = (int)date('m');
+        $currYear = (int)date('Y');
+        $defaultSchoolYear = ($currMonth >= 6) ? "$currYear-" . ($currYear + 1) : ($currYear - 1) . "-$currYear";
+        $defaultSemester = "1st Semester";
+
+        $schoolYear = trim($_GET['school_year'] ?? ($latestTerm['school_year'] ?? $defaultSchoolYear));
+        $semester = trim($_GET['semester'] ?? ($latestTerm['semester'] ?? $defaultSemester));
+
+        $termGrades = [];
+        try {
+            $termGrades = $enrollModel->getEnrollmentsByTerm($student_id, $schoolYear, $semester);
+        } catch (\Throwable $e) {
+            $termGrades = [];
+        }
+
+        $scholasticHistory = $gradeModel->getScholasticHistory($student_id);
+        $curriculumProgress = $gradeModel->getCurriculumProgress($student_id);
+
+        $termSummary = $this->buildGradeSummary($termGrades, true);
+        $overallSummary = $this->buildGradeSummary($scholasticHistory, false);
+        $groupedHistory = $this->groupScholasticHistory($scholasticHistory);
+
+        $this->render('student/academic_record_print', [
+            'pageTitle' => 'Academic Record | SIS',
+            'student' => $student,
+            'selectedSchoolYear' => $schoolYear,
+            'selectedSemester' => $semester,
+            'termGrades' => $termGrades,
+            'termSummary' => $termSummary,
+            'overallSummary' => $overallSummary,
+            'scholasticHistory' => $scholasticHistory,
+            'groupedHistory' => $groupedHistory,
+            'curriculumProgress' => $curriculumProgress,
+            'generatedAt' => date('F j, Y g:i A'),
+        ]);
+    }
+
+    public function exportCurriculumProgress() {
+        $this->checkStudent();
+
+        $student_id = $_SESSION['student_id'];
+        $studentModel = new \App\Models\Student($this->conn);
+        $gradeModel = new Grade($this->conn);
+
+        $student = $studentModel->getStudentById($student_id);
+        if (!$student) {
+            http_response_code(404);
+            die("<div class='alert alert-danger'>Student info not found.</div>");
+        }
+
+        $curriculumProgress = $gradeModel->getCurriculumProgress($student_id);
+        $summary = $this->buildCurriculumSummary($curriculumProgress);
+        $returnTo = trim($_GET['return_to'] ?? '') ?: '/Student-Portal/student/dashboard?view=get_student_grades';
+
+        $this->render('student/curriculum_progress_print', [
+            'pageTitle' => 'Curriculum Progress | SIS',
+            'student' => $student,
+            'curriculumProgress' => $curriculumProgress,
+            'summary' => $summary,
+            'generatedAt' => date('F j, Y g:i A'),
+            'returnTo' => $returnTo,
+        ]);
+    }
     
     public function getGradesByTerm() {
         $this->checkStudent();
@@ -170,6 +251,113 @@ class StudentController extends BaseController {
             http_response_code(403);
             die("<div class='alert alert-danger'>Access Denied. Invalid session or not logged in as student.</div>");
         }
+    }
+
+    private function buildGradeSummary(array $records, bool $isTerm): array {
+        $totalUnits = 0;
+        $weightedSum = 0.0;
+        $unitsForGwa = 0;
+        $gradedCount = 0;
+        $hasIncomplete = false;
+        $passedCount = 0;
+
+        foreach ($records as $row) {
+            $units = (int)($row['units'] ?? 0);
+            $grade = isset($row['grade']) && $row['grade'] !== '' ? (float)$row['grade'] : null;
+            $remarks = (string)($row['remarks'] ?? '');
+            $status = (string)($row['status'] ?? '');
+
+            $totalUnits += $units;
+
+            if ($grade !== null) {
+                $gradedCount++;
+            }
+            if ($remarks === 'Incomplete' || $status === 'incomplete') {
+                $hasIncomplete = true;
+            }
+
+            if ($grade !== null && ($remarks === 'Passed' || $grade <= 3.00)) {
+                $weightedSum += ($grade * $units);
+                $unitsForGwa += $units;
+                $passedCount++;
+            }
+        }
+
+        return [
+            'total_units' => $totalUnits,
+            'gwa' => $unitsForGwa > 0 ? round($weightedSum / $unitsForGwa, 2) : null,
+            'graded_count' => $gradedCount,
+            'has_incomplete' => $hasIncomplete,
+            'passed_count' => $passedCount,
+            'label' => $isTerm ? 'Term' : 'Overall',
+        ];
+    }
+
+    private function groupScholasticHistory(array $history): array {
+        $grouped = [];
+        foreach ($history as $row) {
+            $key = ($row['school_year'] ?? 'Unknown') . '|' . ($row['semester'] ?? 'Unknown');
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'school_year' => $row['school_year'] ?? 'Unknown',
+                    'semester' => $row['semester'] ?? 'Unknown',
+                    'items' => [],
+                ];
+            }
+            $grouped[$key]['items'][] = $row;
+        }
+
+        return array_values($grouped);
+    }
+
+    private function buildCurriculumSummary(array $curriculumProgress): array {
+        $yearGroups = 0;
+        $semesterGroups = 0;
+        $subjectsTotal = 0;
+        $subjectsPassed = 0;
+        $subjectsIncomplete = 0;
+        $subjectsFailed = 0;
+        $subjectsPending = 0;
+        $totalUnits = 0;
+        $passedUnits = 0;
+
+        foreach ($curriculumProgress as $year => $semesters) {
+            $yearGroups++;
+            foreach ($semesters as $semester => $subjects) {
+                $semesterGroups++;
+                foreach ($subjects as $subject) {
+                    $subjectsTotal++;
+                    $units = (int)($subject['units'] ?? 0);
+                    $totalUnits += $units;
+                    $grade = isset($subject['grade']) && $subject['grade'] !== '' ? (float)$subject['grade'] : null;
+                    $remarks = (string)($subject['remarks'] ?? '');
+                    $status = (string)($subject['enrollment_status'] ?? '');
+
+                    if ($remarks === 'Passed' || ($grade !== null && $grade <= 3.00)) {
+                        $subjectsPassed++;
+                        $passedUnits += $units;
+                    } elseif ($remarks === 'Incomplete' || $status === 'incomplete') {
+                        $subjectsIncomplete++;
+                    } elseif ($remarks === 'Failed' || $status === 'failed' || $grade === 5.00) {
+                        $subjectsFailed++;
+                    } else {
+                        $subjectsPending++;
+                    }
+                }
+            }
+        }
+
+        return [
+            'year_groups' => $yearGroups,
+            'semester_groups' => $semesterGroups,
+            'subjects_total' => $subjectsTotal,
+            'subjects_passed' => $subjectsPassed,
+            'subjects_incomplete' => $subjectsIncomplete,
+            'subjects_failed' => $subjectsFailed,
+            'subjects_pending' => $subjectsPending,
+            'total_units' => $totalUnits,
+            'passed_units' => $passedUnits,
+        ];
     }
 }
 ?>

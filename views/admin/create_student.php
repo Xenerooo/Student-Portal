@@ -36,6 +36,31 @@
             </div>
 
             <div class="mb-3">
+                <label for="place_of_birth" class="form-label">Place of Birth</label>
+                <input type="text" name="place_of_birth" id="place_of_birth" class="form-control" placeholder="e.g., Manila City" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <textarea name="address" id="address" class="form-control" rows="3" placeholder="Complete home address" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="last_school_attended" class="form-label">School Last Attended</label>
+                <input type="text" name="last_school_attended" id="last_school_attended" class="form-control" placeholder="e.g., ABC Senior High School" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="contact_number" class="form-label">Contact Number</label>
+                <input type="text" name="contact_number" id="contact_number" class="form-control" placeholder="e.g., 09123456789" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="e.g., student@example.com" required>
+            </div>
+
+            <div class="mb-3">
                 <label for="course_id" class="form-label">Course / Program</label>
                 <select name="course_id" id="course_id" class="form-select" required>
                     <option value="" disabled selected>Select Course</option>

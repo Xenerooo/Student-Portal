@@ -359,12 +359,21 @@ class AdminController extends BaseController {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? ''; 
         $birthday = trim($_POST['birthday'] ?? '');
+        $address = trim($_POST['address'] ?? '');
+        $last_school_attended = trim($_POST['last_school_attended'] ?? '');
+        $contact_number = trim($_POST['contact_number'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $place_of_birth = trim($_POST['place_of_birth'] ?? '');
 
         if (!$student_id || !$user_id) {
             $this->json(['success' => false, 'message' => 'Invalid student or user ID.'], 400);
         }
 
-        if (empty($name) || empty($number) || !$course_id || empty($username) || empty($birthday)) {
+        if (
+            empty($name) || empty($number) || !$course_id || empty($username) || empty($birthday) ||
+            empty($address) || empty($last_school_attended) || empty($contact_number) ||
+            empty($email) || empty($place_of_birth)
+        ) {
             $this->json(['success' => false, 'message' => 'Please fill out all required fields.'], 400);
         }
 
@@ -378,6 +387,9 @@ class AdminController extends BaseController {
         }
         if ($birthdayDate > new DateTime('today')) {
             $this->json(['success' => false, 'message' => 'Birthday cannot be in the future.'], 400);
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->json(['success' => false, 'message' => 'Invalid email address.'], 400);
         }
 
         $image_data = null;
@@ -399,7 +411,22 @@ class AdminController extends BaseController {
 
         $studentModel = new Student($this->conn);
         try {
-            $result = $studentModel->editStudent($student_id, $user_id, $username, $password, $name, $number, $course_id, $birthday, $image_data);
+            $result = $studentModel->editStudent(
+                $student_id,
+                $user_id,
+                $username,
+                $password,
+                $name,
+                $number,
+                $course_id,
+                $birthday,
+                $image_data,
+                $address,
+                $last_school_attended,
+                $contact_number,
+                $email,
+                $place_of_birth
+            );
             $this->json($result);
         } catch (Exception $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 400);
@@ -438,8 +465,17 @@ class AdminController extends BaseController {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
         $birthday = trim($_POST['birthday'] ?? '');
+        $address = trim($_POST['address'] ?? '');
+        $last_school_attended = trim($_POST['last_school_attended'] ?? '');
+        $contact_number = trim($_POST['contact_number'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $place_of_birth = trim($_POST['place_of_birth'] ?? '');
 
-        if (empty($name) || empty($number) || !$course_id || empty($username) || empty($password) || empty($birthday)) {
+        if (
+            empty($name) || empty($number) || !$course_id || empty($username) || empty($password) ||
+            empty($birthday) || empty($address) || empty($last_school_attended) ||
+            empty($contact_number) || empty($email) || empty($place_of_birth)
+        ) {
             $this->json(['success' => false, 'message' => 'Please fill out all required fields.'], 400);
         }
         if (strlen($password) < 6) {
@@ -452,6 +488,9 @@ class AdminController extends BaseController {
         }
         if ($birthdayDate > new DateTime('today')) {
             $this->json(['success' => false, 'message' => 'Birthday cannot be in the future.'], 400);
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->json(['success' => false, 'message' => 'Invalid email address.'], 400);
         }
 
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -475,7 +514,20 @@ class AdminController extends BaseController {
 
         $studentModel = new Student($this->conn);
         try {
-            $result = $studentModel->createStudent($username, $hashed_password, $name, $number, $course_id, $birthday, $image_data);
+            $result = $studentModel->createStudent(
+                $username,
+                $hashed_password,
+                $name,
+                $number,
+                $course_id,
+                $birthday,
+                $image_data,
+                $address,
+                $last_school_attended,
+                $contact_number,
+                $email,
+                $place_of_birth
+            );
             $this->json($result);
         } catch (Exception $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 400);
