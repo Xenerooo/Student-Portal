@@ -73,6 +73,20 @@ class Student extends BaseModel {
             $stmt_get_id->close();
             while ($this->conn->more_results()) { $this->conn->next_result(); }
 
+            $stmt_flag = $this->conn->prepare("UPDATE users SET must_change_password = 1 WHERE user_id = ?");
+            if (!$stmt_flag) {
+                $this->conn->rollback();
+                throw new Exception("Failed to prepare password change flag update.");
+            }
+            $stmt_flag->bind_param("i", $new_user_id);
+
+            if (!$stmt_flag->execute()) {
+                $stmt_flag->close();
+                $this->conn->rollback();
+                throw new Exception("Failed to mark the new account for password change.");
+            }
+            $stmt_flag->close();
+
             // --- INSERT 2: Create the Student Profile (Profile/Academic Data) ---
             $stmt_student = $this->conn->prepare(
                 "INSERT INTO students (

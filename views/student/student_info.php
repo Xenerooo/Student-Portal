@@ -74,60 +74,10 @@
                     <h5 class="mb-0">Account Details</h5>
                 </div>
                 <div class="card-body">
-                    <?php
-                    if (empty($_SESSION['csrf'])) {
-                        $_SESSION['csrf'] = bin2hex(random_bytes(32));
-                    }
-                    $csrf = $_SESSION['csrf'];
-                    ?>
-                    <form id="changePasswordForm">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" name="username" id="username" class="form-control">
-                        </div>
-                        <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
-                        <div class="mb-3">
-                            <label for="oldPassword" class="form-label">Old Password</label>
-                            <input type="password" name="old_password" id="oldPassword" class="form-control" >
-                        </div>
-                        <div class="mb-3">
-                            <label for="newPassword" class="form-label">New Password</label>
-                            <input type="password" name="new_password" id="newPassword" class="form-control" >
-                        </div>
-                        <button type="submit" class="btn btn-success w-100 mt-2">Change Password</button>
-                    </form>
-                    <div id="changePasswordFeedback" class="mt-3"></div>
+                    <p class="mb-3">Use the button below to update your password. On first login, this step is required before accessing the rest of the portal.</p>
+                    <a href="/Student-Portal/student/change-password" class="btn btn-success w-100">Change Password</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-    const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
-
-    document.getElementById('changePasswordForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const feedback = document.getElementById('changePasswordFeedback');
-    feedback.innerHTML = '';
-    try {
-        const res = await fetch('/Student-Portal/student/api/password/change', {
-            method: 'POST',
-            body: data,
-            credentials: 'same-origin'
-        });
-        // await console.log(res.clone().text());
-        const json = await res.json();
-        const cls = json.success ? 'alert-success' : 'alert-danger';
-        feedback.innerHTML = `<div class="alert ${cls}">${json.message || (json.success ? 'Password updated.' : 'Failed to update password.')}</div>`;
-        if (json.success) {
-            form.reset();
-        }
-    } catch (err) {
-        feedback.innerHTML = '<div class="alert alert-danger">Network error. Please try again. Error: ' + err + '</div>';
-    }
-});
-</script>

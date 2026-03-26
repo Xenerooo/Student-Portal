@@ -16,6 +16,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/Student-Portal/student/dashboard?view=get_student_grades" data-content="get_student_grades">Grades</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Student-Portal/student/change-password">Change Password</a>
+                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">

@@ -463,7 +463,6 @@ class AdminController extends BaseController {
         $number = trim($_POST['student_number'] ?? '');
         $course_id = filter_input(INPUT_POST, 'course_id', FILTER_VALIDATE_INT);
         $username = trim($_POST['username'] ?? '');
-        $password = $_POST['password'] ?? '';
         $birthday = trim($_POST['birthday'] ?? '');
         $address = trim($_POST['address'] ?? '');
         $last_school_attended = trim($_POST['last_school_attended'] ?? '');
@@ -472,14 +471,11 @@ class AdminController extends BaseController {
         $place_of_birth = trim($_POST['place_of_birth'] ?? '');
 
         if (
-            empty($name) || empty($number) || !$course_id || empty($username) || empty($password) ||
+            empty($name) || empty($number) || !$course_id || empty($username) ||
             empty($birthday) || empty($address) || empty($last_school_attended) ||
             empty($contact_number) || empty($email) || empty($place_of_birth)
         ) {
             $this->json(['success' => false, 'message' => 'Please fill out all required fields.'], 400);
-        }
-        if (strlen($password) < 6) {
-            $this->json(['success' => false, 'message' => 'Password must be at least 6 characters long.'], 400);
         }
 
         $birthdayDate = DateTime::createFromFormat('Y-m-d', $birthday);
@@ -493,7 +489,8 @@ class AdminController extends BaseController {
             $this->json(['success' => false, 'message' => 'Invalid email address.'], 400);
         }
 
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $temporary_password = \generateTemporaryPassword();
+        $hashed_password = password_hash($temporary_password, PASSWORD_DEFAULT);
         $image_data = null;
 
         if (isset($_FILES['student_image']) && $_FILES['student_image']['error'] === UPLOAD_ERR_OK) {
@@ -528,7 +525,21 @@ class AdminController extends BaseController {
                 $email,
                 $place_of_birth
             );
-            $this->json($result);
+
+            $emailResult = \sendWelcomeEmail($email, $name, $username, $temporary_password);
+            $message = $result['message'] ?? 'Student created successfully!';
+            if (!empty($emailResult['success'])) {
+                $message .= ' Welcome email sent to the student.';
+            } else {
+                $message .= ' Student account was created, but the welcome email could not be sent: ' . ($emailResult['message'] ?? 'Unknown email error.');
+            }
+
+            $this->json([
+                'success' => true,
+                'message' => $message,
+                'user_id' => $result['user_id'] ?? null,
+                'email_sent' => !empty($emailResult['success'])
+            ]);
         } catch (Exception $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }

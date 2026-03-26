@@ -23,6 +23,50 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../Core/db_connect.php';
 require_once __DIR__ . '/../Core/utilities.php';
 
+function portal_env(string $key, $default = null) {
+    $value = getenv($key);
+    if ($value !== false && $value !== '') {
+        return $value;
+    }
+
+    static $fileConfig = null;
+    if ($fileConfig === null) {
+        $envPath = ROOT_PATH . '/.env';
+        $fileConfig = file_exists($envPath) ? parse_ini_file($envPath) : [];
+    }
+
+    return $fileConfig[$key] ?? $default;
+}
+
+if (!defined('APP_URL')) {
+    $appUrl = portal_env('APP_URL', 'http://localhost/Student-Portal');
+    define('APP_URL', rtrim($appUrl, '/'));
+}
+
+if (!defined('SMTP_HOST')) {
+    define('SMTP_HOST', portal_env('SMTP_HOST', 'smtp.gmail.com'));
+}
+
+if (!defined('SMTP_PORT')) {
+    define('SMTP_PORT', (int) portal_env('SMTP_PORT', 587));
+}
+
+if (!defined('SMTP_USERNAME')) {
+    define('SMTP_USERNAME', portal_env('SMTP_USERNAME', ''));
+}
+
+if (!defined('SMTP_PASSWORD')) {
+    define('SMTP_PASSWORD', portal_env('SMTP_PASSWORD', ''));
+}
+
+if (!defined('SMTP_FROM_EMAIL')) {
+    define('SMTP_FROM_EMAIL', portal_env('SMTP_FROM_EMAIL', SMTP_USERNAME));
+}
+
+if (!defined('SMTP_FROM_NAME')) {
+    define('SMTP_FROM_NAME', portal_env('SMTP_FROM_NAME', 'Student Portal'));
+}
+
 // Initialize AltoRouter
 $router = new AltoRouter();
 // Set base path if your project isn't at the root of the domain.
@@ -84,6 +128,7 @@ $router->map('GET', '/student/api/grades/progress', 'App\\Controllers\\StudentCo
 $router->map('GET', '/student/api/grades/history', 'App\\Controllers\\StudentController#getScholasticHistory', 'api_student_grades_history');
 $router->map('GET', '/student/printables/academic-record', 'App\\Controllers\\StudentController#exportAcademicRecord', 'student_print_academic_record');
 $router->map('GET', '/student/printables/curriculum-progress', 'App\\Controllers\\StudentController#exportCurriculumProgress', 'student_print_curriculum_progress');
+$router->map('GET', '/student/change-password', 'App\\Controllers\\StudentController#showChangePasswordForm', 'student_change_password_form');
 $router->map('POST', '/student/api/password/change', 'App\\Controllers\\StudentController#changePassword', 'api_student_password_change');
 
 // New student API routes

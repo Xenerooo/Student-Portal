@@ -79,9 +79,8 @@
                 <input type="text" name="username" id="username" class="form-control" placeholder="e.g., jdoe2024" required>
             </div>
             
-            <div class="mb-3">
-                <label for="password" class="form-label">Initial Password</label>
-                <input type="password" name="password" id="password" class="form-control" placeholder="Min 6 characters" required>
+            <div class="alert alert-info">
+                A temporary password will be generated automatically and sent to the student's email address.
             </div>
             
             <button type="submit" class="btn btn-primary w-100 mt-4">Create Student</button>

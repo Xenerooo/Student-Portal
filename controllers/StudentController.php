@@ -15,6 +15,11 @@ class StudentController extends BaseController {
             exit();
         }
 
+        if (!empty($_SESSION['must_change_password'])) {
+            header("Location: /Student-Portal/student/change-password");
+            exit();
+        }
+
         $student_id = $_SESSION['student_id'];
         $studentModel = new \App\Models\Student($this->conn);
         $student = $studentModel->getStudentDashboardData($student_id);
@@ -23,6 +28,19 @@ class StudentController extends BaseController {
         $this->render('student/dashboard', [
             'pageTitle' => "Student Dashboard | SIS",
             'student' => $student
+        ]);
+    }
+
+    public function showChangePasswordForm() {
+        $this->checkStudent();
+
+        $userModel = new User($this->conn);
+        $account = $userModel->getUserAccountDetails($_SESSION['student_id']);
+
+        $this->generateCsrfToken();
+        $this->render('student/change_password', [
+            'pageTitle' => 'Change Password | SIS',
+            'account' => $account,
         ]);
     }
 
@@ -63,13 +81,16 @@ class StudentController extends BaseController {
         $student_id = $_SESSION['student_id'];
         $oldPassword = (string)($_POST['old_password'] ?? '');
         $newPassword = (string)($_POST['new_password'] ?? '');
-        $enteredUsername = (string)($_POST['username'] ?? '');
+        $confirmPassword = (string)($_POST['confirm_password'] ?? '');
 
-        if ($oldPassword === '' || $newPassword === '') {
-            $this->json(['success' => false, 'message' => 'Please provide old and new password.'], 400);
+        if ($oldPassword === '' || $newPassword === '' || $confirmPassword === '') {
+            $this->json(['success' => false, 'message' => 'Please provide your current password, new password, and confirmation.'], 400);
         }
         if (strlen($newPassword) < 6) {
             $this->json(['success' => false, 'message' => 'New password must be at least 6 characters.'], 400);
+        }
+        if ($newPassword !== $confirmPassword) {
+            $this->json(['success' => false, 'message' => 'New password and confirmation do not match.'], 400);
         }
 
         $userModel = new User($this->conn);
@@ -79,17 +100,18 @@ class StudentController extends BaseController {
             $this->json(['success' => false, 'message' => 'User account not found.'], 404);
         }
 
-        if ($enteredUsername != $row['username']) {
-            $this->json(['success' => false, 'message' => 'Username invalid.'], 401);
-        }
-
         if (!password_verify($oldPassword, $row['password_hash'])) {
             $this->json(['success' => false, 'message' => 'Old password is incorrect.'], 401);
         }
 
         $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
         if ($userModel->updatePassword($row['user_id'], $newHash)) {
-            $this->json(['success' => true, 'message' => 'Password updated successfully.']);
+            $_SESSION['must_change_password'] = 0;
+            $this->json([
+                'success' => true,
+                'message' => 'Password updated successfully.',
+                'redirect' => '/Student-Portal/student/dashboard'
+            ]);
         } else {
             $this->json(['success' => false, 'message' => 'Failed to update password.'], 500);
         }
