@@ -16,9 +16,6 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/Student-Portal/student/dashboard?view=get_student_grades" data-content="get_student_grades">Grades</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/Student-Portal/student/change-password">Change Password</a>
-                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
@@ -30,10 +27,10 @@
 </nav>
 
 <div class="container-fluid mt-4">
-    <div class="mb-3">
+    <!-- <div class="mb-3">
         <h2>Welcome, <?= htmlspecialchars($student['student_name'] ?? '') ?></h2>
         <p class="text-muted">Course: <?= htmlspecialchars($student['course_name'] ?? '') ?></p>
-    </div>
+    </div> -->
     
     <div id="main-content-area">
         <div class="d-flex justify-content-center py-5">
