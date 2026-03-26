@@ -74,10 +74,62 @@
                     <h5 class="mb-0">Account Details</h5>
                 </div>
                 <div class="card-body">
-                    <p class="mb-3">Use the button below to update your password. On first login, this step is required before accessing the rest of the portal.</p>
-                    <a href="/Student-Portal/student/change-password" class="btn btn-success w-100">Change Password</a>
+                    <form id="changePasswordForm">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES) ?>">
+
+                        <div class="mb-3">
+                            <label for="oldPassword" class="form-label">Current Password</label>
+                            <input type="password" name="old_password" id="oldPassword" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <input type="password" name="new_password" id="newPassword" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                            <input type="password" name="confirm_password" id="confirmPassword" class="form-control" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 mt-2">Change Password</button>
+                    </form>
+                    <div id="changePasswordFeedback" class="mt-3"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('changePasswordForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const form = e.currentTarget;
+        const feedback = document.getElementById('changePasswordFeedback');
+        const formData = new FormData(form);
+
+        feedback.innerHTML = '<div class="alert alert-info">Updating password...</div>';
+
+        try {
+            const res = await fetch('/Student-Portal/student/api/password/change', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRF-TOKEN': formData.get('csrf_token') || ''
+                }
+            });
+
+            const json = await res.json();
+            const cls = json.success ? 'alert-success' : 'alert-danger';
+            feedback.innerHTML = `<div class="alert ${cls}">${json.message || (json.success ? 'Password updated.' : 'Failed to update password.')}</div>`;
+
+            if (json.success) {
+                form.reset();
+            }
+        } catch (err) {
+            feedback.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+        }
+    });
+</script>
