@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0c09b84dbc0114f2985e6ffd7a6973d8",
+    "content-hash": "d70441dd4d6a57c605e6248152f992b6",
     "packages": [
         {
             "name": "altorouter/altorouter",
@@ -144,6 +144,55 @@
                 }
             ],
             "time": "2025-10-15T16:49:08+00:00"
+        },
+        {
+            "name": "rlanvin/php-rrule",
+            "version": "v2.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rlanvin/php-rrule.git",
+                "reference": "2a389a9fa67dda58bc5a569a3264555152db3c49"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rlanvin/php-rrule/zipball/2a389a9fa67dda58bc5a569a3264555152db3c49",
+                "reference": "2a389a9fa67dda58bc5a569a3264555152db3c49",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "phpmd/phpmd": "@stable",
+                "phpunit/phpunit": "^5.7|^6.5|^8.0"
+            },
+            "suggest": {
+                "ext-intl": "Intl extension is needed for humanReadable()"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "RRule\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Lightweight and fast recurrence rules for PHP (RFC 5545)",
+            "homepage": "https://github.com/rlanvin/php-rrule",
+            "keywords": [
+                "date",
+                "ical",
+                "recurrence",
+                "recurring",
+                "rrule"
+            ],
+            "support": {
+                "issues": "https://github.com/rlanvin/php-rrule/issues",
+                "source": "https://github.com/rlanvin/php-rrule/tree/v2.6.0"
+            },
+            "time": "2025-04-25T07:40:09+00:00"
         }
     ],
     "packages-dev": [],

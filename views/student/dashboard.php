@@ -10,6 +10,10 @@
             </div>
         </div>
         <nav class="sidebar-nav">
+            <a href="/Student-Portal/student/dashboard?view=get_overview" class="sidebar-link active" data-content="get_overview">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span class="link-text">Dashboard</span>
+            </a>
             <a href="/Student-Portal/student/dashboard?view=get_student_info" class="sidebar-link" data-content="get_student_info">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 <span class="link-text">Student Information</span>
@@ -74,6 +78,7 @@
         const navLinks = document.querySelectorAll('.sidebar-link[data-content]');
         
         const ajaxActionMap = {
+            'get_overview': 'overview',
             'get_student_info': 'info',
             'get_student_grades': 'grades'
         };
@@ -214,7 +219,7 @@
             });
         });
 
-        const defaultContentAction = 'get_student_grades';
+        const defaultContentAction = 'get_overview';
         const defaultLink = document.querySelector(`[data-content="${defaultContentAction}"]`);
         
         if(defaultLink) {

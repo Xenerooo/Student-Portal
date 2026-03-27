@@ -5,6 +5,7 @@ use App\Core\BaseController;
 use App\Models\Grade;
 use App\Models\User;
 use App\Models\Enrollment;
+use App\Models\Event;
 use Throwable;
 
 class StudentController extends BaseController {
@@ -27,6 +28,18 @@ class StudentController extends BaseController {
         $this->generateCsrfToken();
         $this->render('student/dashboard', [
             'pageTitle' => "Student Dashboard | SIS",
+            'student' => $student
+        ]);
+    }
+
+    public function getOverview() {
+        $this->checkStudent();
+        $student_id = $_SESSION['student_id'];
+        
+        $studentModel = new \App\Models\Student($this->conn);
+        $student = $studentModel->getStudentDashboardData($student_id);
+        
+        $this->render('student/overview', [
             'student' => $student
         ]);
     }
@@ -265,13 +278,29 @@ class StudentController extends BaseController {
         }
     }
 
+    public function getEventsApi() {
+        $this->checkStudent();
+        $start = $_GET['start'] ?? date('Y-m-01');
+        $end = $_GET['end'] ?? date('Y-m-t');
+        
+        error_log("Calendar Get API Call (Student): start=$start, end=$end");
+
+        try {
+            $eventModel = new Event($this->conn);
+            $events = $eventModel->getExpandedEvents($start, $end);
+            error_log("Calendar Get API Response (Student): " . count($events) . " events found.");
+            $this->json(['success' => true, 'events' => $events]);
+        } catch (\Throwable $e) {
+            error_log("Calendar Get API Error (Student): " . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     private function checkStudent() {
-        if (!isset($_SESSION['student_id']) || $_SESSION['role'] !== 'student') {
-            if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
-                $this->json(['success' => false, 'message' => 'Access Denied.'], 403);
-            }
-            http_response_code(403);
-            die("<div class='alert alert-danger'>Access Denied. Invalid session or not logged in as student.</div>");
+        if (session_status() == PHP_SESSION_NONE) session_start();
+        if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['student', 'admin'])) {
+            $this->json(['success' => false, 'message' => 'Access Denied.'], 403);
+            exit;
         }
     }
 

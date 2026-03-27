@@ -8,6 +8,7 @@ use App\Models\Curriculum;
 use App\Models\Grade;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Models\Event;
 use Exception;
 use DateTime;
 use mysqli_sql_exception;
@@ -799,6 +800,98 @@ class AdminController extends BaseController {
         $subjectModel = new Subject($this->conn);
         $subjects = $subjectModel->getAllSubjects();
         $this->json(['success' => true, 'subjects' => $subjects]);
+    }
+
+    public function getCalendar() {
+        $this->checkAdmin();
+        $this->render('admin/calendar', [
+            'pageTitle' => "School Calendar | SIS"
+        ]);
+    }
+
+    public function getEventsApi() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        
+        $start = $_GET['start'] ?? null;
+        $end = $_GET['end'] ?? null;
+        
+        error_log("Calendar Get API Call (Admin): start=$start, end=$end");
+        
+        try {
+            $eventModel = new Event($this->conn);
+            $events = $eventModel->getExpandedEvents($start, $end);
+            error_log("Calendar Get API Response (Admin): " . count($events) . " events found.");
+            $this->json(['success' => true, 'events' => $events]);
+        } catch (\Throwable $e) {
+            error_log("Calendar Get API Error (Admin): " . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function saveEventApi() {
+        $this->checkAdmin();
+        $this->verifyCsrfToken();
+        header('Content-Type: application/json');
+        
+        // Handle JSON or POST data
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            $input = $_POST;
+        }
+
+        $data = [
+            'id' => $input['id'] ?? null,
+            'title' => trim($input['title'] ?? ''),
+            'description' => trim($input['description'] ?? ''),
+            'location' => trim($input['location'] ?? ''),
+            'start_date' => str_replace('T', ' ', $input['start_date'] ?? ''),
+            'end_date' => str_replace('T', ' ', $input['end_date'] ?? ''),
+            'color' => $input['color'] ?? '#3788d8',
+            'all_day' => (isset($input['all_day']) && ($input['all_day'] === 'true' || $input['all_day'] === 1 || $input['all_day'] === true)) ? 1 : 0,
+            'rrule' => trim($input['rrule'] ?? ''),
+            'created_by' => $_SESSION['user_id'] ?? null
+        ];
+
+        error_log("Calendar Save API Call: " . json_encode($data));
+
+        if (empty($data['title']) || empty($data['start_date']) || empty($data['end_date'])) {
+            $this->json(['success' => false, 'message' => 'Title and dates are required.'], 400);
+        }
+
+        $eventModel = new Event($this->conn);
+        $result = false;
+        if (!empty($data['id'])) {
+            $result = $eventModel->updateEvent($data);
+        } else {
+            $result = $eventModel->createEvent($data);
+        }
+
+        if ($result) {
+            $this->json(['success' => true, 'message' => 'Event saved successfully!']);
+        } else {
+            $this->json(['success' => false, 'message' => 'Failed to save event.'], 500);
+        }
+    }
+
+    public function deleteEventApi() {
+        $this->checkAdmin();
+        $this->verifyCsrfToken();
+        header('Content-Type: application/json');
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $id = $input['id'] ?? $_POST['id'] ?? null;
+        $id = filter_var($id, FILTER_VALIDATE_INT);
+
+        if (!$id) {
+            $this->json(['success' => false, 'message' => 'Invalid event ID.'], 400);
+        }
+        $eventModel = new Event($this->conn);
+        if ($eventModel->deleteEvent($id)) {
+            $this->json(['success' => true, 'message' => 'Event deleted successfully!']);
+        } else {
+            $this->json(['success' => false, 'message' => 'Failed to delete event.'], 500);
+        }
     }
 
     private function checkAdmin() {

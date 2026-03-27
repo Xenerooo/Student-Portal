@@ -247,7 +247,7 @@ body.vh-100 {
     z-index: 2;
 }
 
-.sidebar-link:hover {
+.sidebar-link:hover:not(.active) {
     color: #ffffff;
     background-color: rgba(192, 200, 153, 0.15);
     /* Tinted hover */
@@ -286,14 +286,14 @@ body.vh-100 {
 }
 
 .sidebar-active-indicator::before {
-    top: -25px;
+    top: -24px;
     mask-image: radial-gradient(circle at top left, transparent 24.5px, black 25px);
     -webkit-mask-image: radial-gradient(circle at top left, transparent 24.5px, black 25px);
     background-color: #f8fafc;
 }
 
 .sidebar-active-indicator::after {
-    bottom: -25px;
+    bottom: -24px;
     mask-image: radial-gradient(circle at bottom left, transparent 24.5px, black 25px);
     -webkit-mask-image: radial-gradient(circle at bottom left, transparent 24.5px, black 25px);
     background-color: #f8fafc;

@@ -106,6 +106,10 @@ $router->map('POST', '/admin/api/curriculum/manage', 'App\\Controllers\\AdminCon
 $router->map('GET', '/admin/api/grades/edit', 'App\\Controllers\\AdminController#getGradeEditor', 'api_admin_grades_edit');
 $router->map('GET', '/admin/api/subject/history', 'App\\Controllers\\AdminController#getSubjectHistoryApi', 'api_admin_subject_history');
 $router->map('POST', '/admin/api/grades/save', 'App\\Controllers\\AdminController#saveGrade', 'api_admin_grades_save');
+$router->map('GET', '/admin/api/calendar', 'App\\Controllers\\AdminController#getCalendar', 'admin_calendar');
+$router->map('GET', '/admin/api/events', 'App\\Controllers\\AdminController#getEventsApi', 'api_admin_events');
+$router->map('POST', '/admin/api/events/save', 'App\\Controllers\\AdminController#saveEventApi', 'api_admin_events_save');
+$router->map('POST', '/admin/api/events/delete', 'App\\Controllers\\AdminController#deleteEventApi', 'api_admin_events_delete');
 
 // Enrollment routes
 $router->map('GET',  '/admin/api/students/enroll-form',       'App\\Controllers\\AdminController#getEnrollmentForm',    'api_admin_enroll_form');
@@ -123,6 +127,7 @@ $router->map('POST', '/admin/api/account/update', 'App\\Controllers\\AdminContro
  * STUDENT ROUTES (Requires Student Role)
  *====================================*/
 $router->map('GET', '/student/dashboard', 'App\\Controllers\\StudentController#dashboard', 'student_dashboard');
+$router->map('GET', '/student/api/overview', 'App\\Controllers\\StudentController#getOverview', 'api_student_overview');
 $router->map('GET', '/student/api/info', 'App\\Controllers\\StudentController#getStudentInfo', 'api_student_info');
 $router->map('GET', '/student/api/grades', 'App\\Controllers\\StudentController#getStudentGrades', 'api_student_grades');
 $router->map('GET', '/student/api/grades/progress', 'App\\Controllers\\StudentController#getGradesProgress', 'api_student_grades_progress');
@@ -135,6 +140,7 @@ $router->map('POST', '/student/api/password/change', 'App\\Controllers\\StudentC
 // New student API routes
 $router->map('GET', '/student/api/grades/term',  'App\\Controllers\\StudentController#getGradesByTerm',   'api_student_grades_term');
 $router->map('GET', '/student/api/grades/terms', 'App\\Controllers\\StudentController#getEnrolledTerms',  'api_student_grades_terms');
+$router->map('GET', '/student/api/events', 'App\\Controllers\\StudentController#getEventsApi', 'api_student_events');
 
 /*====================================
  * MATCH AND ROUTE
