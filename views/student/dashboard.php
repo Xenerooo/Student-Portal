@@ -1,50 +1,77 @@
 <?php require ROOT_PATH . '/views/layouts/header.php'; ?>
 
-<nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/Student-Portal/student/dashboard">
-            <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="32">
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="/Student-Portal/student/dashboard?view=get_student_info" data-content="get_student_info">Student Information</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/Student-Portal/student/dashboard?view=get_student_grades" data-content="get_student_grades">Grades</a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a href="/Student-Portal/logout" class="btn btn-outline-danger">Logout</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<div class="container-fluid mt-4">
-    <!-- <div class="mb-3">
-        <h2>Welcome, <?= htmlspecialchars($student['student_name'] ?? '') ?></h2>
-        <p class="text-muted">Course: <?= htmlspecialchars($student['course_name'] ?? '') ?></p>
-    </div> -->
-    
-    <div id="main-content-area">
-        <div class="d-flex justify-content-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+<div class="app-wrapper">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="32" style="border-radius: 4px;">
+            <div class="sidebar-brand-text">
+                Colegio de Porta Vaga <span>Student Portal</span>
             </div>
         </div>
-    </div>
+        <nav class="sidebar-nav">
+            <a href="/Student-Portal/student/dashboard?view=get_student_info" class="sidebar-link" data-content="get_student_info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span class="link-text">Student Information</span>
+            </a>
+            <a href="/Student-Portal/student/dashboard?view=get_student_grades" class="sidebar-link" data-content="get_student_grades">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span class="link-text">Grades</span>
+            </a>
+            
+            <div style="flex-grow: 1;"></div>
+            
+            <a href="/Student-Portal/logout" class="sidebar-link text-danger" style="color: #fca5a5 !important;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span class="link-text">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="breadcrumb-title">
+                    <span class="d-none d-sm-inline">Student Portal</span>
+                    <span class="d-none d-sm-inline separator">></span>
+                    <span id="header-title" style="color: #64748b; font-weight: normal; font-size: 0.95em;">Dashboard</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span class="badge"></span>
+                </button>
+                <div class="user-profile">
+                    <div class="user-avatar text-white bg-primary">
+                        S
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content View -->
+        <div class="app-content-scrollable">
+            <div id="main-content-area">
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const contentArea = document.getElementById('main-content-area');
-        const navLinks = document.querySelectorAll('.nav-link[data-content]');
+        const navLinks = document.querySelectorAll('.sidebar-link[data-content]');
         
         const ajaxActionMap = {
             'get_student_info': 'info',
@@ -67,6 +94,42 @@
             }
             return originalFetch(url, options);
         };
+
+        // Sidebar Toggle Logic
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        const sidebarNav = document.querySelector('.sidebar-nav');
+        const indicator = document.createElement('div');
+        indicator.className = 'sidebar-active-indicator';
+        sidebarNav.appendChild(indicator);
+
+        function updateIndicator(targetLink) {
+            if (targetLink && indicator) {
+                indicator.style.transform = `translateY(${targetLink.offsetTop}px)`;
+                indicator.style.height = `${targetLink.offsetHeight}px`;
+            }
+        }
+        
+        window.addEventListener('resize', () => {
+            const active = document.querySelector('.sidebar-link.active');
+            if (active) updateIndicator(active);
+        });
+        
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                if (window.innerWidth <= 991.98) {
+                    sidebar.classList.toggle('mobile-shown');
+                    sidebar.classList.remove('mobile-hidden');
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                }
+                setTimeout(() => {
+                    const active = document.querySelector('.sidebar-link.active');
+                    if (active) updateIndicator(active);
+                }, 310);
+            });
+        }
 
         async function loadContent(action, targetLink) {
             contentArea.innerHTML = `
@@ -116,6 +179,23 @@
                     navLinks.forEach(link => link.classList.remove('active'));
                     if (targetLink) {
                         targetLink.classList.add('active');
+                        updateIndicator(targetLink);
+                        // Update Header Text
+                        const headerTitle = document.getElementById('header-title');
+                        if (headerTitle) {
+                            // Extract text ignoring svg 
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = targetLink.innerHTML;
+                            const svg = tempDiv.querySelector('svg');
+                            if (svg) svg.remove();
+                            headerTitle.textContent = tempDiv.textContent.trim();
+                        }
+                        
+                        // Auto-hide sidebar on mobile after clicking a link
+                        if (window.innerWidth <= 991.98 && sidebar.classList.contains('mobile-shown')) {
+                            sidebar.classList.remove('mobile-shown');
+                            sidebar.classList.add('mobile-hidden');
+                        }
                     }
                     
                     history.pushState(null, '', `/Student-Portal/student/dashboard?view=${action}`);

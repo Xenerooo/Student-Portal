@@ -369,6 +369,30 @@ class Student extends BaseModel {
         return $students;
     }
 
+    public function getTotalStudentsCount() {
+        $sql = "SELECT COUNT(*) as total FROM students";
+        $result = $this->conn->query($sql);
+        if (!$result) return 0;
+        $row = $result->fetch_assoc();
+        return (int)$row['total'];
+    }
+
+    public function getRecentStudents($limit = 5) {
+        $sql = "
+            SELECT s.student_id, s.student_number, s.student_name, c.course_name 
+            FROM students s 
+            LEFT JOIN courses c ON s.course_id = c.course_id 
+            ORDER BY s.student_id DESC LIMIT ?
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $students = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $students;
+    }
+
     public function searchStudents($search) {
         $search = "%{$search}%";
         $sql = "

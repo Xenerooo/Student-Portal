@@ -97,5 +97,13 @@ class Subject extends BaseModel {
         
         return $subjects;
     }
+
+    public function getTotalSubjectsCount() {
+        $sql = "SELECT COUNT(*) as total FROM subjects";
+        $result = $this->conn->query($sql);
+        if (!$result) return 0;
+        $row = $result->fetch_assoc();
+        return (int)$row['total'];
+    }
 }
 ?>

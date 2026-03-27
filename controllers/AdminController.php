@@ -27,6 +27,31 @@ class AdminController extends BaseController {
         ]);
     }
 
+    public function getOverview() {
+        $this->checkAdmin();
+        
+        $studentModel = new Student($this->conn);
+        $subjectModel = new Subject($this->conn);
+
+        $totalStudents = $studentModel->getTotalStudentsCount();
+        $totalSubjects = $subjectModel->getTotalSubjectsCount();
+        $recentStudents = $studentModel->getRecentStudents(5);
+
+        $totalEnrolled = 0;
+        $enrollRes = $this->conn->query("SELECT COUNT(DISTINCT student_id) as total FROM enrollments");
+        if ($enrollRes) {
+            $row = $enrollRes->fetch_assoc();
+            $totalEnrolled = (int)$row['total'];
+        }
+
+        $this->render('admin/overview', [
+            'totalStudents' => $totalStudents,
+            'totalSubjects' => $totalSubjects,
+            'totalEnrolled' => $totalEnrolled,
+            'recentStudents' => $recentStudents
+        ]);
+    }
+
     public function getStudentList() {
         $this->checkAdmin();
         $this->render('admin/student_list');

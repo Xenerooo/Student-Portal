@@ -85,6 +85,7 @@ $router->map('GET', '/logout', 'App\\Controllers\\AuthController#logout', 'logou
  * ADMIN ROUTES (Requires Admin Role)
  *====================================*/
 $router->map('GET', '/admin/dashboard', 'App\\Controllers\\AdminController#dashboard', 'admin_dashboard');
+$router->map('GET', '/admin/api/overview', 'App\\Controllers\\AdminController#getOverview', 'api_admin_overview');
 
 $router->map('GET', '/admin/api/students', 'App\\Controllers\\AdminController#getStudentList', 'api_admin_students');
 $router->map('GET', '/admin/api/students/search', 'App\\Controllers\\AdminController#searchStudents', 'api_admin_students_search');
