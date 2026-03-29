@@ -48,7 +48,7 @@ function academic_record_grade_label($grade, $remarks, $status = '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle ?? 'Academic Record') ?></title>
-    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= APP_URL ?>/assets/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
             --record-ink: #111827;
@@ -291,7 +291,7 @@ function academic_record_grade_label($grade, $remarks, $status = '') {
         </div>
 
             <div class="print-letterhead">
-                <img class="logo" src="/assets/images/icon.png" alt="School logo">
+                <img class="logo" src="<?= APP_URL ?>/assets/images/icon.png" alt="School logo">
                 <div class="letterhead-text">
                     <div class="letterhead-top">Republic of the Philippines</div>
                     <div class="letterhead-name">COLEGIO DE PORTA VAGA</div>

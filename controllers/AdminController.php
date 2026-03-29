@@ -18,7 +18,7 @@ class AdminController extends BaseController {
 
     public function dashboard() {
         if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-            header("Location: /");
+            header("Location: " . APP_URL . "/");
             exit();
         }
 
@@ -115,7 +115,7 @@ class AdminController extends BaseController {
         $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
 
         if (!$student_id) {
-            header("Location: /admin/dashboard");
+            header("Location: " . APP_URL . "/admin/dashboard");
             exit();
         }
 

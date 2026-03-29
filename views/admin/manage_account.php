@@ -70,7 +70,7 @@
 
                 messageDiv.innerHTML = '<div class="alert alert-info">Updating account...</div>';
 
-                fetch('/admin/api/account/update', {
+                fetch('<?= APP_URL ?>/admin/api/account/update', {
                     method: 'POST',
                     body: formData
                 })

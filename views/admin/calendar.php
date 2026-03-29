@@ -165,7 +165,7 @@
                         right: 'dayGridMonth,timeGridWeek,timeGridDay'
                     },
                     events: function(fetchInfo, successCallback, failureCallback) {
-                            fetch('/admin/api/events?start=' + fetchInfo.startStr + '&end=' + fetchInfo.endStr)
+                            fetch('<?= APP_URL ?>/admin/api/events?start=' + fetchInfo.startStr + '&end=' + fetchInfo.endStr)
                             .then(response => {
                                 if (!response.ok) throw new Error("Network response was not ok. Status: " + response.status);
                                 return response.json();
@@ -260,7 +260,7 @@
                 data[key] = value;
             }
 
-            fetch('/admin/api/events/save', {
+            fetch('<?= APP_URL ?>/admin/api/events/save', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -306,7 +306,7 @@
 
             if (confirm('Are you sure you want to delete this event?')) {
                 const csrfToken = '<?= $_SESSION['csrf_token'] ?? '' ?>';
-                fetch('/admin/api/events/delete', {
+                fetch('<?= APP_URL ?>/admin/api/events/delete', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',

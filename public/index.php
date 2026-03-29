@@ -39,7 +39,23 @@ function portal_env(string $key, $default = null) {
 }
 
 if (!defined('APP_URL')) {
-    $appUrl = portal_env('APP_URL', 'http://localhost/Student-Portal');
+    $envUrl = portal_env('APP_URL', 'http://localhost/Student-Portal');
+    
+    // Auto-detect URL for tunnels (ngrok) or if accessing via IP/remote host
+    $hasForwardedHost = isset($_SERVER['HTTP_X_FORWARDED_HOST']);
+    $isNotLocalhost = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' && $_SERVER['HTTP_HOST'] !== '127.0.0.1';
+
+    if ($hasForwardedHost || $isNotLocalhost) {
+        $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'];
+        
+        // Extract the path (subdirectory) from the ENV URL to maintain it
+        $envPath = parse_url($envUrl, PHP_URL_PATH) ?: '';
+        $appUrl = $protocol . '://' . $host . rtrim($envPath, '/');
+    } else {
+        $appUrl = $envUrl;
+    }
+    
     define('APP_URL', rtrim($appUrl, '/'));
 }
 
@@ -71,7 +87,12 @@ if (!defined('SMTP_FROM_NAME')) {
 $router = new AltoRouter();
 // Set base path if your project isn't at the root of the domain.
 // e.g. localhost/Student-Portal
-$router->setBasePath('');
+$urlPath = parse_url(APP_URL, PHP_URL_PATH) ?: '';
+if (empty($urlPath) || $urlPath === '/') {
+    // If APP_URL is root but we're in a folder, try to detect from script name
+    $urlPath = str_replace('/public/index.php', '', $_SERVER['SCRIPT_NAME'] ?? '');
+}
+$router->setBasePath(rtrim($urlPath, '/'));
 
 /*====================================
  * PUBLIC ROUTES

@@ -301,7 +301,7 @@
             return;
         }
         
-        fetch(`/admin/api/curriculum/data?course_id=${courseId}`)
+        fetch(`<?= APP_URL ?>/admin/api/curriculum/data?course_id=${courseId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -390,7 +390,7 @@
         const formData = new FormData(this);
         formData.append('action', 'add');
         
-        fetch('/admin/api/curriculum/manage', {
+        fetch('<?= APP_URL ?>/admin/api/curriculum/manage', {
             method: 'POST',
             body: formData
         })
@@ -442,7 +442,7 @@
         const formData = new FormData(form);
         formData.append('action', 'update');
         
-        fetch('/admin/api/curriculum/manage', {
+        fetch('<?= APP_URL ?>/admin/api/curriculum/manage', {
             method: 'POST',
             body: formData
         })
@@ -470,7 +470,7 @@
         formData.append('action', 'delete');
         formData.append('curriculum_id', curriculumId);
         
-        fetch('/admin/api/curriculum/manage', {
+        fetch('<?= APP_URL ?>/admin/api/curriculum/manage', {
             method: 'POST',
             body: formData
         })
@@ -596,7 +596,7 @@
                 formData.append('action', 'bulk_save');
                 formData.append('curriculum_data', JSON.stringify(curriculumData));
                 
-                fetch('/admin/api/curriculum/manage', {
+                fetch('<?= APP_URL ?>/admin/api/curriculum/manage', {
                     method: 'POST',
                     body: formData
                 })

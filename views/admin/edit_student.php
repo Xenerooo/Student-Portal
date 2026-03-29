@@ -160,7 +160,7 @@
                 } else {
                     // Fallback if loadContent is not available
                     console.error('loadContent function not available');
-                    window.location.href = '/admin/dashboard';
+                    window.location.href = '<?= APP_URL ?>/admin/dashboard';
                 }
             });
         }
@@ -177,7 +177,7 @@
             
             messageDiv.innerHTML = '<div class="alert alert-info">Processing...</div>';
 
-            fetch('/admin/api/students/update', {
+            fetch('<?= APP_URL ?>/admin/api/students/update', {
                 method: 'POST',
                 body: formData
             })
@@ -204,7 +204,7 @@
                         if (typeof window.loadContent === 'function') {
                             window.loadContent(action, targetLink);
                         } else {
-                            window.location.href = '/admin/dashboard';
+                            window.location.href = '<?= APP_URL ?>/admin/dashboard';
                         }
                     }, 1500);
                 } else {
@@ -247,7 +247,7 @@
                 const formData = new FormData();
                 formData.append('student_id', studentId);
 
-                fetch('/admin/api/students/delete', {
+                fetch('<?= APP_URL ?>/admin/api/students/delete', {
                     method: 'POST',
                     body: formData
                 })
@@ -287,7 +287,7 @@
                             if (typeof window.loadContent === 'function') {
                                 window.loadContent(action, targetLink);
                             } else {
-                                window.location.href = '/admin/dashboard';
+                                window.location.href = '<?= APP_URL ?>/admin/dashboard';
                             }
                         }, 1000);
                     } else {

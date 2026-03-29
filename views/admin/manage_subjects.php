@@ -252,7 +252,7 @@
         
         messageDiv.innerHTML = '<div class="alert alert-info">Adding subject...</div>';
         
-        fetch('/admin/api/subjects/manage', {
+        fetch('<?= APP_URL ?>/admin/api/subjects/manage', {
             method: 'POST',
             body: formData
         })
@@ -425,7 +425,7 @@
                 formData.append('action', 'delete');
                 formData.append('subject_id', pendingDeleteSubjectId);
 
-                fetch('/admin/api/subjects/manage', {
+                fetch('<?= APP_URL ?>/admin/api/subjects/manage', {
                     method: 'POST',
                     body: formData
                 })
@@ -512,7 +512,7 @@
                 const messageDiv = document.getElementById('form-submission-message');
                 messageDiv.innerHTML = '<div class="alert alert-info">Updating subject...</div>';
 
-                fetch('/admin/api/subjects/manage', {
+                fetch('<?= APP_URL ?>/admin/api/subjects/manage', {
                     method: 'POST',
                     body: formData
                 })
@@ -576,7 +576,7 @@
             const listBody = document.getElementById('requisites-list-body');
             listBody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
 
-            fetch(`/admin/api/subjects/requisites?subject_id=${subjectId}`)
+            fetch(`<?= APP_URL ?>/admin/api/subjects/requisites?subject_id=${subjectId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -649,7 +649,7 @@
                 const msgContainer = document.getElementById('requisites-message-container');
                 msgContainer.innerHTML = '';
 
-                fetch('/admin/api/subjects/requisites/manage', {
+                fetch('<?= APP_URL ?>/admin/api/subjects/requisites/manage', {
                     method: 'POST',
                     body: formData
                 })
@@ -681,7 +681,7 @@
                     formData.append('prerequisite_id', reqId);
                     formData.append('subject_id', currentSubjectIdForReq);
 
-                    fetch('/admin/api/subjects/requisites/manage', {
+                    fetch('<?= APP_URL ?>/admin/api/subjects/requisites/manage', {
                         method: 'POST',
                         body: formData
                     })

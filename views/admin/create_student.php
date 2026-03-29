@@ -84,7 +84,7 @@
             </div>
             
             <button type="submit" class="btn btn-primary w-100 mt-4">Create Student</button>
-            <button type="button" class="btn btn-secondary w-100 mt-2" onclick="window.location.href='/admin/dashboard'">Cancel</button>
+            <button type="button" class="btn btn-secondary w-100 mt-2" onclick="window.location.href='<?= APP_URL ?>/admin/dashboard'">Cancel</button>
         </form>
     </div>
 </div>
@@ -100,7 +100,7 @@
         
         messageDiv.innerHTML = '<div class="alert alert-info">Processing...</div>';
 
-        fetch('/admin/api/students/store', {
+        fetch('<?= APP_URL ?>/admin/api/students/store', {
             method: 'POST',
             body: formData
         })

@@ -2,7 +2,7 @@
 
 <div class="container py-5" style="max-width: 720px;">
     <div class="text-center mb-4">
-        <img src="/assets/images/icon.png" alt="School Logo" height="72" class="mb-3">
+        <img src="<?= APP_URL ?>/assets/images/icon.png" alt="School Logo" height="72" class="mb-3">
         <h1 class="h3 mb-2">Change Your Password</h1>
         <p class="text-muted mb-0">
             <?php if (!empty($account['username'])): ?>

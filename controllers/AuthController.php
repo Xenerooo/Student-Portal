@@ -10,13 +10,13 @@ class AuthController extends BaseController {
         if (isset($_SESSION['role'])) {
             if ($_SESSION['role'] === 'student') {
                 if (!empty($_SESSION['must_change_password'])) {
-                    header("Location: /student/change-password");
+                    header("Location: " . APP_URL . "/student/change-password");
                     exit();
                 }
-                header("Location: /student/dashboard");
+                header("Location: " . APP_URL . "/student/dashboard");
                 exit();
             } elseif ($_SESSION['role'] === 'admin') {
-                header("Location: /admin/dashboard");
+                header("Location: " . APP_URL . "/admin/dashboard");
                 exit();
             }
         }
@@ -52,14 +52,14 @@ class AuthController extends BaseController {
                 if ($student_id) {
                     $_SESSION['student_id'] = $student_id;
                     $redirect_page = !empty($user['must_change_password'])
-                        ? '/student/change-password'
-                        : '/student/dashboard';
+                        ? APP_URL . '/student/change-password'
+                        : APP_URL . '/student/dashboard';
                 }
             } elseif ($user['role'] === 'admin') {
                 $admin_id = $userModel->getAdminIdByUserId($user['user_id']);
                 if ($admin_id) {
                     $_SESSION['admin_id'] = $admin_id;
-                    $redirect_page = '/admin/dashboard';
+                    $redirect_page = APP_URL . '/admin/dashboard';
                 }
             }
 
@@ -78,7 +78,7 @@ class AuthController extends BaseController {
 
     public function logout() {
         session_destroy();
-        header("Location: /");
+        header("Location: " . APP_URL . "/");
         exit();
     }
 }

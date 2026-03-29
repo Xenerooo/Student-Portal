@@ -527,7 +527,7 @@ $course_id = (int)($student['course_id'] ?? 0);
     async function loadLatestEnrollmentMap() {
         if (latestEnrollmentLoaded) return;
 
-        const histRes = await fetch(`/admin/api/students/enrollment-history?student_id=${studentId}`);
+        const histRes = await fetch(`<?= APP_URL ?>/admin/api/students/enrollment-history?student_id=${studentId}`);
         const histData = await histRes.json();
         if (!histData.success) throw new Error(histData.message);
 
@@ -544,7 +544,7 @@ $course_id = (int)($student['course_id'] ?? 0);
     async function loadAllSubjectsCatalog() {
         if (subjectCatalogLoaded) return;
 
-        const subRes = await fetch('/admin/api/subjects/list');
+        const subRes = await fetch('<?= APP_URL ?>/admin/api/subjects/list');
         const subData = await subRes.json();
         if (!subData.success) throw new Error(subData.message || 'Failed to load subjects.');
         allSubjects = subData.subjects || [];
@@ -627,7 +627,7 @@ $course_id = (int)($student['course_id'] ?? 0);
 
             if (semester === 'Summer') {
                 await loadAllSubjectsCatalog();
-                const retakeRes = await fetch(`/admin/api/students/retake-candidates?student_id=${studentId}&school_year=${encodeURIComponent(schoolYear)}&semester=${encodeURIComponent(semester)}`);
+                const retakeRes = await fetch(`<?= APP_URL ?>/admin/api/students/retake-candidates?student_id=${studentId}&school_year=${encodeURIComponent(schoolYear)}&semester=${encodeURIComponent(semester)}`);
                 const retakeData = await retakeRes.json();
                 if (!retakeData.success) throw new Error(retakeData.message);
                 retakeCandidates = retakeData.retake_candidates || [];
@@ -670,7 +670,7 @@ $course_id = (int)($student['course_id'] ?? 0);
         document.getElementById('regularChecklist').style.display = 'block';
         document.getElementById('summerChecklist').style.display = 'none';
         
-        const enrollSubRes = await fetch(`/admin/api/students/enroll-form-subjects?student_id=${studentId}&year_level=${yearLevel}&semester_int=${semInt}&school_year=${encodeURIComponent(schoolYear)}&semester=${encodeURIComponent(semesterLabel)}`);
+        const enrollSubRes = await fetch(`<?= APP_URL ?>/admin/api/students/enroll-form-subjects?student_id=${studentId}&year_level=${yearLevel}&semester_int=${semInt}&school_year=${encodeURIComponent(schoolYear)}&semester=${encodeURIComponent(semesterLabel)}`);
         const enrollSubData = await enrollSubRes.json();
         
         if (!enrollSubData.success) throw new Error(enrollSubData.message);
@@ -968,7 +968,7 @@ $course_id = (int)($student['course_id'] ?? 0);
         }
         
         try {
-            const r = await fetch('/admin/api/students/enroll', {
+            const r = await fetch('<?= APP_URL ?>/admin/api/students/enroll', {
                 method: 'POST',
                 body: formData
             });
@@ -1007,7 +1007,7 @@ $course_id = (int)($student['course_id'] ?? 0);
     window.reloadHistory = function() {
         historyContainer.innerHTML = '<div class="p-4 text-center text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</div>';
         
-        fetch(`/admin/api/students/enrollment-history?student_id=${studentId}`)
+        fetch(`<?= APP_URL ?>/admin/api/students/enrollment-history?student_id=${studentId}`)
         .then(r => r.json())
         .then(data => {
             if (!data.success) throw new Error(data.message);
@@ -1100,7 +1100,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                 const id = this.getAttribute('data-enroll-id');
                 if (!confirm('Are you sure you want to drop this subject?')) return;
                 
-                fetch('/admin/api/students/drop-subject', {
+                fetch('<?= APP_URL ?>/admin/api/students/drop-subject', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: `enrollment_id=${id}`

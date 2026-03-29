@@ -1,9 +1,18 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /Student-Portal/
 
-    # Stop processing if we're already in the public directory (inf loop prevention)
-    RewriteRule ^public/ - [L]
+    # If the file/dir exists in the root, serve it (e.g. debug scripts)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
-    # Rewrite all requests to the public directory
+    # OTHERWISE, transparency rewrite everything into the 'public' folder
+    # This ensures assets in public/assets/ are reachable via /assets/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ public/$1 [L]
+
+    # If the file still doesn't exist in public/, the public/.htaccess will 
+    # finally route it to index.php
 </IfModule>

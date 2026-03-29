@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="/assets/images/icon.png">
+    <link rel="icon" href="<?= APP_URL ?>/assets/images/icon.png">
     
     <title>Portal Login</title>
-    <link href="/assets/css/bootstrap.css" rel="stylesheet" >
-    <link href="/assets/css/app.css" rel="stylesheet" >
+    <link href="<?= APP_URL ?>/assets/css/bootstrap.css" rel="stylesheet" >
+    <link href="<?= APP_URL ?>/assets/css/app.css" rel="stylesheet" >
     <style>
         body {
             background-color: #3a522e; /* Hunter Green */
@@ -123,13 +123,13 @@
         
         <div class="login-card">
             <div class="login-logo">
-                <img src="/assets/images/icon.png" alt="" width="64" height="64">
+                <img src="<?= APP_URL ?>/assets/images/icon.png" alt="" width="64" height="64">
             </div>
             
             <h1 class="login-title">Welcome Back</h1>
             <p class="login-subtitle">Sign in to your account to continue</p>
 
-            <form method="POST" action="/login" id="loginForm">
+            <form method="POST" action="<?= APP_URL ?>/login" id="loginForm">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
 
                 <div class="form-floating mb-3">
@@ -162,7 +162,7 @@
         </div>
     </div>
 
-<script src="/assets/js/bootstrap.bundle.js"></script>
+<script src="<?= APP_URL ?>/assets/js/bootstrap.bundle.js"></script>
 <script>
     document.getElementById('loginForm').addEventListener('submit', function(event) {
         event.preventDefault();

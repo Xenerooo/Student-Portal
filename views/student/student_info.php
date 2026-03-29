@@ -172,7 +172,7 @@ $initials = strtoupper(substr(trim((string)($student['student_name'] ?? 'S')), 0
         feedback.innerHTML = '<div class="alert alert-info">Updating password...</div>';
 
         try {
-            const res = await fetch('/student/api/password/change', {
+            const res = await fetch('<?= APP_URL ?>/student/api/password/change', {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin',
