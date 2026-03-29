@@ -4,7 +4,7 @@
     <!-- Sidebar -->
     <aside class="app-sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="32" style="border-radius: 4px;">
+            <img src="/assets/images/icon.png" alt="School Logo" height="32" style="border-radius: 4px;">
             <div class="sidebar-brand-text">
                 Colegio de Porta Vaga <span>Admin Panel</span>
             </div>
@@ -41,7 +41,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 <span class="link-text">Manage Account</span>
             </a>
-            <a href="/Student-Portal/logout" class="sidebar-link text-danger" style="color: #fca5a5 !important;">
+            <a href="/logout" class="sidebar-link text-danger" style="color: #fca5a5 !important;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 <span class="link-text">Logout (<?php echo htmlspecialchars($_SESSION['role'] ?? ''); ?>)</span>
             </a>
@@ -109,7 +109,7 @@
             'admin_manage_account': 'account'
         };
 
-        const apiBasePath = '/Student-Portal/admin/api/';
+        const apiBasePath = '/admin/api/';
 
         // Global Fetch Interceptor to include CSRF token in all POST/PUT/DELETE requests
         const originalFetch = window.fetch;
@@ -238,7 +238,7 @@
                         }
                     }
                     
-                    history.pushState(null, '', `/Student-Portal/admin/dashboard?view=${action}`);
+                    history.pushState(null, '', `/admin/dashboard?view=${action}`);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;

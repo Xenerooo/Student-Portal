@@ -12,12 +12,12 @@ class StudentController extends BaseController {
 
     public function dashboard() {
         if (!isset($_SESSION['student_id']) || $_SESSION['role'] !== 'student') {
-            header("Location: /Student-Portal/");
+            header("Location: /");
             exit();
         }
 
         if (!empty($_SESSION['must_change_password'])) {
-            header("Location: /Student-Portal/student/change-password");
+            header("Location: /student/change-password");
             exit();
         }
 
@@ -123,7 +123,7 @@ class StudentController extends BaseController {
             $this->json([
                 'success' => true,
                 'message' => 'Password updated successfully.',
-                'redirect' => '/Student-Portal/student/dashboard'
+                'redirect' => '/student/dashboard'
             ]);
         } else {
             $this->json(['success' => false, 'message' => 'Failed to update password.'], 500);
@@ -235,7 +235,7 @@ class StudentController extends BaseController {
 
         $curriculumProgress = $gradeModel->getCurriculumProgress($student_id);
         $summary = $this->buildCurriculumSummary($curriculumProgress);
-        $returnTo = trim($_GET['return_to'] ?? '') ?: '/Student-Portal/student/dashboard?view=get_student_grades';
+        $returnTo = trim($_GET['return_to'] ?? '') ?: '/student/dashboard?view=get_student_grades';
 
         $this->render('student/curriculum_progress_print', [
             'pageTitle' => 'Curriculum Progress | SIS',

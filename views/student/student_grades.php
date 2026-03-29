@@ -132,7 +132,7 @@
                         <div class="mb-3 input-group">
                             <span class="input-group-text">
                                 <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Search">
-                                    <use xlink:href="/Student-Portal/assets/images/search.svg"/>
+                                    <use xlink:href="/assets/images/search.svg"/>
                                 </svg>
                             </span>
                             <label for="termSearch" class="form-label"></label>
@@ -182,7 +182,7 @@
                             <div class="mb-3 input-group">
                                 <span class="input-group-text">
                                     <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Search">
-                                        <use xlink:href="/Student-Portal/assets/images/search.svg"/>
+                                        <use xlink:href="/assets/images/search.svg"/>
                                     </svg>
                                 </span>
                                 <label for="progressSearch" class="form-label"></label>
@@ -209,7 +209,7 @@
                         <div class="mb-3 input-group">
                             <span class="input-group-text">
                                 <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Search">
-                                    <use xlink:href="/Student-Portal/assets/images/search.svg"/>
+                                    <use xlink:href="/assets/images/search.svg"/>
                                 </svg>
                             </span>
                             <label for="historySearch" class="form-label"></label>
@@ -272,13 +272,13 @@
     async function init() {
         try {
             // Fetch History immediately for summary calculations
-            const histRes = await fetch('/Student-Portal/student/api/grades/history');
+            const histRes = await fetch('/student/api/grades/history');
             const histData = await histRes.json();
             scholasticHistory = histData.data || [];
             updateOverallSummary();
 
             // Fetch Terms
-            const termsRes = await fetch('/Student-Portal/student/api/grades/terms');
+            const termsRes = await fetch('/student/api/grades/terms');
             const data = await termsRes.json();
             termsList = data.terms || [];
 
@@ -318,7 +318,7 @@
         termContent.style.display = 'block';
 
         try {
-            const res = await fetch(`/Student-Portal/student/api/grades/term?school_year=${encodeURIComponent(year)}&semester=${encodeURIComponent(sem)}`);
+            const res = await fetch(`/student/api/grades/term?school_year=${encodeURIComponent(year)}&semester=${encodeURIComponent(sem)}`);
             const data = await res.json();
             renderTerm(data.data || [], year, sem);
         } catch (err) {
@@ -496,7 +496,7 @@
         const container = document.getElementById('progress-container');
         
         try {
-            const res = await fetch('/Student-Portal/student/api/grades/progress');
+            const res = await fetch('/student/api/grades/progress');
             const data = await res.json();
             renderProgress(data.data || {});
             progressLoaded = true;
@@ -647,17 +647,17 @@
             return;
         }
 
-        const exportUrl = new URL('/Student-Portal/student/printables/academic-record', window.location.origin);
+        const exportUrl = new URL('/student/printables/academic-record', window.location.origin);
         exportUrl.searchParams.set('school_year', year);
         exportUrl.searchParams.set('semester', sem);
-        exportUrl.searchParams.set('return_to', '/Student-Portal/student/dashboard?view=get_student_grades');
+        exportUrl.searchParams.set('return_to', '/student/dashboard?view=get_student_grades');
 
         window.location.href = exportUrl.toString();
     });
 
     document.getElementById('exportCurriculumPdfBtn').addEventListener('click', function() {
-        const exportUrl = new URL('/Student-Portal/student/printables/curriculum-progress', window.location.origin);
-        exportUrl.searchParams.set('return_to', '/Student-Portal/student/dashboard?view=get_student_grades');
+        const exportUrl = new URL('/student/printables/curriculum-progress', window.location.origin);
+        exportUrl.searchParams.set('return_to', '/student/dashboard?view=get_student_grades');
         window.location.href = exportUrl.toString();
     });
 

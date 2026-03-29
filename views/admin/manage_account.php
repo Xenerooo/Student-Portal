@@ -70,7 +70,7 @@
 
                 messageDiv.innerHTML = '<div class="alert alert-info">Updating account...</div>';
 
-                fetch('/Student-Portal/admin/api/account/update', {
+                fetch('/admin/api/account/update', {
                     method: 'POST',
                     body: formData
                 })

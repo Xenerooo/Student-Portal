@@ -10,7 +10,7 @@
 <div class="mb-3 input-group">
     <span class="input-group-text">
         <svg class="bi bi-search" height="16px" width="16px" fill="current" role="img" aria-label="Tools" ">
-            <use xlink:href="/Student-Portal/assets/images/search.svg"/>
+            <use xlink:href="/assets/images/search.svg"/>
         </svg>
     </span>
 
@@ -63,7 +63,7 @@
             `;
             
             // Build URL with search parameter
-            let url = '/Student-Portal/admin/api/students/search';
+            let url = '/admin/api/students/search';
             const params = new URLSearchParams();
             if (searchTerm.trim()) {
                 params.set('search', searchTerm.trim());
@@ -123,7 +123,7 @@
                     <tr>
                         <td>${escapeHtml(student.student_number)}</td>
                         <td>
-                            <img src="/Student-Portal/assets/images/person.svg" alt="" class="mb-1">
+                            <img src="/assets/images/person.svg" alt="" class="mb-1">
                             ${escapeHtml(student.student_name)}
                         </td>
                         <td>${escapeHtml(student.course_name)}</td>
@@ -212,7 +212,7 @@
         function loadEditStudentForm(studentId) {
             const contentArea = document.getElementById('main-content-area');
             
-            const url = `/Student-Portal/admin/api/students/edit?student_id=${studentId}`;
+            const url = `/admin/api/students/edit?student_id=${studentId}`;
             
             fetch(url)
                 .then(response => {
@@ -252,7 +252,7 @@
                     });
                     
                     // Update URL
-                    history.pushState(null, '', `/Student-Portal/admin/dashboard?view=get_edit_student_form&student_id=${studentId}`);
+                    history.pushState(null, '', `/admin/dashboard?view=get_edit_student_form&student_id=${studentId}`);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;
@@ -273,7 +273,7 @@
                 </div>
             `;
 
-            let url = `/Student-Portal/admin/api/grades/edit?student_id=${studentId}`;
+            let url = `/admin/api/grades/edit?student_id=${studentId}`;
             if (schoolYear) url += `&school_year=${encodeURIComponent(schoolYear)}`;
             if (semester) url += `&semester=${encodeURIComponent(semester)}`;
 
@@ -310,7 +310,7 @@
                         newScript.remove();
                     });
 
-                    let pushUrl = `/Student-Portal/admin/dashboard?view=grade_editor&student_id=${studentId}`;
+                    let pushUrl = `/admin/dashboard?view=grade_editor&student_id=${studentId}`;
                     if (schoolYear) pushUrl += `&school_year=${encodeURIComponent(schoolYear)}`;
                     if (semester) pushUrl += `&semester=${encodeURIComponent(semester)}`;
                     history.pushState(null, '', pushUrl);
@@ -324,7 +324,7 @@
         function loadEnrollmentForm(studentId) {
             const contentArea = document.getElementById('main-content-area');
             
-            const url = `/Student-Portal/admin/api/students/enroll-form?student_id=${studentId}`;
+            const url = `/admin/api/students/enroll-form?student_id=${studentId}`;
             
             fetch(url)
                 .then(response => {
@@ -359,7 +359,7 @@
                         newScript.remove();
                     });
                     
-                    history.pushState(null, '', `/Student-Portal/admin/dashboard?view=enroll_form&student_id=${studentId}`);
+                    history.pushState(null, '', `/admin/dashboard?view=enroll_form&student_id=${studentId}`);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;

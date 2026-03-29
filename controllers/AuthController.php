@@ -10,13 +10,13 @@ class AuthController extends BaseController {
         if (isset($_SESSION['role'])) {
             if ($_SESSION['role'] === 'student') {
                 if (!empty($_SESSION['must_change_password'])) {
-                    header("Location: /Student-Portal/student/change-password");
+                    header("Location: /student/change-password");
                     exit();
                 }
-                header("Location: /Student-Portal/student/dashboard");
+                header("Location: /student/dashboard");
                 exit();
             } elseif ($_SESSION['role'] === 'admin') {
-                header("Location: /Student-Portal/admin/dashboard");
+                header("Location: /admin/dashboard");
                 exit();
             }
         }
@@ -52,14 +52,14 @@ class AuthController extends BaseController {
                 if ($student_id) {
                     $_SESSION['student_id'] = $student_id;
                     $redirect_page = !empty($user['must_change_password'])
-                        ? '/Student-Portal/student/change-password'
-                        : '/Student-Portal/student/dashboard';
+                        ? '/student/change-password'
+                        : '/student/dashboard';
                 }
             } elseif ($user['role'] === 'admin') {
                 $admin_id = $userModel->getAdminIdByUserId($user['user_id']);
                 if ($admin_id) {
                     $_SESSION['admin_id'] = $admin_id;
-                    $redirect_page = '/Student-Portal/admin/dashboard';
+                    $redirect_page = '/admin/dashboard';
                 }
             }
 
@@ -78,7 +78,7 @@ class AuthController extends BaseController {
 
     public function logout() {
         session_destroy();
-        header("Location: /Student-Portal/");
+        header("Location: /");
         exit();
     }
 }

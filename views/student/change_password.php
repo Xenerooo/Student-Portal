@@ -2,7 +2,7 @@
 
 <div class="container py-5" style="max-width: 720px;">
     <div class="text-center mb-4">
-        <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="72" class="mb-3">
+        <img src="/assets/images/icon.png" alt="School Logo" height="72" class="mb-3">
         <h1 class="h3 mb-2">Change Your Password</h1>
         <p class="text-muted mb-0">
             <?php if (!empty($account['username'])): ?>
@@ -57,7 +57,7 @@
         feedback.innerHTML = '<div class="alert alert-info">Updating password...</div>';
 
         try {
-            const res = await fetch('/Student-Portal/student/api/password/change', {
+            const res = await fetch('/student/api/password/change', {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin',
@@ -72,7 +72,7 @@
 
             if (json.success) {
                 form.reset();
-                window.location.href = json.redirect || '/Student-Portal/student/dashboard';
+                window.location.href = json.redirect || '/student/dashboard';
             }
         } catch (err) {
             feedback.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';

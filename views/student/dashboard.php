@@ -4,28 +4,28 @@
     <!-- Sidebar -->
     <aside class="app-sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="/Student-Portal/assets/images/icon.png" alt="School Logo" height="32" style="border-radius: 4px;">
+            <img src="/assets/images/icon.png" alt="School Logo" height="32" style="border-radius: 4px;">
             <div class="sidebar-brand-text">
                 Colegio de Porta Vaga <span>Student Portal</span>
             </div>
         </div>
         <nav class="sidebar-nav">
-            <a href="/Student-Portal/student/dashboard?view=get_overview" class="sidebar-link active" data-content="get_overview">
+            <a href="/student/dashboard?view=get_overview" class="sidebar-link active" data-content="get_overview">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 <span class="link-text">Dashboard</span>
             </a>
-            <a href="/Student-Portal/student/dashboard?view=get_student_info" class="sidebar-link" data-content="get_student_info">
+            <a href="/student/dashboard?view=get_student_info" class="sidebar-link" data-content="get_student_info">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 <span class="link-text">Student Information</span>
             </a>
-            <a href="/Student-Portal/student/dashboard?view=get_student_grades" class="sidebar-link" data-content="get_student_grades">
+            <a href="/student/dashboard?view=get_student_grades" class="sidebar-link" data-content="get_student_grades">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 <span class="link-text">Grades</span>
             </a>
             
             <div style="flex-grow: 1;"></div>
             
-            <a href="/Student-Portal/logout" class="sidebar-link text-danger" style="color: #fca5a5 !important;">
+            <a href="/logout" class="sidebar-link text-danger" style="color: #fca5a5 !important;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 <span class="link-text">Logout</span>
             </a>
@@ -83,7 +83,7 @@
             'get_student_grades': 'grades'
         };
 
-        const apiBasePath = '/Student-Portal/student/api/';
+        const apiBasePath = '/student/api/';
 
         // Global Fetch Interceptor to include CSRF token in all POST/PUT/DELETE requests
         const originalFetch = window.fetch;
@@ -203,7 +203,7 @@
                         }
                     }
                     
-                    history.pushState(null, '', `/Student-Portal/student/dashboard?view=${action}`);
+                    history.pushState(null, '', `/student/dashboard?view=${action}`);
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;

@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?? '' ?>">
     <title><?= htmlspecialchars($pageTitle ?? 'SIS Portal') ?></title>
-    <link href="/Student-Portal/assets/css/bootstrap.css" rel="stylesheet"> 
-    <link href="/Student-Portal/assets/css/app.css?view=last_<?= time() ?>_10" rel="stylesheet">
-    <script defer src="/Student-Portal/assets/js/bootstrap.bundle.js"></script>
-    <link rel="icon" href="/Student-Portal/assets/images/icon.png">
+    <link href="/assets/css/bootstrap.css" rel="stylesheet"> 
+    <link href="/assets/css/app.css?view=last_<?= time() ?>_10" rel="stylesheet">
+    <script defer src="/assets/js/bootstrap.bundle.js"></script>
+    <link rel="icon" href="/assets/images/icon.png">
 </head>
 <body class="vh-100">

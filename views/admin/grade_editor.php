@@ -8,8 +8,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grade Editor - <?php echo htmlspecialchars($student_details['student_name']); ?></title>
-    <link href="/Student-Portal/assets/css/bootstrap.min.css" rel="stylesheet"> 
-    <script defer src="/Student-Portal/assets/js/bootstrap.bundle.js"></script>
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet"> 
+    <script defer src="/assets/js/bootstrap.bundle.js"></script>
     <style>
         .grade-card {
             border: none;
@@ -45,7 +45,7 @@
                 <h1 class="h2 mb-1">Grade Management</h1>
                 <p class="text-muted">Recording grades for: <strong><?php echo htmlspecialchars($student_details['student_name']); ?></strong></p>
             </div>
-            <a href="/Student-Portal/admin/dashboard" class="btn btn-outline-secondary">
+            <a href="/admin/dashboard" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
         </div>
@@ -396,7 +396,7 @@
         function fetchSubjectHistory(subjId) {
             historyContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
             
-            fetch(`/Student-Portal/admin/api/subject/history?student_id=${studentId}&subject_id=${subjId}`)
+            fetch(`/admin/api/subject/history?student_id=${studentId}&subject_id=${subjId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.history.length > 0) {
@@ -453,7 +453,7 @@
             finalData.append(`grades[${subjectId}][average_grade]`, document.getElementById('modal_average_display').value);
             finalData.append(`grades[${subjectId}][remarks]`, document.getElementById('modal_remarks_input').value);
 
-            fetch('/Student-Portal/admin/api/grades/save', {
+            fetch('/admin/api/grades/save', {
                 method: 'POST',
                 body: finalData,
                 credentials: 'same-origin'

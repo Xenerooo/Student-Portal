@@ -19,7 +19,7 @@
                         </div>
                     </div>
                     <div class="col-md-4 d-none d-md-block text-end">
-                        <img src="/Student-Portal/assets/images/icon.png" alt="Logo" style="height: 120px; opacity: 0.2; filter: brightness(0) invert(1);">
+                        <img src="/assets/images/icon.png" alt="Logo" style="height: 120px; opacity: 0.2; filter: brightness(0) invert(1);">
                     </div>
                 </div>
             </div>
@@ -187,7 +187,7 @@
             const end = `${year}-${month}-${lastDay}`;
             
             try {
-                const response = await fetch(`/Student-Portal/student/api/events?start=${start}&end=${end}`);
+                const response = await fetch(`/student/api/events?start=${start}&end=${end}`);
                 const data = await response.json();
                 if (data.success) {
                     eventsData = data.events;

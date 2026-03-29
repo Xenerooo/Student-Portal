@@ -15,8 +15,8 @@
 $studentName = htmlspecialchars($student['student_name'] ?? 'Student');
 $studentNumber = htmlspecialchars($student['student_number'] ?? 'N/A');
 $courseName = htmlspecialchars($student['course_name'] ?? 'N/A');
-$photoData = !empty($student['img']) ? 'data:image/jpeg;base64,' . base64_encode($student['img']) : '/Student-Portal/assets/images/person.svg';
-$returnTo = trim($_GET['return_to'] ?? '') ?: '/Student-Portal/student/dashboard?view=get_student_grades';
+$photoData = !empty($student['img']) ? 'data:image/jpeg;base64,' . base64_encode($student['img']) : '/assets/images/person.svg';
+$returnTo = trim($_GET['return_to'] ?? '') ?: '/student/dashboard?view=get_student_grades';
 
 function academic_record_grade_label($grade, $remarks, $status = '') {
     $grade = $grade !== null && $grade !== '' ? (float)$grade : null;
@@ -48,7 +48,7 @@ function academic_record_grade_label($grade, $remarks, $status = '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle ?? 'Academic Record') ?></title>
-    <link href="/Student-Portal/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
             --record-ink: #111827;
@@ -291,7 +291,7 @@ function academic_record_grade_label($grade, $remarks, $status = '') {
         </div>
 
             <div class="print-letterhead">
-                <img class="logo" src="/Student-Portal/assets/images/icon.png" alt="School logo">
+                <img class="logo" src="/assets/images/icon.png" alt="School logo">
                 <div class="letterhead-text">
                     <div class="letterhead-top">Republic of the Philippines</div>
                     <div class="letterhead-name">COLEGIO DE PORTA VAGA</div>
