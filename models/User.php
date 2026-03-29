@@ -37,7 +37,7 @@ class User extends BaseModel {
     }
 
     public function getStudentIdByUserId($user_id) {
-        $stmt = $this->conn->prepare("CALL getStudentByUserId(?)");
+        $stmt = $this->conn->prepare("SELECT student_id FROM students WHERE user_id = ? LIMIT 1");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -45,25 +45,17 @@ class User extends BaseModel {
         $result->close();
         $stmt->close();
         
-        while ($this->conn->more_results()) {
-            $this->conn->next_result();
-        }
-        
         return $student ? $student['student_id'] : null;
     }
 
     public function getAdminIdByUserId($user_id) {
-        $stmt = $this->conn->prepare("CALL getAdminByUserId(?)");
+        $stmt = $this->conn->prepare("SELECT admin_id FROM admins WHERE user_id = ? LIMIT 1");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
         $admin = $result->fetch_assoc();
         $result->close();
         $stmt->close();
-        
-        while ($this->conn->more_results()) {
-            $this->conn->next_result();
-        }
         
         return $admin ? $admin['admin_id'] : null;
     }

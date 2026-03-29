@@ -25,7 +25,7 @@ class Student extends BaseModel {
             $this->conn->begin_transaction();
             
             // --- INSERT 1: Create the User Account (Authentication/Login) ---
-            $stmt_user = $this->conn->prepare("CALL createUser(?, ?, 'student');");
+            $stmt_user = $this->conn->prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'student');");
             if (!$stmt_user) {
                 throw new Exception("User creation preparation failed: " . $this->conn->error);
             }
@@ -41,9 +41,9 @@ class Student extends BaseModel {
             }
             $stmt_user->close();
 
-            while ($this->conn->more_results()) { $this->conn->next_result(); }
 
-            $stmt_get_id = $this->conn->prepare("CALL getUserDetailByUsername(?);");
+
+            $stmt_get_id = $this->conn->prepare("SELECT user_id, password_hash, role FROM users WHERE username = ? AND is_active = 1");
             if (!$stmt_get_id) {
                 $this->conn->rollback();
                 throw new Exception("Error: User was created but user_id could not be retrieved.");
@@ -71,7 +71,6 @@ class Student extends BaseModel {
             }
 
             $stmt_get_id->close();
-            while ($this->conn->more_results()) { $this->conn->next_result(); }
 
             $stmt_flag = $this->conn->prepare("UPDATE users SET must_change_password = 1 WHERE user_id = ?");
             if (!$stmt_flag) {
@@ -133,7 +132,7 @@ class Student extends BaseModel {
             }
             
             $stmt_student->close();
-            while ($this->conn->more_results()) { $this->conn->next_result(); }
+
             
             // --- Success: Commit Transaction ---
             $this->conn->commit();
@@ -172,8 +171,13 @@ class Student extends BaseModel {
             
             // --- UPDATE 1: Update User Account (Username and optionally Password) ---
             $hashed_password = !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null;
-            $stmt_user = $this->conn->prepare("CALL updateUser(?, ?, ?);");
-            $stmt_user->bind_param("ssi", $username, $hashed_password, $user_id);
+            if ($hashed_password !== null) {
+                $stmt_user = $this->conn->prepare("UPDATE users SET username = ?, password_hash = ? WHERE user_id = ?");
+                $stmt_user->bind_param("ssi", $username, $hashed_password, $user_id);
+            } else {
+                $stmt_user = $this->conn->prepare("UPDATE users SET username = ? WHERE user_id = ?");
+                $stmt_user->bind_param("si", $username, $user_id);
+            }
             
             if (!$stmt_user->execute()) {
                 $this->conn->rollback();
@@ -184,7 +188,7 @@ class Student extends BaseModel {
                 }
             }
             $stmt_user->close();
-            while ($this->conn->more_results()) { $this->conn->next_result(); }
+            
 
             // --- UPDATE 2: Update Student Profile ---
             $studentSql = "
@@ -250,7 +254,7 @@ class Student extends BaseModel {
             }
             
             $stmt_student->close();
-            while ($this->conn->more_results()) { $this->conn->next_result(); }
+
             
             // --- Success: Commit Transaction ---
             $this->conn->commit();

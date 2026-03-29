@@ -34,15 +34,15 @@ class ComposerStaticInite7d4a7b0540c2633749055ac727e5997
         ),
         'App\\Models\\' =>
         array (
-            0 => __DIR__ . '/../..' . '/Models',
+            0 => __DIR__ . '/../..' . '/models',
         ),
         'App\\Core\\' =>
         array (
-            0 => __DIR__ . '/../..' . '/Core',
+            0 => __DIR__ . '/../..' . '/core',
         ),
         'App\\Controllers\\' =>
         array (
-            0 => __DIR__ . '/../..' . '/Controllers',
+            0 => __DIR__ . '/../..' . '/controllers',
         ),
     );
 

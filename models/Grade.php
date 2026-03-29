@@ -18,7 +18,7 @@ class Grade extends BaseModel {
                 if (is_array($data)) {
                     $grade_val = trim((string)($data['grade'] ?? ''));
                     if ($grade_val === '') {
-                        $stmt = $this->conn->prepare("CALL deleteGrade(?, ?, ?, ?);");
+                        $stmt = $this->conn->prepare("DELETE FROM grades WHERE student_id = ? AND subject_id = ? AND semester = ? AND school_year = ?");
                         $stmt->bind_param("iiss", $student_id, $subject_id, $semester, $school_year);
                         $stmt->execute();
                         $stmt->close();
@@ -62,7 +62,21 @@ class Grade extends BaseModel {
                         }
                     }
 
-                    $stmt = $this->conn->prepare("CALL upsertGrade(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    $stmt = $this->conn->prepare("
+                        INSERT INTO grades (
+                            student_id, subject_id, semester_grade, 
+                            average_grade, prelim, midterm, prefinal, finals, 
+                            remarks, semester, school_year
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE 
+                            semester_grade = VALUES(semester_grade),
+                            average_grade = VALUES(average_grade),
+                            prelim = VALUES(prelim),
+                            midterm = VALUES(midterm),
+                            prefinal = VALUES(prefinal),
+                            finals = VALUES(finals),
+                            remarks = VALUES(remarks)
+                    ");
                     $stmt->bind_param("iidddddssss", 
                         $student_id, $subject_id, $semester_grade, $average_grade, 
                         $prelim, $midterm, $prefinal, $finals, 

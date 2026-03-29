@@ -8,7 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'RRule\\' => array($vendorDir . '/rlanvin/php-rrule/src'),
     'PHPMailer\\PHPMailer\\' => array($vendorDir . '/phpmailer/phpmailer/src'),
-    'App\\Models\\' => array($baseDir . '/Models'),
-    'App\\Core\\' => array($baseDir . '/Core'),
-    'App\\Controllers\\' => array($baseDir . '/Controllers'),
+    'App\\Models\\' => array($baseDir . '/models'),
+    'App\\Core\\' => array($baseDir . '/core'),
+    'App\\Controllers\\' => array($baseDir . '/controllers'),
 );

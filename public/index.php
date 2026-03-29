@@ -20,8 +20,8 @@ header("Referrer-Policy: strict-origin-when-cross-origin");
 
 define('ROOT_PATH', __DIR__ . '/..');
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../Core/db_connect.php';
-require_once __DIR__ . '/../Core/utilities.php';
+require_once __DIR__ . '/../core/db_connect.php';
+require_once __DIR__ . '/../core/utilities.php';
 
 function portal_env(string $key, $default = null) {
     $value = getenv($key);
@@ -71,7 +71,7 @@ if (!defined('SMTP_FROM_NAME')) {
 $router = new AltoRouter();
 // Set base path if your project isn't at the root of the domain.
 // e.g. localhost/Student-Portal
-$router->setBasePath('/Student-Portal');
+$router->setBasePath('');
 
 /*====================================
  * PUBLIC ROUTES
