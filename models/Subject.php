@@ -50,6 +50,20 @@ class Subject extends BaseModel {
         return $success;
     }
 
+    public function updateSubject($subject_id, $subject_code, $subject_name, $units) {
+        $stmt = $this->conn->prepare("UPDATE subjects SET subject_code = ?, subject_name = ?, units = ? WHERE subject_id = ?");
+        if (!$stmt) {
+            throw new Exception('Failed to prepare update statement.');
+        }
+        $stmt->bind_param('ssii', $subject_code, $subject_name, $units, $subject_id);
+        $stmt->execute();
+
+        $success = ($stmt->affected_rows >= 0); // 0 rows affected is also a success if nothing changed
+        $stmt->close();
+        
+        return $success;
+    }
+
     public function deleteSubject($subject_id) {
         // Start transaction for safe deletion
         $this->conn->begin_transaction();
@@ -104,6 +118,67 @@ class Subject extends BaseModel {
         if (!$result) return 0;
         $row = $result->fetch_assoc();
         return (int)$row['total'];
+    }
+
+    public function getRequisites($subject_id) {
+        $sql = "SELECT pr.prerequisite_id, pr.required_subject_id, pr.type, 
+                       s.subject_code, s.subject_name 
+                FROM subject_prerequisites pr
+                JOIN subjects s ON s.subject_id = pr.required_subject_id
+                WHERE pr.subject_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $subject_id);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function addRequisite($subject_id, $required_id, $type) {
+        // Prevent circular dependency: Check if the 'target' is already a requirement for the 'required' course
+        if ($this->isRequisiteOf($required_id, $subject_id)) {
+            throw new Exception("Cannot add requisite: This would create a circular dependency.");
+        }
+
+        $sql = "INSERT INTO subject_prerequisites (subject_id, required_subject_id, type) VALUES (?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iis", $subject_id, $required_id, $type);
+        $success = $stmt->execute();
+        $stmt->close();
+        return $success;
+    }
+
+    public function deleteRequisite($prerequisite_id) {
+        $sql = "DELETE FROM subject_prerequisites WHERE prerequisite_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $prerequisite_id);
+        $success = $stmt->execute();
+        $stmt->close();
+        return $success;
+    }
+
+    /**
+     * Checks if $potential_ancestor is a requisite of $subject_id (directly or indirectly)
+     */
+    public function isRequisiteOf($subject_id, $potential_ancestor, &$visited = []) {
+        if ($subject_id == $potential_ancestor) return true;
+        
+        // Return false if we've already checked this subject branch
+        if (in_array($subject_id, $visited)) return false;
+        $visited[] = $subject_id;
+        
+        // Get direct requisites
+        $sql = "SELECT required_subject_id FROM subject_prerequisites WHERE subject_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $subject_id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        foreach ($res as $row) {
+            if ($this->isRequisiteOf($row['required_subject_id'], $potential_ancestor, $visited)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 ?>

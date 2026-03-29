@@ -255,6 +255,22 @@ class AdminController extends BaseController {
                     throw new Exception('Failed to add subject.');
                 }
 
+            } elseif ($action === 'edit') {
+                $subject_id = filter_input(INPUT_POST, 'subject_id', FILTER_VALIDATE_INT);
+                $subject_code = trim($_POST['subject_code'] ?? '');
+                $subject_name = trim($_POST['subject_name'] ?? '');
+                $units = filter_input(INPUT_POST, 'units', FILTER_VALIDATE_INT);
+
+                if (!$subject_id) throw new Exception('Invalid subject ID.');
+                if (empty($subject_code) || empty($subject_name)) throw new Exception('Subject code and name are required.');
+                if (!$units || $units < 1 || $units > 10) throw new Exception('Units must be between 1 and 10.');
+
+                if ($subjectModel->updateSubject($subject_id, $subject_code, $subject_name, $units)) {
+                    $this->json(['success' => true, 'message' => 'Subject updated successfully!']);
+                } else {
+                    throw new Exception('Failed to update subject.');
+                }
+
             } elseif ($action === 'delete') {
                 $subject_id = filter_input(INPUT_POST, 'subject_id', FILTER_VALIDATE_INT);
 
@@ -684,6 +700,7 @@ class AdminController extends BaseController {
         $semester = trim($_POST['semester'] ?? '');
         $subject_ids = array_filter(array_map('intval', (array)($_POST['subject_ids'] ?? [])));
         $retake_ids  = array_filter(array_map('intval', (array)($_POST['retake_subject_ids'] ?? [])));
+        $force_enroll = (isset($_POST['force_enroll']) && ($_POST['force_enroll'] === 'true' || $_POST['force_enroll'] === '1'));
 
         if (!$student_id) $this->json(['success'=>false,'message'=>'Invalid student ID.'],400);
         if (empty($school_year)) $this->json(['success'=>false,'message'=>'School year required.'],400);
@@ -693,6 +710,24 @@ class AdminController extends BaseController {
 
         try {
             $enrollModel = new Enrollment($this->conn);
+
+            // Server-side requisite check (unless forced by Admin)
+            if (!$force_enroll) {
+                foreach ($subject_ids as $sid) {
+                    $missing = $enrollModel->getMissingRequisites($student_id, $sid, $subject_ids);
+                    if (!empty($missing)) {
+                        $this->json([
+                            'success' => false, 
+                            'type' => 'requisite_violation',
+                            'message' => 'Requisite violation detected.',
+                            'subject_id' => $sid,
+                            'missing_requisites' => $missing
+                        ], 400);
+                        return;
+                    }
+                }
+            }
+
             $allowedRetakeIds = array_map(
                 'intval',
                 array_column($enrollModel->getLatestFailedRetakeCandidates($student_id, $school_year, $semester), 'subject_id')
@@ -891,6 +926,59 @@ class AdminController extends BaseController {
             $this->json(['success' => true, 'message' => 'Event deleted successfully!']);
         } else {
             $this->json(['success' => false, 'message' => 'Failed to delete event.'], 500);
+        }
+    }
+
+    public function getSubjectRequisitesApi() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        $subject_id = filter_input(INPUT_GET, 'subject_id', FILTER_VALIDATE_INT);
+        if (!$subject_id) $this->json(['success' => false, 'message' => 'Invalid subject ID.'], 400);
+
+        try {
+            $subjectModel = new Subject($this->conn);
+            $requisites = $subjectModel->getRequisites($subject_id);
+            $this->json(['success' => true, 'requisites' => $requisites]);
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function manageRequisites() {
+        $this->checkAdmin();
+        $this->verifyCsrfToken();
+        header('Content-Type: application/json');
+
+        $action = $_POST['action'] ?? '';
+        $subject_id = filter_input(INPUT_POST, 'subject_id', FILTER_VALIDATE_INT);
+        $subjectModel = new Subject($this->conn);
+
+        try {
+            if ($action === 'add') {
+                $required_id = filter_input(INPUT_POST, 'required_id', FILTER_VALIDATE_INT);
+                $type = $_POST['type'] ?? 'prerequisite';
+                if (!$subject_id || !$required_id) throw new \Exception("Invalid parameters.");
+                if ($subject_id === $required_id) throw new \Exception("A subject cannot require itself.");
+                
+                if ($subjectModel->addRequisite($subject_id, $required_id, $type)) {
+                    $this->json(['success' => true, 'message' => 'Requisite added successfully!']);
+                } else {
+                    throw new \Exception("Failed to add requisite.");
+                }
+            } elseif ($action === 'delete') {
+                $prerequisite_id = filter_input(INPUT_POST, 'prerequisite_id', FILTER_VALIDATE_INT);
+                if (!$prerequisite_id) throw new \Exception("Invalid requisite ID.");
+                
+                if ($subjectModel->deleteRequisite($prerequisite_id)) {
+                    $this->json(['success' => true, 'message' => 'Requisite deleted successfully!']);
+                } else {
+                    throw new \Exception("Failed to delete requisite.");
+                }
+            } else {
+                throw new \Exception("Invalid action.");
+            }
+        } catch (\Throwable $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 

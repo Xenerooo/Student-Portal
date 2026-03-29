@@ -1,6 +1,7 @@
-<div class="container-fluid px-4 py-4">
+<div >
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4 mb-0" style="color: #1e293b; font-weight: 700;">Dashboard Overview</h2>
+        <h1 class="mb-4" >Dashboard Overview</h1>
+        <!-- <h1 class="mb-4">Student Lookup Table</h1> -->
         <span class="badge bg-primary rounded-pill py-2 px-3 fw-normal">Current System Status</span>
     </div>
 

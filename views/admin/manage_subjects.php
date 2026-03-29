@@ -65,6 +65,20 @@
                                 <td class="units-cell"><?php echo h($subject['units']); ?></td>
                                 <td class="text-end">
                                     <button type="button" 
+                                            class="btn btn-warning btn-sm edit-subject-btn text-dark" 
+                                            data-subject-id="<?php echo h($subject['subject_id']); ?>"
+                                            data-subject-code="<?php echo h($subject['subject_code']); ?>"
+                                            data-subject-name="<?php echo h($subject['subject_name'] ?? ''); ?>"
+                                            data-units="<?php echo h($subject['units']); ?>">
+                                        <i class="bi bi-pencil-fill"></i> Edit
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-info btn-sm requisites-btn text-white" 
+                                            data-subject-id="<?php echo h($subject['subject_id']); ?>"
+                                            data-subject-code="<?php echo h($subject['subject_code']); ?>">
+                                        <i class="bi bi-diagram-3-fill"></i> Requisites
+                                    </button>
+                                    <button type="button" 
                                             class="btn btn-danger btn-sm delete-subject-btn" 
                                             data-subject-id="<?php echo h($subject['subject_id']); ?>"
                                             data-subject-code="<?php echo h($subject['subject_code']); ?>">
@@ -115,6 +129,40 @@
     </div>
 </div>
 
+<!-- Edit Subject Modal -->
+<div class="modal fade" id="editSubjectModal" tabindex="-1" aria-labelledby="editSubjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="editSubjectModalLabel">Edit Subject</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editSubjectForm">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="subject_id" id="edit_subject_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_subject_code" class="form-label">Subject Code <span class="text-danger">*</span></label>
+                        <input type="text" name="subject_code" id="edit_subject_code" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_subject_name" class="form-label">Subject Name <span class="text-danger">*</span></label>
+                        <input type="text" name="subject_name" id="edit_subject_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_units" class="form-label">Units <span class="text-danger">*</span></label>
+                        <input type="number" name="units" id="edit_units" class="form-control" min="1" max="10" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteSubjectModal" tabindex="-1" aria-labelledby="deleteSubjectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -130,6 +178,64 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Subject</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Requisites Modal -->
+<div class="modal fade" id="requisitesModal" tabindex="-1" aria-labelledby="requisitesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="requisitesModalLabel">Manage Requisites for <span id="req-subject-code"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="requisites-message-container"></div>
+                
+                <h6>Existing Requisites</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                                <th>Type</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requisites-list-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr>
+
+                <h6>Add New Requisite</h6>
+                <form id="addRequisiteForm" class="row g-2 align-items-end">
+                    <input type="hidden" id="req-target-subject-id" name="subject_id">
+                    <div class="col-md-6">
+                        <label class="form-label small">Select Subject</label>
+                        <select class="form-select form-select-sm" id="req-required-subject-id" name="required_id" required>
+                            <option value="">Choose a subject...</option>
+                            <?php foreach ($subjects as $s): ?>
+                                <option value="<?php echo h($s['subject_id']); ?>"><?php echo h($s['subject_code'] . " - " . ($s['subject_name'] ?? '')); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Type</label>
+                        <select class="form-select form-select-sm" name="type" required>
+                            <option value="prerequisite">Prerequisite</option>
+                            <option value="corequisite">Corequisite</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Add</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -394,6 +500,200 @@
                     }
                     pendingDeleteSubjectId = null;
                 });
+            });
+        }
+
+        /* --- Edit Subject Logic --- */
+        const editSubjectForm = document.getElementById('editSubjectForm');
+        if (editSubjectForm) {
+            editSubjectForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const messageDiv = document.getElementById('form-submission-message');
+                messageDiv.innerHTML = '<div class="alert alert-info">Updating subject...</div>';
+
+                fetch('/Student-Portal/admin/api/subjects/manage', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                        const modalEl = document.getElementById('editSubjectModal');
+                        if (modalEl && window.bootstrap) {
+                            const instance = window.bootstrap.Modal.getInstance(modalEl);
+                            if (instance) instance.hide();
+                        }
+                        // Refresh content
+                        setTimeout(() => {
+                            if (typeof window.loadContent === 'function') {
+                                window.loadContent('get_manage_subjects', document.querySelector('[data-content="get_manage_subjects"]'));
+                            } else {
+                                location.reload();
+                            }
+                        }, 1000);
+                    } else {
+                        messageDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    messageDiv.innerHTML = `<div class="alert alert-danger">An error occurred during update.</div>`;
+                });
+            });
+        }
+
+        // Delegate Edit Button Click
+        if (subjectsTableBody) {
+            subjectsTableBody.addEventListener('click', function(e) {
+                const btn = e.target.closest('.edit-subject-btn');
+                if (btn) {
+                    const sid = btn.getAttribute('data-subject-id');
+                    const scode = btn.getAttribute('data-subject-code');
+                    const sname = btn.getAttribute('data-subject-name');
+                    const sunits = btn.getAttribute('data-units');
+
+                    document.getElementById('edit_subject_id').value = sid;
+                    document.getElementById('edit_subject_code').value = scode;
+                    document.getElementById('edit_subject_name').value = sname;
+                    document.getElementById('edit_units').value = sunits;
+
+                    const modalEl = document.getElementById('editSubjectModal');
+                    if (modalEl && window.bootstrap) {
+                        const modal = new window.bootstrap.Modal(modalEl);
+                        modal.show();
+                    }
+                }
+            });
+        }
+
+        /* --- Requisites Management --- */
+
+        let currentSubjectIdForReq = null;
+
+        function fetchRequisites(subjectId) {
+            const listBody = document.getElementById('requisites-list-body');
+            listBody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
+
+            fetch(`/Student-Portal/admin/api/subjects/requisites?subject_id=${subjectId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        renderRequisites(data.requisites);
+                    } else {
+                        listBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${data.message}</td></tr>`;
+                    }
+                });
+        }
+
+        function openRequisitesModal(subjectId, subjectCode) {
+            currentSubjectIdForReq = subjectId;
+            document.getElementById('req-subject-code').textContent = subjectCode;
+            document.getElementById('req-target-subject-id').value = subjectId;
+            
+            fetchRequisites(subjectId);
+
+            const modalEl = document.getElementById('requisitesModal');
+            if (modalEl && window.bootstrap) {
+                // Check if already opened to prevent backdrop stacking
+                let modal = window.bootstrap.Modal.getInstance(modalEl);
+                if (!modal) {
+                    modal = new window.bootstrap.Modal(modalEl);
+                }
+                modal.show();
+            }
+        }
+
+        function renderRequisites(requisites) {
+            const listBody = document.getElementById('requisites-list-body');
+            if (requisites.length === 0) {
+                listBody.innerHTML = '<tr><td colspan="4" class="text-center">No requisites defined.</td></tr>';
+                return;
+            }
+
+            listBody.innerHTML = requisites.map(req => `
+                <tr>
+                    <td>${req.subject_code}</td>
+                    <td>${req.subject_name}</td>
+                    <td><span class="badge ${req.type === 'prerequisite' ? 'bg-primary' : 'bg-info'} text-capitalize">${req.type}</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-outline-danger btn-sm py-0 delete-req-btn" data-id="${req.prerequisite_id}">
+                            &times;
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Delegate Requisites Click
+        if (subjectsTableBody) {
+            subjectsTableBody.addEventListener('click', function(e) {
+                const btn = e.target.closest('.requisites-btn');
+                if (btn) {
+                    const sid = btn.getAttribute('data-subject-id');
+                    const scode = btn.getAttribute('data-subject-code');
+                    openRequisitesModal(sid, scode);
+                }
+            });
+        }
+
+        // Add Requisite Form
+        const addReqForm = document.getElementById('addRequisiteForm');
+        if (addReqForm) {
+            addReqForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                formData.append('action', 'add');
+                
+                const msgContainer = document.getElementById('requisites-message-container');
+                msgContainer.innerHTML = '';
+
+                fetch('/Student-Portal/admin/api/subjects/requisites/manage', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        msgContainer.innerHTML = `<div class="alert alert-success py-1 small">${data.message}</div>`;
+                        addReqForm.reset();
+                        document.getElementById('req-target-subject-id').value = currentSubjectIdForReq; 
+                        fetchRequisites(currentSubjectIdForReq);
+                    } else {
+                        msgContainer.innerHTML = `<div class="alert alert-danger py-1 small">${data.message}</div>`;
+                    }
+                });
+            });
+        }
+
+        // Delete Requisite Delegation
+        const reqListBody = document.getElementById('requisites-list-body');
+        if (reqListBody) {
+            reqListBody.addEventListener('click', function(e) {
+                const btn = e.target.closest('.delete-req-btn');
+                if (btn) {
+                    const reqId = btn.getAttribute('data-id');
+                    if (!confirm("Remove this requisite?")) return;
+
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('prerequisite_id', reqId);
+                    formData.append('subject_id', currentSubjectIdForReq);
+
+                    fetch('/Student-Portal/admin/api/subjects/requisites/manage', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            fetchRequisites(currentSubjectIdForReq);
+                        } else {
+                            alert(data.message);
+                        }
+                    });
+                }
             });
         }
     })();

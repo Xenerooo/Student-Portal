@@ -98,6 +98,9 @@ $router->map('POST', '/admin/api/students/delete', 'App\\Controllers\\AdminContr
 
 $router->map('GET', '/admin/api/subjects', 'App\\Controllers\\AdminController#getManageSubjects', 'api_admin_subjects');
 $router->map('POST', '/admin/api/subjects/manage', 'App\\Controllers\\AdminController#manageSubject', 'api_admin_subject_manage');
+$router->map('GET',  '/admin/api/subjects/requisites',       'App\\Controllers\\AdminController#getSubjectRequisitesApi', 'api_admin_subject_requisites');
+$router->map('POST', '/admin/api/subjects/requisites/manage', 'App\\Controllers\\AdminController#manageRequisites',       'api_admin_subject_requisites_manage');
+
 
 $router->map('GET', '/admin/api/curriculum', 'App\\Controllers\\AdminController#getManageCurriculum', 'api_admin_curriculum');
 $router->map('GET', '/admin/api/curriculum/data', 'App\\Controllers\\AdminController#getCurriculumData', 'api_admin_curriculum_data');

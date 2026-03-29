@@ -640,7 +640,22 @@ INSERT INTO `subjects` (`subject_id`, `subject_code`, `subject_name`, `units`) V
 (168, 'DIGGIE', 'Diggie Strat and Mechanics', 3),
 (170, 'Ghi', 'Ghi', 3);
 
+
 -- --------------------------------------------------------
+
+--
+-- Table structure for table `subject_prerequisites`
+--
+
+CREATE TABLE `subject_prerequisites` (
+  `prerequisite_id` int(11) NOT NULL,
+  `subject_id` int(11) NOT NULL,
+  `required_subject_id` int(11) NOT NULL,
+  `type` enum('prerequisite','corequisite') NOT NULL DEFAULT 'prerequisite'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
 
 --
 -- Table structure for table `users`
@@ -652,6 +667,7 @@ CREATE TABLE `users` (
   `password_hash` varchar(255) NOT NULL,
   `role` varchar(20) DEFAULT 'student',
   `is_active` tinyint(1) DEFAULT 1,
+  `must_change_password` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -660,12 +676,12 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `username`, `password_hash`, `role`, `is_active`, `created_at`) VALUES
-(3, '25-002', '$2y$10$b7Fe95H1IO52g3E5IIoJ1u8wfic7SL86zKNC2yjTggWPZsxpDI8uO', 'student', 1, '2026-03-14 11:57:53'),
-(5, 'admin', '$2y$10$Vy/HMSRC43wcMgLGBiyoju3YoKpB9/bY0JtFCK29yz3rgh669m2mi', 'admin', 1, '2026-03-14 11:57:53'),
-(12, '25-003', '$2y$10$m2ISBjLegdFsvsejKwWA.eEz6XvHj2PkwdUq6jYCdGJ/B2nyJDZqW', 'student', 1, '2026-03-14 11:57:53'),
-(16, '25-004', '$2y$10$GjsN9SvnkG1UAWWfPAZxh.CVEK/kScNbZ7EUGWHmqwUzBb0UgO7Oi', 'student', 1, '2026-03-14 11:57:53'),
-(42, '22-871', '$2y$10$OZOkqqAsXuOUqfIuyH.cjOyNxU.5s8ItQD/2OJ95aJoXjwJicNnwy', 'student', 1, '2026-03-14 11:57:53');
+INSERT INTO `users` (`user_id`, `username`, `password_hash`, `role`, `is_active`, `must_change_password`, `created_at`) VALUES
+(3, '25-002', '$2y$10$b7Fe95H1IO52g3E5IIoJ1u8wfic7SL86zKNC2yjTggWPZsxpDI8uO', 'student', 1, 0, '2026-03-14 11:57:53'),
+(5, 'admin', '$2y$10$Vy/HMSRC43wcMgLGBiyoju3YoKpB9/bY0JtFCK29yz3rgh669m2mi', 'admin', 1, 0, '2026-03-14 11:57:53'),
+(12, '25-003', '$2y$10$m2ISBjLegdFsvsejKwWA.eEz6XvHj2PkwdUq6jYCdGJ/B2nyJDZqW', 'student', 1, 0, '2026-03-14 11:57:53'),
+(16, '25-004', '$2y$10$GjsN9SvnkG1UAWWfPAZxh.CVEK/kScNbZ7EUGWHmqwUzBb0UgO7Oi', 'student', 1, 0, '2026-03-14 11:57:53'),
+(42, '22-871', '$2y$10$OZOkqqAsXuOUqfIuyH.cjOyNxU.5s8ItQD/2OJ95aJoXjwJicNnwy', 'student', 1, 0, '2026-03-14 11:57:53');
 
 --
 -- Indexes for dumped tables
@@ -725,6 +741,15 @@ ALTER TABLE `subjects`
   ADD UNIQUE KEY `subject_code` (`subject_code`);
 
 --
+-- Indexes for table `subject_prerequisites`
+--
+ALTER TABLE `subject_prerequisites`
+  ADD PRIMARY KEY (`prerequisite_id`),
+  ADD UNIQUE KEY `unique_requisite` (`subject_id`,`required_subject_id`),
+  ADD KEY `fk_requisite_required` (`required_subject_id`);
+
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -777,6 +802,13 @@ ALTER TABLE `subjects`
   MODIFY `subject_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=171;
 
 --
+-- AUTO_INCREMENT for table `subject_prerequisites`
+--
+ALTER TABLE `subject_prerequisites`
+  MODIFY `prerequisite_id` int(11) NOT NULL AUTO_INCREMENT;
+
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
@@ -812,6 +844,14 @@ ALTER TABLE `grades`
 ALTER TABLE `students`
   ADD CONSTRAINT `fk_students_courses` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE SET NULL,
   ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `subject_prerequisites`
+--
+ALTER TABLE `subject_prerequisites`
+  ADD CONSTRAINT `fk_requisite_required` FOREIGN KEY (`required_subject_id`) REFERENCES `subjects` (`subject_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_requisite_target` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`subject_id`) ON DELETE CASCADE;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

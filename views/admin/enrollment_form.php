@@ -342,6 +342,31 @@ $course_id = (int)($student['course_id'] ?? 0);
         </div>
     </div>
 
+    <!-- Requisite Violation Modal -->
+    <div class="modal fade" id="requisiteViolationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header bg-warning py-2">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill"></i> Requisite Violation Detected</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">The following subjects selected for enrollment have missing prerequisites or corequisites:</p>
+                    <div id="violationListContainer" class="list-group list-group-flush border rounded mb-3">
+                        <!-- Populated via JS -->
+                    </div>
+                    <div class="alert alert-danger small mb-0">
+                        <strong>Important:</strong> Enrolling students without fulfilling requirements may lead to academic issues. As an administrator, you may override this warning.
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#confirmModal">Back to Selection</button>
+                    <button type="button" id="btnForceEnroll" class="btn btn-danger px-4">Force Enroll (Override)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Status Notification Modal -->
     <div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -466,14 +491,20 @@ $course_id = (int)($student['course_id'] ?? 0);
             const latestTake = latestEnrollmentBySubject.get(parseInt(s.subject_id));
             const isPassed = latestTake && latestTake.status === 'passed';
             const isChecked = selectedSubjects.has(s.subject_id.toString());
+            const missing = s.missing_requisites || [];
+            const hasMissing = missing.length > 0;
+
             return `
-                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''}">
+                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''} ${hasMissing && !isPassed ? 'border-start border-warning border-4' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${s.subject_id}" 
-                           data-units="${s.units}" ${isChecked && !isPassed ? 'checked' : ''} ${isPassed ? 'disabled' : ''}>
+                           data-units="${s.units}" 
+                           data-missing='${JSON.stringify(missing)}'
+                           ${isChecked && !isPassed ? 'checked' : ''} ${isPassed ? 'disabled' : ''}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${s.subject_code}</span>
+                                ${hasMissing && !isPassed ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
                                 <div class="small">${s.subject_name}</div>
                             </div>
                             <div class="text-end">
@@ -681,18 +712,24 @@ $course_id = (int)($student['course_id'] ?? 0);
         // Render Curriculum
         curriculumList.innerHTML = regularCurriculum.map(e => {
             const isPassed = parseInt(e.already_passed) > 0;
+            const missing = e.missing_requisites || [];
+            const hasMissing = missing.length > 0;
+            
             if (!isPassed) {
                 // Pre-select curriculum subjects if not passed
                 selectedSubjects.set(e.subject_id.toString(), parseInt(e.units));
             }
             return `
-                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''}">
+                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''} ${hasMissing && !isPassed ? 'border-start border-warning border-4' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${e.subject_id}" 
-                           data-units="${e.units}" ${isPassed ? 'disabled' : 'checked'}>
+                           data-units="${e.units}" 
+                           data-missing='${JSON.stringify(missing)}'
+                           ${isPassed ? 'disabled' : 'checked'}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${e.subject_code}</span>
+                                ${hasMissing && !isPassed ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
                                 <div class="small">${e.subject_name}</div>
                             </div>
                             <div class="text-end">
@@ -764,15 +801,20 @@ $course_id = (int)($student['course_id'] ?? 0);
             const sid = parseInt(s.subject_id);
             const latestTake = latestEnrollmentBySubject.get(sid);
             const isPassed = latestTake && latestTake.status === 'passed';
+            const missing = s.missing_requisites || [];
+            const hasMissing = missing.length > 0;
             
             return `
-                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''}">
+                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''} ${hasMissing && !isPassed ? 'border-start border-warning border-4' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${s.subject_id}" 
-                           data-units="${s.units}" ${isPassed ? 'disabled' : ''}>
+                           data-units="${s.units}" 
+                           data-missing='${JSON.stringify(missing)}'
+                           ${isPassed ? 'disabled' : ''}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${s.subject_code}</span>
+                                ${hasMissing && !isPassed ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
                                 <div class="small">${s.subject_name}</div>
                             </div>
                             <div class="text-end">
@@ -846,7 +888,6 @@ $course_id = (int)($student['course_id'] ?? 0);
         e.preventDefault();
         
         // Ensure all selected subjects are included, even those not currently rendered!
-        // We'll append hidden inputs for subjects in selectedSubjects that are NOT already in the form.
         const existingInputs = new Set([...form.querySelectorAll('input[name="subject_ids[]"]')].map(i => i.value));
         
         selectedSubjects.forEach((units, sid) => {
@@ -859,6 +900,52 @@ $course_id = (int)($student['course_id'] ?? 0);
             }
         });
 
+        // Check for Requisite Violations among selected subjects
+        const selectedCbs = [...checklistArea.querySelectorAll('.subject-cb:checked')];
+        const missingList = [];
+        
+        selectedCbs.forEach(cb => {
+            const missing = JSON.parse(cb.getAttribute('data-missing') || '[]');
+            if (missing.length > 0) {
+                // Check if missing items are corequisites being enrolled in this same batch
+                const enrollingIds = new Set([...selectedSubjects.keys()].map(id => parseInt(id)));
+                const actuallyMissing = missing.filter(m => {
+                    if (m.type === 'corequisite' && enrollingIds.has(parseInt(m.required_subject_id))) {
+                        return false; // Satistfied by current batch
+                    }
+                    return true;
+                });
+
+                if (actuallyMissing.length > 0) {
+                    const row = cb.closest('.list-group-item');
+                    missingList.push({
+                        code: row.querySelector('.fw-bold').textContent,
+                        name: row.querySelector('.small').textContent,
+                        missing: actuallyMissing
+                    });
+                }
+            }
+        });
+
+        if (missingList.length > 0) {
+            const violationList = document.getElementById('violationListContainer');
+            violationList.innerHTML = missingList.map(m => `
+                <div class="list-group-item">
+                    <div class="fw-bold text-dark">${m.code} - ${m.name}</div>
+                    <div class="small text-danger">Requires: ${m.missing.map(req => `<strong>${req.subject_code}</strong> (${req.type})`).join(', ')}</div>
+                </div>
+            `).join('');
+            
+            const violationModal = new bootstrap.Modal(document.getElementById('requisiteViolationModal'));
+            violationModal.show();
+
+            document.getElementById('btnForceEnroll').onclick = function() {
+                violationModal.hide();
+                processEnrollment(true);
+            };
+            return;
+        }
+
         // Show Bootstrap Modal
         const modalEl = document.getElementById('confirmModal');
         const modal = new bootstrap.Modal(modalEl);
@@ -867,15 +954,18 @@ $course_id = (int)($student['course_id'] ?? 0);
         // Handle Confirmation
         document.getElementById('btnActualSubmit').onclick = function() {
             modal.hide();
-            processEnrollment();
+            processEnrollment(false);
         };
     });
 
-    async function processEnrollment() {
+    async function processEnrollment(isForced = false) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enrolling...';
         
         const formData = new FormData(form);
+        if (isForced) {
+            formData.append('force_enroll', 'true');
+        }
         
         try {
             const r = await fetch('/Student-Portal/admin/api/students/enroll', {

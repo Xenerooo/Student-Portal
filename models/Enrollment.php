@@ -50,6 +50,7 @@ class Enrollment extends BaseModel {
     $stmtA->bind_param("iiii", $student_id, $student_id, $year_level, $semester_int);
     $stmtA->execute();
     $curriculum = $stmtA->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmtA->close();
 
     // Part B — all other subjects not in Part A
     $sqlB = "SELECT subject_id, subject_code, subject_name, units
@@ -65,12 +66,65 @@ class Enrollment extends BaseModel {
     $stmtB->bind_param("iii", $student_id, $year_level, $semester_int);
     $stmtB->execute();
     $others = $stmtB->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmtB->close();
+
+    $retake_candidates = $this->getLatestFailedRetakeCandidates($student_id, $target_school_year, $target_semester);
+
+    // Attach missing requisites to all lists
+    foreach ($curriculum as &$s) {
+      $s['missing_requisites'] = $this->getMissingRequisites($student_id, (int)$s['subject_id']);
+    }
+    foreach ($others as &$s) {
+      $s['missing_requisites'] = $this->getMissingRequisites($student_id, (int)$s['subject_id']);
+    }
+    foreach ($retake_candidates as &$s) {
+      $s['missing_requisites'] = $this->getMissingRequisites($student_id, (int)$s['subject_id']);
+    }
 
     return [
       'curriculum' => $curriculum,
       'others' => $others,
-      'retake_candidates' => $this->getLatestFailedRetakeCandidates($student_id, $target_school_year, $target_semester)
+      'retake_candidates' => $retake_candidates
     ];
+  }
+
+  /**
+   * Checks all requisites for a subject against a student's history.
+   * $enrolling_subject_ids: If provided, also check if these are in the current enrollment batch (for corequisites)
+   */
+  public function getMissingRequisites($student_id, $subject_id, $enrolling_subject_ids = []): array {
+    $sql = "SELECT pr.required_subject_id, pr.type, s.subject_code, s.subject_name
+            FROM subject_prerequisites pr
+            JOIN subjects s ON s.subject_id = pr.required_subject_id
+            WHERE pr.subject_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $subject_id);
+    $stmt->execute();
+    $requisites = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+
+    $missing = [];
+    foreach ($requisites as $req) {
+      $req_id = (int)$req['required_subject_id'];
+      
+      // Check if student has passed this requirement in any prior term
+      $passedSql = "SELECT enrollment_id FROM enrollments WHERE student_id = ? AND subject_id = ? AND status = 'passed'";
+      $pStmt = $this->conn->prepare($passedSql);
+      $pStmt->bind_param("ii", $student_id, $req_id);
+      $pStmt->execute();
+      $isPassed = $pStmt->get_result()->num_rows > 0;
+      $pStmt->close();
+
+      if ($isPassed) continue;
+
+      // If not passed, check if it's a corequisite and being enrolled now
+      if ($req['type'] === 'corequisite' && in_array($req_id, $enrolling_subject_ids)) {
+        continue;
+      }
+
+      $missing[] = $req;
+    }
+    return $missing;
   }
 
   // Returns subjects whose latest take is currently failed.
