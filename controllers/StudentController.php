@@ -311,6 +311,7 @@ class StudentController extends BaseController {
         $gradedCount = 0;
         $hasIncomplete = false;
         $passedCount = 0;
+        $failedCount = 0;
 
         foreach ($records as $row) {
             $units = (int)($row['units'] ?? 0);
@@ -327,19 +328,37 @@ class StudentController extends BaseController {
                 $hasIncomplete = true;
             }
 
-            if ($grade !== null && ($remarks === 'Passed' || $grade <= 3.00)) {
+            if ($grade !== null && !in_array($remarks, ['Incomplete', 'Dropped']) && !in_array($status, ['incomplete', 'dropped'])) {
                 $weightedSum += ($grade * $units);
                 $unitsForGwa += $units;
-                $passedCount++;
+                if ($remarks === 'Passed' || $grade <= 3.00) {
+                    $passedCount++;
+                } else if ($remarks === 'Failed' || $grade === 5.00) {
+                    $failedCount++;
+                }
             }
+        }
+
+        $gwa = $unitsForGwa > 0 ? round($weightedSum / $unitsForGwa, 2) : null;
+        $standing = 'Good Standing';
+        if ($hasIncomplete) {
+            $standing = 'Has Incomplete';
+        } else if ($failedCount >= 3 || ($gwa !== null && $gwa > 3.00)) {
+            $standing = 'Probation';
+        } else if ($failedCount > 0) {
+            $standing = 'Warning';
+        } else if ($gwa !== null && $gwa <= 1.50 && $passedCount > 0) {
+            $standing = 'Honor Roll';
         }
 
         return [
             'total_units' => $totalUnits,
-            'gwa' => $unitsForGwa > 0 ? round($weightedSum / $unitsForGwa, 2) : null,
+            'gwa' => $gwa,
             'graded_count' => $gradedCount,
             'has_incomplete' => $hasIncomplete,
             'passed_count' => $passedCount,
+            'failed_count' => $failedCount,
+            'standing' => $standing,
             'label' => $isTerm ? 'Term' : 'Overall',
         ];
     }

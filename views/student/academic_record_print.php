@@ -349,7 +349,7 @@ function academic_record_grade_label($grade, $remarks, $status = '') {
                         <div class="metric">
                             <div class="metric-label">Academic Standing</div>
                             <div class="metric-value" style="font-size: 1.1rem;">
-                                <?= !empty($overallSummary['has_incomplete']) ? 'Has INC' : 'Good Standing' ?>
+                                <?= htmlspecialchars($overallSummary['standing'] ?? 'Good Standing') ?>
                             </div>
                         </div>
                     </div>

@@ -359,7 +359,7 @@
             if (grade !== null) gradedCount++;
             if (remarks === 'Incomplete' || status === 'incomplete') hasIncomplete = true;
 
-            if (grade !== null && (remarks === 'Passed' || grade <= 3.00)) {
+            if (grade !== null && !['Incomplete', 'Dropped'].includes(remarks) && !['incomplete', 'dropped'].includes(status)) {
                 weightedSum += (grade * units);
                 unitsForGwa += units;
             }
@@ -421,6 +421,7 @@
 
         let totalUnitsPassed = 0;
         let weightedSum = 0;
+        let unitsForGwa = 0;
         let subjectsPassed = 0;
         const subjectOutcomes = {}; // Latest outcome per subject code
 
@@ -428,12 +429,18 @@
             const units = parseInt(h.units);
             const grade = h.grade ? parseFloat(h.grade) : null;
             const remarks = h.remarks || '';
+            const status = h.status || '';
             const scode = h.subject_code;
 
-            if (remarks === 'Passed' || (grade !== null && grade <= 3.00)) {
+            const isPassed = remarks === 'Passed' || (grade !== null && grade <= 3.00);
+            if (isPassed) {
                 totalUnitsPassed += units;
-                weightedSum += (grade * units);
                 subjectsPassed++;
+            }
+
+            if (grade !== null && !['Incomplete', 'Dropped'].includes(remarks) && !['incomplete', 'dropped'].includes(status)) {
+                weightedSum += (grade * units);
+                unitsForGwa += units;
             }
 
             // Track for standing: sort results by SY/Sem? 
@@ -443,21 +450,44 @@
             }
         });
 
-        overallGwaEl.textContent = totalUnitsPassed > 0 ? (weightedSum / totalUnitsPassed).toFixed(2) : '--';
+        const gwaValue = unitsForGwa > 0 ? (weightedSum / unitsForGwa) : null;
+        overallGwaEl.textContent = gwaValue !== null ? gwaValue.toFixed(2) : '--';
         totalUnitsEl.textContent = totalUnitsPassed;
         subjectsPassedEl.textContent = subjectsPassed;
 
-        let hasFailing = false;
-        for (const code in subjectOutcomes) {
-            if (subjectOutcomes[code] === 'Failed') {
-                hasFailing = true;
-                break;
-            }
+        // Calculate failures and incompletes properly
+        let failedCount = 0;
+        let hasIncompleteStatus = false;
+        scholasticHistory.forEach(h => {
+             const grade = h.grade ? parseFloat(h.grade) : null;
+             const remarks = (h.remarks || '').toLowerCase();
+             if (remarks === 'incomplete') hasIncompleteStatus = true;
+             if (remarks === 'failed' || grade === 5.00) failedCount++;
+        });
+
+        let standing = 'Good Standing';
+        let colorClass = 'text-success';
+        let icon = 'bi-check-circle';
+
+        if (hasIncompleteStatus) {
+            standing = 'Has Incomplete';
+            colorClass = 'text-warning';
+            icon = 'bi-exclamation-circle';
+        } else if (failedCount >= 3 || (gwaValue !== null && gwaValue > 3.00)) {
+            standing = 'Probation';
+            colorClass = 'text-danger';
+            icon = 'bi-exclamation-triangle-fill';
+        } else if (failedCount > 0) {
+            standing = 'Warning';
+            colorClass = 'text-warning';
+            icon = 'bi-exclamation-triangle';
+        } else if (gwaValue !== null && gwaValue <= 1.50 && subjectsPassed > 0) {
+            standing = 'Honor Roll';
+            colorClass = 'text-primary';
+            icon = 'bi-star-fill';
         }
 
-        standingTextEl.innerHTML = hasFailing ? 
-            '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Failing Subject(s)</span>' : 
-            '<span class="text-success"><i class="bi bi-check-circle"></i> Good Standing</span>';
+        standingTextEl.innerHTML = `<span class="${colorClass}"><i class="bi ${icon}"></i> ${standing}</span>`;
     }
 
     // Lazy load Progress
