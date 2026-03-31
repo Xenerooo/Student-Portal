@@ -484,6 +484,25 @@ body.vh-100 {
         width: 280px;
         box-shadow: 5px 0 25px rgba(0, 0, 0, 0.2);
     }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 1045;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-backdrop.show {
+        display: block;
+        opacity: 1;
+    }
 }
 
 /* --- Overview Dashboard Styling --- */

@@ -90,7 +90,7 @@ $router = new AltoRouter();
 $urlPath = parse_url(APP_URL, PHP_URL_PATH) ?: '';
 if (empty($urlPath) || $urlPath === '/') {
     // If APP_URL is root but we're in a folder, try to detect from script name
-    $urlPath = str_replace('/public/index.php', '', $_SERVER['SCRIPT_NAME'] ?? '');
+    $urlPath = str_replace(['/public/index.php', '/index.php'], '', $_SERVER['SCRIPT_NAME'] ?? '');
 }
 $router->setBasePath(rtrim($urlPath, '/'));
 

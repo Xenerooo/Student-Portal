@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /Student-Portal/
+    # Generic base detection
 
     # If the file/dir exists in the root, serve it (e.g. debug scripts)
     RewriteCond %{REQUEST_FILENAME} -f [OR]

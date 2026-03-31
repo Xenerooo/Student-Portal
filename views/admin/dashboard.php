@@ -130,6 +130,11 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
         
+        // Create backdrop dynamically
+        const backdrop = document.createElement('div');
+        backdrop.className = 'sidebar-backdrop';
+        document.body.appendChild(backdrop);
+        
         const sidebarNav = document.querySelector('.sidebar-nav');
         const indicator = document.createElement('div');
         indicator.className = 'sidebar-active-indicator';
@@ -150,8 +155,13 @@
         if (sidebarToggle) {
             sidebarToggle.addEventListener('click', function() {
                 if (window.innerWidth <= 991.98) {
-                    sidebar.classList.toggle('mobile-shown');
+                    const isShown = sidebar.classList.toggle('mobile-shown');
                     sidebar.classList.remove('mobile-hidden');
+                    if (isShown) {
+                        backdrop.classList.add('show');
+                    } else {
+                        backdrop.classList.remove('show');
+                    }
                 } else {
                     sidebar.classList.toggle('collapsed');
                 }
@@ -161,6 +171,13 @@
                 }, 310);
             });
         }
+
+        // Close sidebar when clicking backdrop
+        backdrop.addEventListener('click', function() {
+            sidebar.classList.remove('mobile-shown');
+            sidebar.classList.add('mobile-hidden');
+            backdrop.classList.remove('show');
+        });
 
         async function loadContent(action, targetLink) {
             contentArea.innerHTML = `
@@ -235,6 +252,7 @@
                         if (window.innerWidth <= 991.98 && sidebar.classList.contains('mobile-shown')) {
                             sidebar.classList.remove('mobile-shown');
                             sidebar.classList.add('mobile-hidden');
+                            backdrop.classList.remove('show');
                         }
                     }
                     
