@@ -124,11 +124,18 @@
                                         <td class="text-end pe-4">
                                             <?php if ($subject['grade'] !== null): ?>
                                                 <div class="d-flex flex-column align-items-end">
-                                                    <span class="grade-badge text-primary fw-bold">
+                                                    <?php 
+                                                    $gradeVal = (float)$subject['grade'];
+                                                    $remarks = $subject['remarks'] ?? '';
+                                                    $colorClass = 'text-success'; // Default to passed
+                                                    if ($remarks === 'Incomplete') $colorClass = 'text-warning';
+                                                    else if ($gradeVal > 3.0) $colorClass = 'text-danger';
+                                                    ?>
+                                                    <span class="grade-badge <?= $colorClass ?> fw-bold">
                                                         <?= number_format($subject['grade'], 2) ?>
                                                     </span>
                                                     <span class="small text-muted" style="font-size: 0.75rem;">
-                                                        Avg: <?= number_format($subject['average_grade'], 1) ?> - <?= $subject['remarks'] ?>
+                                                        Avg: <?= number_format($subject['average_grade'], 1) ?> - <?= $remarks ?>
                                                     </span>
                                                 </div>
                                             <?php else: ?>
@@ -402,9 +409,15 @@
                     if (data.success && data.history.length > 0) {
                         let html = '<table class="table table-sm table-striped small"><thead><tr class="table-light"><th>Term</th><th class="text-center">Grade</th></tr></thead><tbody>';
                         data.history.forEach(h => {
+                            const gradeVal = parseFloat(h.grade);
+                            const remarks = h.remarks || '';
+                            let colorClass = 'text-success';
+                            if (remarks === 'Incomplete') colorClass = 'text-warning';
+                            else if (gradeVal > 3.0) colorClass = 'text-danger';
+                            
                             html += `<tr>
                                         <td>${h.school_year} ${h.semester}</td>
-                                        <td class="text-center fw-bold">
+                                        <td class="text-center fw-bold ${colorClass}">
                                             ${h.grade} 
                                             <span class="text-muted small">
                                                 (${h.prelim ?? '-'}/${h.midterm ?? '-'}/${h.prefinal ?? '-'}/${h.finals ?? '-'})

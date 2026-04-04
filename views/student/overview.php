@@ -16,6 +16,10 @@
                                 <span class="d-block small opacity-50">Student ID</span>
                                 <span class="fw-bold"><?= htmlspecialchars($student['student_number'] ?? 'N/A') ?></span>
                             </div>
+                            <div class="stats-item border-start ps-3">
+                                <span class="d-block small opacity-50">Year Level</span>
+                                <span class="fw-bold">Year <?= htmlspecialchars($student['year_level'] ?? '1') ?></span>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4 d-none d-md-block text-end">

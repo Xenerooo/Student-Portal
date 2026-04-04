@@ -5,6 +5,36 @@ use App\Core\BaseModel;
 use Exception;
 
 class Enrollment extends BaseModel {
+  
+  /**
+   * Automatically expires "Incomplete" enrollments to "Failed" after one year.
+   * $current_sy: The school year being enrolled into (e.g., "2026-2027")
+   */
+  public function expireIncompleteEnrollments($student_id, $current_sy = null): int {
+    if (!$current_sy) {
+      $currMonth = (int)date('m');
+      $currYear = (int)date('Y');
+      $current_sy = ($currMonth >= 6) ? "$currYear-" . ($currYear + 1) : ($currYear - 1) . "-$currYear";
+    }
+
+    // Extract the starting year of the current SY (e.g., 2026)
+    $currBaseYear = (int)explode('-', $current_sy)[0];
+    
+    // Any incomplete from a school year starting at least 2 years ago is expired
+    // Example: Current is 2026-2027. Incomplete from 2024-2025 is expired.
+    // Logic: Base year of enrollment <= currBaseYear - 2
+    $sql = "UPDATE enrollments 
+            SET status = 'failed' 
+            WHERE student_id = ? 
+              AND status = 'incomplete' 
+              AND CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) <= ?";
+    
+    $expireYear = $currBaseYear - 2;
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $student_id, $expireYear);
+    $stmt->execute();
+    return $stmt->affected_rows;
+  }
 
   // Returns enrolled subjects + joined grade data for a specific term
   // Used by: grade editor, student "This Term" tab
@@ -37,9 +67,21 @@ class Enrollment extends BaseModel {
   public function getSubjectsForEnrollment($student_id, $year_level, $semester_int, $target_school_year = null, $target_semester = null): array {
     // Part A — curriculum subjects (pre-fill)
     $sqlA = "SELECT c.subject_id, s.subject_code, s.subject_name, s.units,
-                   (SELECT COUNT(*) FROM enrollments
-                    WHERE student_id = ? AND subject_id = c.subject_id
-                    AND status = 'passed') as already_passed
+                   (SELECT status FROM enrollments 
+                    WHERE student_id = ? AND subject_id = c.subject_id 
+                    ORDER BY CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) DESC, 
+                             CASE semester WHEN 'Summer' THEN 3 WHEN '2nd Semester' THEN 2 WHEN '1st Semester' THEN 1 ELSE 0 END DESC,
+                             enrollment_id DESC LIMIT 1) as latest_status,
+                   (SELECT school_year FROM enrollments 
+                    WHERE student_id = ? AND subject_id = c.subject_id 
+                    ORDER BY CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) DESC, 
+                             CASE semester WHEN 'Summer' THEN 3 WHEN '2nd Semester' THEN 2 WHEN '1st Semester' THEN 1 ELSE 0 END DESC,
+                             enrollment_id DESC LIMIT 1) as latest_sy,
+                   (SELECT semester FROM enrollments 
+                    WHERE student_id = ? AND subject_id = c.subject_id 
+                    ORDER BY CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) DESC, 
+                             CASE semester WHEN 'Summer' THEN 3 WHEN '2nd Semester' THEN 2 WHEN '1st Semester' THEN 1 ELSE 0 END DESC,
+                             enrollment_id DESC LIMIT 1) as latest_sem
             FROM curriculum c
             JOIN subjects s ON s.subject_id = c.subject_id
             WHERE c.course_id = (SELECT course_id FROM students WHERE student_id = ?)
@@ -47,23 +89,38 @@ class Enrollment extends BaseModel {
             ORDER BY s.subject_code";
     
     $stmtA = $this->conn->prepare($sqlA);
-    $stmtA->bind_param("iiii", $student_id, $student_id, $year_level, $semester_int);
+    $stmtA->bind_param("iiiiii", $student_id, $student_id, $student_id, $student_id, $year_level, $semester_int);
     $stmtA->execute();
     $curriculum = $stmtA->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmtA->close();
 
     // Part B — all other subjects not in Part A
-    $sqlB = "SELECT subject_id, subject_code, subject_name, units
-            FROM subjects
-            WHERE subject_id NOT IN (
+    $sqlB = "SELECT s.subject_id, s.subject_code, s.subject_name, s.units,
+                   (SELECT status FROM enrollments 
+                    WHERE student_id = ? AND subject_id = s.subject_id 
+                    ORDER BY CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) DESC, 
+                             CASE semester WHEN 'Summer' THEN 3 WHEN '2nd Semester' THEN 2 WHEN '1st Semester' THEN 1 ELSE 0 END DESC,
+                             enrollment_id DESC LIMIT 1) as latest_status,
+                   (SELECT school_year FROM enrollments 
+                    WHERE student_id = ? AND subject_id = s.subject_id 
+                    ORDER BY CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) DESC, 
+                             CASE semester WHEN 'Summer' THEN 3 WHEN '2nd Semester' THEN 2 WHEN '1st Semester' THEN 1 ELSE 0 END DESC,
+                             enrollment_id DESC LIMIT 1) as latest_sy,
+                   (SELECT semester FROM enrollments 
+                    WHERE student_id = ? AND subject_id = s.subject_id 
+                    ORDER BY CAST(SUBSTRING_INDEX(school_year, '-', 1) AS UNSIGNED) DESC, 
+                             CASE semester WHEN 'Summer' THEN 3 WHEN '2nd Semester' THEN 2 WHEN '1st Semester' THEN 1 ELSE 0 END DESC,
+                             enrollment_id DESC LIMIT 1) as latest_sem
+            FROM subjects s
+            WHERE s.subject_id NOT IN (
               SELECT subject_id FROM curriculum
               WHERE course_id = (SELECT course_id FROM students WHERE student_id = ?)
                 AND year_level = ? AND semester = ?
             )
-            ORDER BY subject_code";
+            ORDER BY s.subject_code";
     
     $stmtB = $this->conn->prepare($sqlB);
-    $stmtB->bind_param("iii", $student_id, $year_level, $semester_int);
+    $stmtB->bind_param("iiiiii", $student_id, $student_id, $student_id, $student_id, $year_level, $semester_int);
     $stmtB->execute();
     $others = $stmtB->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmtB->close();
@@ -251,6 +308,45 @@ class Enrollment extends BaseModel {
     $stmt->execute();
     return $stmt->affected_rows > 0;
   }
+
+  // Delete an enrollment and its associated grade
+  public function deleteEnrollment($enrollment_id): bool {
+    // 1. Get enrollment details
+    $getDetailsSql = "SELECT student_id, subject_id, school_year, semester FROM enrollments WHERE enrollment_id = ?";
+    $stmt = $this->conn->prepare($getDetailsSql);
+    $stmt->bind_param("i", $enrollment_id);
+    $stmt->execute();
+    $details = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$details) return false;
+
+    try {
+        $this->conn->begin_transaction();
+
+        // 2. Delete associated grade
+        $gradeSql = "DELETE FROM grades WHERE student_id = ? AND subject_id = ? AND school_year = ? AND semester = ?";
+        $gStmt = $this->conn->prepare($gradeSql);
+        $gStmt->bind_param("iiss", $details['student_id'], $details['subject_id'], $details['school_year'], $details['semester']);
+        $gStmt->execute();
+        $gStmt->close();
+
+        // 3. Delete enrollment
+        $enrollSql = "DELETE FROM enrollments WHERE enrollment_id = ?";
+        $eStmt = $this->conn->prepare($enrollSql);
+        $eStmt->bind_param("i", $enrollment_id);
+        $eStmt->execute();
+        $success = $eStmt->affected_rows > 0;
+        $eStmt->close();
+
+        $this->conn->commit();
+        return $success;
+    } catch (\Throwable $e) {
+        $this->conn->rollback();
+        throw $e;
+    }
+  }
+
 
   // Returns all enrollment history for a student grouped by term
   // Used for: enrollment form history section, admin history view

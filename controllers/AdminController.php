@@ -55,7 +55,9 @@ class AdminController extends BaseController {
 
     public function getStudentList() {
         $this->checkAdmin();
-        $this->render('admin/student_list');
+        $courseModel = new Course($this->conn);
+        $courses = $courseModel->getAllCourses();
+        $this->render('admin/student_list', ['courses' => $courses]);
     }
 
     public function getManageSubjects() {
@@ -217,10 +219,27 @@ class AdminController extends BaseController {
         $this->checkAdmin();
         
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+        $course_id = filter_input(INPUT_GET, 'course_id', FILTER_VALIDATE_INT) ?: null;
+        $page   = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
+        $limit  = filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?: 10;
+        $offset = ($page - 1) * $limit;
+
         $studentModel = new Student($this->conn);
-        $students = $studentModel->searchStudents($search);
+        $totalCount = $studentModel->getSearchCount($search, $course_id);
+        $students = $studentModel->searchStudents($search, $course_id, $limit, $offset);
         
-        $this->json(['success' => true, 'students' => $students]);
+        $totalPages = ceil($totalCount / $limit);
+
+        $this->json([
+            'success' => true, 
+            'students' => $students,
+            'pagination' => [
+                'total_count' => $totalCount,
+                'total_pages' => $totalPages,
+                'current_page' => $page,
+                'limit' => $limit
+            ]
+        ]);
     }
 
     public function manageSubject() {
@@ -406,6 +425,7 @@ class AdminController extends BaseController {
         $contact_number = trim($_POST['contact_number'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $place_of_birth = trim($_POST['place_of_birth'] ?? '');
+        $year_level = filter_input(INPUT_POST, 'year_level', FILTER_VALIDATE_INT);
 
         if (!$student_id || !$user_id) {
             $this->json(['success' => false, 'message' => 'Invalid student or user ID.'], 400);
@@ -414,7 +434,7 @@ class AdminController extends BaseController {
         if (
             empty($name) || empty($number) || !$course_id || empty($username) || empty($birthday) ||
             empty($address) || empty($last_school_attended) || empty($contact_number) ||
-            empty($email) || empty($place_of_birth)
+            empty($email) || empty($place_of_birth) || !$year_level
         ) {
             $this->json(['success' => false, 'message' => 'Please fill out all required fields.'], 400);
         }
@@ -461,6 +481,7 @@ class AdminController extends BaseController {
                 $name,
                 $number,
                 $course_id,
+                $year_level,
                 $birthday,
                 $image_data,
                 $address,
@@ -511,11 +532,12 @@ class AdminController extends BaseController {
         $contact_number = trim($_POST['contact_number'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $place_of_birth = trim($_POST['place_of_birth'] ?? '');
+        $year_level = filter_input(INPUT_POST, 'year_level', FILTER_VALIDATE_INT);
 
         if (
             empty($name) || empty($number) || !$course_id || empty($username) ||
-            empty($birthday) || empty($address) || empty($last_school_attended) ||
-            empty($contact_number) || empty($email) || empty($place_of_birth)
+            empty($address) || empty($last_school_attended) ||
+            empty($contact_number) || empty($email) || empty($place_of_birth) || !$year_level
         ) {
             $this->json(['success' => false, 'message' => 'Please fill out all required fields.'], 400);
         }
@@ -559,6 +581,7 @@ class AdminController extends BaseController {
                 $name,
                 $number,
                 $course_id,
+                $year_level,
                 $birthday,
                 $image_data,
                 $address,
@@ -675,17 +698,28 @@ class AdminController extends BaseController {
         $student = $studentModel->getStudentById($student_id);
         if (!$student) die("<div class='alert alert-danger'>Student not found.</div>");
 
-        // Generate school years array
+        $enrollModel = new Enrollment($this->conn);
+        
+        // Determine default school year
+        $currMonth = (int)date('m');
         $currYear = (int)date('Y');
+        $default_sy = ($currMonth >= 6) ? "$currYear-" . ($currYear + 1) : ($currYear - 1) . "-$currYear";
+
+        // Proactively expire incompletes older than a year for this student
+        $enrollModel->expireIncompleteEnrollments($student_id, $default_sy);
+
+        // Generate school years array (limited range)
         $years = [];
-        for ($i = $currYear + 1; $i >= 2000; $i--) {
+        $startLoop = (int)explode('-', $default_sy)[0] + 1;
+        for ($i = $startLoop; $i >= $startLoop - 6; $i--) {
             $years[] = "$i-" . ($i + 1);
         }
 
         $this->render('admin/enrollment_form', [
             'student' => $student,
             'student_id' => $student_id,
-            'years' => $years
+            'years' => $years,
+            'default_sy' => $default_sy
         ]);
     }
 
@@ -737,6 +771,11 @@ class AdminController extends BaseController {
                 $this->json(['success'=>false,'message'=>'Some retake subjects are not valid for the selected term.'],400);
             }
             $count = $enrollModel->bulkEnroll($student_id, array_values($subject_ids), $school_year, $semester, array_values($retake_ids));
+            
+            // Auto-sync year level upon enrollment
+            $studentModel = new Student($this->conn);
+            $studentModel->syncYearLevel($student_id);
+
             $this->json(['success'=>true,'message'=>"Enrolled in $count subject(s) successfully."]);
         } catch (\Throwable $e) {
             $this->json(['success'=>false,'message'=>'Enrollment failed: '.$e->getMessage()],500);
@@ -762,6 +801,27 @@ class AdminController extends BaseController {
             $this->json(['success'=>false,'message'=>$e->getMessage()],500);
         }
     }
+
+    public function deleteEnrollment() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['success'=>false,'message'=>'Method not allowed.'],405);
+        $this->verifyCsrfToken();
+
+        $enrollment_id = filter_input(INPUT_POST, 'enrollment_id', FILTER_VALIDATE_INT);
+        if (!$enrollment_id) $this->json(['success'=>false,'message'=>'Invalid enrollment ID.'],400);
+
+        try {
+            $enrollModel = new Enrollment($this->conn);
+            if ($enrollModel->deleteEnrollment($enrollment_id))
+                $this->json(['success'=>true,'message'=>'Enrollment record and associated grade deleted.']);
+            else
+                $this->json(['success'=>false,'message'=>'Enrollment record not found.'],404);
+        } catch (\Throwable $e) {
+            $this->json(['success'=>false,'message'=>$e->getMessage()],500);
+        }
+    }
+
 
     public function getEnrollmentHistory() {
         $this->checkAdmin();
@@ -978,6 +1038,34 @@ class AdminController extends BaseController {
                 throw new \Exception("Invalid action.");
             }
         } catch (\Throwable $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function syncYearLevelApi() {
+        $this->checkAdmin();
+        header('Content-Type: application/json');
+
+        $student_id = filter_input(INPUT_POST, 'student_id', FILTER_VALIDATE_INT);
+        if (!$student_id) {
+            $this->json(['success' => false, 'message' => 'Invalid student ID.'], 400);
+        }
+
+        try {
+            $studentModel = new Student($this->conn);
+            $detectedYear = $studentModel->detectYearLevel($student_id);
+            
+            if ($detectedYear === null) {
+                throw new Exception("Could not detect year level. Make sure the student is enrolled in subjects belonging to a curriculum.");
+            }
+
+            $success = $studentModel->syncYearLevel($student_id);
+            if ($success) {
+                $this->json(['success' => true, 'message' => "Year level synced to Year $detectedYear.", 'year_level' => $detectedYear]);
+            } else {
+                throw new Exception("Failed to update year level in database.");
+            }
+        } catch (Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }

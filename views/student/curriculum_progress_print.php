@@ -13,7 +13,6 @@ $studentName = htmlspecialchars($student['student_name'] ?? 'Student');
 $studentNumber = htmlspecialchars($student['student_number'] ?? 'N/A');
 $courseName = htmlspecialchars($student['course_name'] ?? 'N/A');
 $photoData = !empty($student['img']) ? 'data:image/jpeg;base64,' . base64_encode($student['img']) : '/assets/images/person.svg';
-$returnTo = $returnTo ?? '/student/dashboard?view=get_student_grades';
 
 function curriculum_progress_badge($grade, $remarks, $status = '') {
     $grade = $grade !== null && $grade !== '' ? (float)$grade : null;
@@ -281,7 +280,7 @@ function curriculum_progress_badge($grade, $remarks, $status = '') {
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
-                <button type="button" class="btn btn-outline-secondary" onclick="window.location.replace(<?= json_encode($returnTo, JSON_HEX_TAG | JSON_HEX_AMP) ?>)">Close</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="goBack()">Close</button>
             </div>
         </div>
 
@@ -431,9 +430,11 @@ function curriculum_progress_badge($grade, $remarks, $status = '') {
             const returnUrl = <?= json_encode($returnTo, JSON_HEX_TAG | JSON_HEX_AMP) ?>;
             let hasPrinted = false;
 
-            window.addEventListener('afterprint', function () {
+            function goBack() {
                 window.location.replace(returnUrl);
-            });
+            }
+
+            window.addEventListener('afterprint', goBack);
 
             window.addEventListener('load', function () {
                 if (hasPrinted) return;

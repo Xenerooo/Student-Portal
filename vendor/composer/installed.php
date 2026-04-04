@@ -3,7 +3,7 @@
         'name' => 'student/portal',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'dd97c4c98dd7a60704e8dc7252befaee23c21bbf',
+        'reference' => '6389172de9fc2c5a2cacb0fcfa2fe4a2f1be8a3b',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -40,7 +40,7 @@
         'student/portal' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'dd97c4c98dd7a60704e8dc7252befaee23c21bbf',
+            'reference' => '6389172de9fc2c5a2cacb0fcfa2fe4a2f1be8a3b',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

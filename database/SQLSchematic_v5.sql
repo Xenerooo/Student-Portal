@@ -25,13 +25,13 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `createStudent` (IN `p_user_id` INT, IN `p_student_name` VARCHAR(255), IN `p_student_number` VARCHAR(50), IN `p_course_id` INT, IN `p_birthday` DATE, IN `p_img` LONGBLOB, IN `p_address` TEXT, IN `p_last_school_attended` VARCHAR(255), IN `p_contact_number` VARCHAR(50), IN `p_email` VARCHAR(255), IN `p_place_of_birth` VARCHAR(255))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `createStudent` (IN `p_user_id` INT, IN `p_student_name` VARCHAR(255), IN `p_student_number` VARCHAR(50), IN `p_course_id` INT, IN `p_year_level` INT, IN `p_birthday` DATE, IN `p_img` LONGBLOB, IN `p_address` TEXT, IN `p_last_school_attended` VARCHAR(255), IN `p_contact_number` VARCHAR(50), IN `p_email` VARCHAR(255), IN `p_place_of_birth` VARCHAR(255))   BEGIN
     IF p_img IS NULL THEN
-        INSERT INTO students (user_id, student_name, student_number, course_id, birthday, img, address, last_school_attended, contact_number, email, place_of_birth)
-        VALUES (p_user_id, p_student_name, p_student_number, p_course_id, p_birthday, NULL, p_address, p_last_school_attended, p_contact_number, p_email, p_place_of_birth);
+        INSERT INTO students (user_id, student_name, student_number, course_id, year_level, birthday, img, address, last_school_attended, contact_number, email, place_of_birth)
+        VALUES (p_user_id, p_student_name, p_student_number, p_course_id, p_year_level, p_birthday, NULL, p_address, p_last_school_attended, p_contact_number, p_email, p_place_of_birth);
     ELSE
-        INSERT INTO students (user_id, student_name, student_number, course_id, birthday, img, address, last_school_attended, contact_number, email, place_of_birth)
-        VALUES (p_user_id, p_student_name, p_student_number, p_course_id, p_birthday, p_img, p_address, p_last_school_attended, p_contact_number, p_email, p_place_of_birth);
+        INSERT INTO students (user_id, student_name, student_number, course_id, year_level, birthday, img, address, last_school_attended, contact_number, email, place_of_birth)
+        VALUES (p_user_id, p_student_name, p_student_number, p_course_id, p_year_level, p_birthday, p_img, p_address, p_last_school_attended, p_contact_number, p_email, p_place_of_birth);
     END IF;
 END$$
 
@@ -50,7 +50,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllStudents` ()   SELECT
             s.student_id, 
             s.student_number, 
             s.student_name, 
-            c.course_name
+            c.course_name,
+            s.year_level
         FROM students s
         JOIN courses c ON s.course_id = c.course_id
         ORDER BY s.student_name ASC$$
@@ -61,7 +62,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getStudentBySearch` (IN `inputSearc
 	s.student_id, 
 	s.student_number, 
 	s.student_name, 
-	c.course_name
+	c.course_name,
+    s.year_level
 FROM students s
 JOIN courses c ON s.course_id = c.course_id
 	WHERE s.student_name LIKE inputSearch
@@ -76,6 +78,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getStudentDetailsByStudentId` (IN `
         s.student_name,
         s.student_number,
         s.course_id,
+        s.year_level,
         s.birthday,
         s.address,
         s.last_school_attended,
@@ -115,12 +118,13 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getUserDetailByUsername` (IN `usern
 FROM users 
 WHERE username = usernameInput AND is_active = 1$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `updateStudent` (IN `p_name` VARCHAR(100), IN `p_number` VARCHAR(100), IN `p_course_id` INT, IN `p_birthday` DATE, IN `p_img` LONGBLOB, IN `p_address` TEXT, IN `p_last_school_attended` VARCHAR(255), IN `p_contact_number` VARCHAR(50), IN `p_email` VARCHAR(255), IN `p_place_of_birth` VARCHAR(255), IN `p_student_id` INT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `updateStudent` (IN `p_name` VARCHAR(100), IN `p_number` VARCHAR(100), IN `p_course_id` INT, IN `p_year_level` INT, IN `p_birthday` DATE, IN `p_img` LONGBLOB, IN `p_address` TEXT, IN `p_last_school_attended` VARCHAR(255), IN `p_contact_number` VARCHAR(50), IN `p_email` VARCHAR(255), IN `p_place_of_birth` VARCHAR(255), IN `p_student_id` INT)   BEGIN
     IF p_img IS NULL OR p_img = '' THEN
         UPDATE students 
         SET student_name = p_name, 
             student_number = p_number, 
             course_id = p_course_id, 
+            year_level = p_year_level,
             birthday = p_birthday,
             address = p_address,
             last_school_attended = p_last_school_attended,
@@ -133,6 +137,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `updateStudent` (IN `p_name` VARCHAR
         SET student_name = p_name, 
             student_number = p_number, 
             course_id = p_course_id, 
+            year_level = p_year_level,
             birthday = p_birthday,
             address = p_address,
             last_school_attended = p_last_school_attended,
@@ -204,21 +209,22 @@ INSERT INTO `admins` (`admin_id`, `user_id`, `admin_number`, `admin_name`) VALUE
 
 CREATE TABLE `courses` (
   `course_id` int(11) NOT NULL,
-  `course_name` varchar(100) DEFAULT NULL
+  `course_name` varchar(100) DEFAULT NULL,
+  `acronym` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `courses`
 --
 
-INSERT INTO `courses` (`course_id`, `course_name`) VALUES
-(1, 'Bachelor in Science in Computer Science (BSCS)'),
-(2, 'Bachelor of Science in Hospitality Management (BSHM)'),
-(3, 'Bachelor of Science in Business Administration (BSBA)'),
-(4, 'Bachelor of Technical-Vocational Teacher Education major in Food Service Management (BTVTED)'),
-(5, 'Bachelor of Technical-Vocational Teacher Education major in Computer Programming (BTVTED)'),
-(6, 'Bachelor of Technical-Vocational Teacher Education major in Computer Hardware Servicing (BTVTED)'),
-(7, 'Bachelor of Technical-Vocational Teacher Education major in Automotive Technology (BTVTED)');
+INSERT INTO `courses` (`course_id`, `course_name`, `acronym`) VALUES
+(1, 'Bachelor in Science in Computer Science (BSCS)', 'BSCS'),
+(2, 'Bachelor of Science in Hospitality Management (BSHM)', 'BSHM'),
+(3, 'Bachelor of Science in Business Administration (BSBA)', 'BSBA'),
+(4, 'Bachelor of Technical-Vocational Teacher Education major in Food Service Management (BTVTED)', 'BTVTED-FSM'),
+(5, 'Bachelor of Technical-Vocational Teacher Education major in Computer Programming (BTVTED)', 'BTVTED-CP'),
+(6, 'Bachelor of Technical-Vocational Teacher Education major in Computer Hardware Servicing (BTVTED)', 'BTVTED-CHS'),
+(7, 'Bachelor of Technical-Vocational Teacher Education major in Automotive Technology (BTVTED)', 'BTVTED-AT');
 
 -- --------------------------------------------------------
 
@@ -477,6 +483,7 @@ CREATE TABLE `students` (
   `student_number` varchar(20) NOT NULL,
   `student_name` varchar(100) NOT NULL,
   `course_id` int(11) DEFAULT NULL,
+  `year_level` int(11) DEFAULT 1,
   `birthday` date DEFAULT NULL,
   `address` text NOT NULL,
   `last_school_attended` varchar(255) NOT NULL,

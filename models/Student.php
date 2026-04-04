@@ -12,6 +12,7 @@ class Student extends BaseModel {
         $name,
         $number,
         $course_id,
+        $year_level,
         $birthday,
         $image_data,
         $address,
@@ -93,6 +94,7 @@ class Student extends BaseModel {
                     student_name,
                     student_number,
                     course_id,
+                    year_level,
                     birthday,
                     img,
                     address,
@@ -100,15 +102,16 @@ class Student extends BaseModel {
                     contact_number,
                     email,
                     place_of_birth
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
             $img_param = null;
             $stmt_student->bind_param(
-                "issisbsssss",
+                "issiisbsssss",
                 $new_user_id,
                 $name,
                 $number,
                 $course_id,
+                $year_level,
                 $birthday,
                 $img_param,
                 $address,
@@ -119,7 +122,7 @@ class Student extends BaseModel {
             );
 
             if ($image_data !== null) {
-                $stmt_student->send_long_data(5, $image_data);
+                $stmt_student->send_long_data(6, $image_data);
             }
 
             if (!$stmt_student->execute()) {
@@ -157,6 +160,7 @@ class Student extends BaseModel {
         $name,
         $number,
         $course_id,
+        $year_level,
         $birthday,
         $image_data,
         $address,
@@ -196,6 +200,7 @@ class Student extends BaseModel {
                 SET student_name = ?,
                     student_number = ?,
                     course_id = ?,
+                    year_level = ?,
                     birthday = ?,
                     address = ?,
                     last_school_attended = ?,
@@ -214,10 +219,11 @@ class Student extends BaseModel {
             if ($image_data !== null) {
                 $null = null;
                 $stmt_student->bind_param(
-                    "ssissssssbi",
+                    "ssiissssssbi",
                     $name,
                     $number,
                     $course_id,
+                    $year_level,
                     $birthday,
                     $address,
                     $last_school_attended,
@@ -227,13 +233,14 @@ class Student extends BaseModel {
                     $null,
                     $student_id
                 );
-                $stmt_student->send_long_data(9, $image_data);
+                $stmt_student->send_long_data(10, $image_data);
             } else {
                 $stmt_student->bind_param(
-                    "ssissssssi",
+                    "ssiissssssi",
                     $name,
                     $number,
                     $course_id,
+                    $year_level,
                     $birthday,
                     $address,
                     $last_school_attended,
@@ -333,6 +340,7 @@ class Student extends BaseModel {
                 s.student_name,
                 s.student_number,
                 s.course_id,
+                s.year_level,
                 s.birthday,
                 s.img,
                 s.address,
@@ -359,7 +367,7 @@ class Student extends BaseModel {
 
     public function getAllStudents() {
         $sql = "
-            SELECT s.student_id, s.student_number, s.student_name, c.course_name 
+            SELECT s.student_id, s.student_number, s.student_name, c.course_name, c.acronym, s.year_level 
             FROM students s 
             LEFT JOIN courses c ON s.course_id = c.course_id 
             ORDER BY s.student_name
@@ -383,9 +391,10 @@ class Student extends BaseModel {
 
     public function getRecentStudents($limit = 5) {
         $sql = "
-            SELECT s.student_id, s.student_number, s.student_name, c.course_name 
+            SELECT s.student_id, s.student_number, s.student_name, c.course_name, u.created_at
             FROM students s 
             LEFT JOIN courses c ON s.course_id = c.course_id 
+            LEFT JOIN users u ON s.user_id = u.user_id
             ORDER BY s.student_id DESC LIMIT ?
         ";
         $stmt = $this->conn->prepare($sql);
@@ -397,17 +406,28 @@ class Student extends BaseModel {
         return $students;
     }
 
-    public function searchStudents($search) {
-        $search = "%{$search}%";
+    public function searchStudents($search, $course_id = null, $limit = 10, $offset = 0) {
+        $searchQuery = "%{$search}%";
         $sql = "
-            SELECT s.student_id, s.student_number, s.student_name, c.course_name 
+            SELECT s.student_id, s.student_number, s.student_name, c.course_name, c.acronym, s.year_level
             FROM students s 
             LEFT JOIN courses c ON s.course_id = c.course_id 
-            WHERE s.student_name LIKE ? OR s.student_number LIKE ? OR c.course_name LIKE ?
-            ORDER BY s.student_name
+            WHERE (s.student_name LIKE ? OR s.student_number LIKE ? OR c.course_name LIKE ? OR c.acronym LIKE ?)
         ";
+        
+        if ($course_id) {
+            $sql .= " AND s.course_id = ? ";
+        }
+        
+        $sql .= " ORDER BY s.student_name LIMIT ? OFFSET ? ";
+
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("sss", $search, $search, $search);
+        if ($course_id) {
+            $stmt->bind_param("ssssiii", $searchQuery, $searchQuery, $searchQuery, $searchQuery, $course_id, $limit, $offset);
+        } else {
+            $stmt->bind_param("ssssii", $searchQuery, $searchQuery, $searchQuery, $searchQuery, $limit, $offset);
+        }
+        
         $stmt->execute();
         $result = $stmt->get_result();
         $students = $result->fetch_all(MYSQLI_ASSOC);
@@ -415,8 +435,87 @@ class Student extends BaseModel {
         return $students;
     }
 
+    public function getSearchCount($search, $course_id = null) {
+        $searchQuery = "%{$search}%";
+        $sql = "
+            SELECT COUNT(*) as total
+            FROM students s 
+            LEFT JOIN courses c ON s.course_id = c.course_id 
+            WHERE (s.student_name LIKE ? OR s.student_number LIKE ? OR c.course_name LIKE ? OR c.acronym LIKE ?)
+        ";
+        
+        if ($course_id) {
+            $sql .= " AND s.course_id = ? ";
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        if ($course_id) {
+            $stmt->bind_param("ssssi", $searchQuery, $searchQuery, $searchQuery, $searchQuery, $course_id);
+        } else {
+            $stmt->bind_param("ssss", $searchQuery, $searchQuery, $searchQuery, $searchQuery);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        return (int)$row['total'];
+    }
+
     public function getStudentDashboardData($student_id) {
         return $this->getStudentById($student_id);
+    }
+
+    /**
+     * Detects the student's year level based on their enrolled subjects' majority year level.
+     * @param int $student_id
+     * @return int|null Predicted year level
+     */
+    public function detectYearLevel($student_id) {
+        $sql = "
+            SELECT curr.year_level, COUNT(*) as count
+            FROM enrollments e
+            JOIN curriculum curr ON e.subject_id = curr.subject_id
+            JOIN (
+                SELECT school_year, semester
+                FROM enrollments
+                WHERE student_id = ?
+                ORDER BY school_year DESC, 
+                         (CASE WHEN semester = 'Summer' THEN 3 WHEN semester = '2nd Semester' THEN 2 ELSE 1 END) DESC
+                LIMIT 1
+            ) latest_term ON e.school_year = latest_term.school_year AND e.semester = latest_term.semester
+            JOIN students s ON e.student_id = s.student_id AND s.course_id = curr.course_id
+            WHERE e.student_id = ?
+            GROUP BY curr.year_level
+            ORDER BY count DESC, curr.year_level DESC
+            LIMIT 1
+        ";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $student_id, $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result ? $result->fetch_assoc() : null;
+        $stmt->close();
+        
+        return $row ? (int)$row['year_level'] : null;
+    }
+
+    /**
+     * Syncs the stored year_level in the database with the detected value.
+     * @param int $student_id
+     * @return bool
+     */
+    public function syncYearLevel($student_id) {
+        $detectedYear = $this->detectYearLevel($student_id);
+        if ($detectedYear === null) return false;
+
+        $sql = "UPDATE students SET year_level = ? WHERE student_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ii", $detectedYear, $student_id);
+        $success = $stmt->execute();
+        $stmt->close();
+
+        return $success;
     }
 }
 ?>

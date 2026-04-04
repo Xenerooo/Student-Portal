@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="<?= $_SESSION['csrf_token'] ?? '' ?>">
     <title><?= htmlspecialchars($pageTitle ?? 'SIS Portal') ?></title>
     <link href="<?= APP_URL ?>/assets/css/bootstrap.css" rel="stylesheet"> 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="<?= APP_URL ?>/assets/css/app.css?view=last_<?= time() ?>_10" rel="stylesheet">
     <script defer src="<?= APP_URL ?>/assets/js/bootstrap.bundle.js"></script>
     <link rel="icon" href="<?= APP_URL ?>/assets/images/icon.png">

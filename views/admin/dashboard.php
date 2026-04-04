@@ -165,8 +165,11 @@
                 } else {
                     sidebar.classList.toggle('collapsed');
                 }
+
+                const active = document.querySelector('.sidebar-link.active');
+                if (active) updateIndicator(active);
+
                 setTimeout(() => {
-                    const active = document.querySelector('.sidebar-link.active');
                     if (active) updateIndicator(active);
                 }, 310);
             });
@@ -257,6 +260,12 @@
                     }
                     
                     history.pushState(null, '', `<?= APP_URL ?>/admin/dashboard?view=${action}`);
+
+                    // Scroll to top of the content area
+                    const scrollContainer = document.querySelector('.app-content-scrollable');
+                    if (scrollContainer) {
+                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 })
                 .catch(error => {
                     contentArea.innerHTML = `<div class='alert alert-danger'>Error loading content: ${error.message}</div>`;

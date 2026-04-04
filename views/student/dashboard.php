@@ -46,7 +46,7 @@
                     <span id="header-title" style="color: #64748b; font-weight: normal; font-size: 0.95em;">Dashboard</span>
                 </div>
             </div>
-            <div class="header-right">
+            <!-- <div class="header-right">
                 <button class="btn-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                     <span class="badge"></span>
@@ -56,7 +56,7 @@
                         S
                     </div>
                 </div>
-            </div>
+            </div> -->
         </header>
 
         <!-- Scrollable Content View -->
@@ -139,8 +139,11 @@
                 } else {
                     sidebar.classList.toggle('collapsed');
                 }
+
+                const active = document.querySelector('.sidebar-link.active');
+                if (active) updateIndicator(active);
+
                 setTimeout(() => {
-                    const active = document.querySelector('.sidebar-link.active');
                     if (active) updateIndicator(active);
                 }, 310);
             });

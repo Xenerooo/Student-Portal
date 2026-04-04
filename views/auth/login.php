@@ -10,7 +10,7 @@
     <link href="<?= APP_URL ?>/assets/css/app.css" rel="stylesheet" >
     <style>
         body {
-            background-color: #3a522e; /* Hunter Green */
+            background-color: #5c4033; /* Primary Brown */
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 0;
@@ -21,7 +21,7 @@
             justify-content: center;
             min-height: 100vh;
             width: 100%;
-            background: radial-gradient(circle at top right, #585f56 0%, #3a522e 100%);
+            background: radial-gradient(circle at top right, #2e2a27 0%, #5c4033 100%);
             padding: 1rem;
         }
         .login-card {
@@ -38,7 +38,7 @@
             width: 88px;
             height: 88px;
             border-radius: 1.25rem;
-            background: #f8fafc;
+            background: #faf7f2;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -53,7 +53,7 @@
             text-align: center;
             font-size: 1.5rem;
             font-weight: 700;
-            color: #0f172a;
+            color: #2e2a27;
             margin-bottom: 0.5rem;
         }
         .login-subtitle {
@@ -69,15 +69,15 @@
             border-radius: 0.75rem;
             border: 1px solid #e2e8f0;
             padding: 1rem;
-            background-color: #f8fafc;
+            background-color: #faf7f2;
         }
         .form-control:focus {
             background-color: #ffffff;
-            border-color: #3a522e;
-            box-shadow: 0 0 0 4px rgba(58, 82, 46, 0.15);
+            border-color: #5c4033;
+            box-shadow: 0 0 0 4px rgba(92, 64, 51, 0.15);
         }
         .btn-login {
-            background-color: #3a522e;
+            background-color: #5c4033;
             color: white;
             border: none;
             border-radius: 9999px;
@@ -88,10 +88,10 @@
             margin-top: 1rem;
         }
         .btn-login:hover {
-            background-color: #0c0c0c;
+            background-color: #2e2a27;
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(12, 12, 12, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(46, 42, 39, 0.3);
         }
         
         /* Decorative circle behind card */
@@ -152,7 +152,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow" style="border-radius: 1.25rem;">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="errorModalLabel" style="color: #0f172a;">Login Failed</h5>
+                    <h5 class="modal-title fw-bold" id="errorModalLabel" style="color: #2e2a27;">Login Failed</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-danger pt-3 pb-4" id="errorModalMessage">

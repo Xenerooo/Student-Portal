@@ -1,8 +1,6 @@
 <div >
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-4" >Dashboard Overview</h1>
-        <!-- <h1 class="mb-4">Student Lookup Table</h1> -->
-        <span class="badge bg-primary rounded-pill py-2 px-3 fw-normal">Current System Status</span>
     </div>
 
     <!-- Metrics Cards -->
@@ -51,6 +49,7 @@
                     <th>Student Name</th>
                     <th>Student Number</th>
                     <th>Course</th>
+                    <th>Date Created</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,10 +59,11 @@
                             <td class="fw-medium text-dark"><?= htmlspecialchars($student['student_name']) ?></td>
                             <td class="text-muted"><?= htmlspecialchars($student['student_number']) ?></td>
                             <td><?= htmlspecialchars($student['course_name'] ?? 'N/A') ?></td>
+                            <td class="text-muted"><?= date('M d, Y', strtotime($student['created_at'])) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="3" class="text-center text-muted">No students found.</td></tr>
+                    <tr><td colspan="4" class="text-center text-muted">No students found.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

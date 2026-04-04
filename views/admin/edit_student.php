@@ -96,6 +96,21 @@
                     <?php endforeach; ?>
                 </select>
             </div>
+
+            <div class="mb-3">
+                <label for="year_level" class="form-label">Current Year Level</label>
+                <div class="input-group">
+                    <select name="year_level" id="year_level" class="form-select" required>
+                        <?php for ($i = 1; $i <= 4; $i++): ?>
+                            <option value="<?= $i ?>" <?= (isset($student['year_level']) && $student['year_level'] == $i) ? 'selected' : '' ?>>Year <?= $i ?></option>
+                        <?php endfor; ?>
+                    </select>
+                    <button class="btn btn-outline-primary" type="button" id="syncYearBtn" title="Auto-detect year level based on enrollment">
+                        <i class="fas fa-sync-alt"></i> Sync
+                    </button>
+                </div>
+                <small class="form-text text-muted">Stored year level. Use "Sync" to auto-detect from enrollment load.</small>
+            </div>
             
             <hr>
             
@@ -167,6 +182,50 @@
 
         
 
+        const syncYearBtn = document.getElementById('syncYearBtn');
+        if (syncYearBtn) {
+            syncYearBtn.addEventListener('click', function() {
+                const studentId = document.querySelector('input[name="student_id"]').value;
+                const yearSelect = document.getElementById('year_level');
+                const messageDiv = document.getElementById('form-submission-message');
+                
+                syncYearBtn.disabled = true;
+                syncYearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                const formData = new FormData();
+                formData.append('student_id', studentId);
+                
+                fetch('<?= APP_URL ?>/admin/api/students/sync-year', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': '<?= $_SESSION['csrf_token'] ?>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        yearSelect.value = data.year_level;
+                        messageDiv.innerHTML = `<div class="alert alert-success mt-2">${data.message}</div>`;
+                    } else {
+                        messageDiv.innerHTML = `<div class="alert alert-danger mt-2">${data.message}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Sync Error:', error);
+                    messageDiv.innerHTML = `<div class="alert alert-danger mt-2">Error syncing year level.</div>`;
+                })
+                .finally(() => {
+                    syncYearBtn.disabled = false;
+                    syncYearBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync';
+                    setTimeout(() => {
+                        const alert = messageDiv.querySelector('.alert');
+                        if (alert) alert.remove();
+                    }, 3000);
+                });
+            });
+        }
+
         function handleEditStudentSubmit(e) {
             e.preventDefault(); 
             // console.log("Edit Student Form Submission Intercepted.");
@@ -193,7 +252,8 @@
             })
             .then(data => {
                 // console.log("Server Response:", data);
-                window.scrollTo(0, 0);
+                const scrollContainer = document.querySelector('.app-content-scrollable');
+                if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                 if (data.success) {
                     messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
                     // Redirect to student list after success using the global loadContent function
@@ -263,7 +323,8 @@
                 })
                 .then(data => {
                     console.log('Delete Response:', data);
-                    window.scrollTo(0, 0);
+                    const scrollContainer = document.querySelector('.app-content-scrollable');
+                    if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                     if (data.success) {
                         messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
                         // Hide modal and fade out card before navigating

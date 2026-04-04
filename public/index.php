@@ -116,7 +116,7 @@ $router->map('GET', '/admin/api/students/edit', 'App\\Controllers\\AdminControll
 $router->map('POST', '/admin/api/students/store', 'App\\Controllers\\AdminController#createStudent', 'api_admin_student_store');
 $router->map('POST', '/admin/api/students/update', 'App\\Controllers\\AdminController#editStudent', 'api_admin_student_update');
 $router->map('POST', '/admin/api/students/delete', 'App\\Controllers\\AdminController#deleteStudent', 'api_admin_student_delete');
-
+$router->map('POST', '/admin/api/students/sync-year', 'App\\Controllers\\AdminController#syncYearLevelApi', 'api_admin_student_sync_year');
 $router->map('GET', '/admin/api/subjects', 'App\\Controllers\\AdminController#getManageSubjects', 'api_admin_subjects');
 $router->map('POST', '/admin/api/subjects/manage', 'App\\Controllers\\AdminController#manageSubject', 'api_admin_subject_manage');
 $router->map('GET',  '/admin/api/subjects/requisites',       'App\\Controllers\\AdminController#getSubjectRequisitesApi', 'api_admin_subject_requisites');
@@ -139,6 +139,8 @@ $router->map('POST', '/admin/api/events/delete', 'App\\Controllers\\AdminControl
 $router->map('GET',  '/admin/api/students/enroll-form',       'App\\Controllers\\AdminController#getEnrollmentForm',    'api_admin_enroll_form');
 $router->map('POST', '/admin/api/students/enroll',            'App\\Controllers\\AdminController#enrollStudent',        'api_admin_enroll');
 $router->map('POST', '/admin/api/students/drop-subject',      'App\\Controllers\\AdminController#dropSubject',          'api_admin_drop_subject');
+$router->map('POST', '/admin/api/students/delete-enrollment',    'App\\Controllers\\AdminController#deleteEnrollment',      'api_admin_delete_enrollment');
+
 $router->map('GET',  '/admin/api/students/enroll-form-subjects', 'App\\Controllers\\AdminController#getEnrollFormSubjects', 'api_admin_enroll_form_subjects');
 $router->map('GET',  '/admin/api/students/enrollment-history','App\\Controllers\\AdminController#getEnrollmentHistory', 'api_admin_enrollment_history');
 $router->map('GET',  '/admin/api/students/retake-candidates', 'App\\Controllers\\AdminController#getRetakeCandidates', 'api_admin_retake_candidates');

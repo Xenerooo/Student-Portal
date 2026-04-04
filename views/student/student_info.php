@@ -14,6 +14,7 @@ $address = nl2br(htmlspecialchars($student['address'] ?? 'N/A'));
 $lastSchool = htmlspecialchars($student['last_school_attended'] ?? 'N/A');
 $contactNumber = htmlspecialchars($student['contact_number'] ?? 'N/A');
 $email = htmlspecialchars($student['email'] ?? 'N/A');
+$yearLevel = htmlspecialchars($student['year_level'] ?? '1');
 $initials = strtoupper(substr(trim((string)($student['student_name'] ?? 'S')), 0, 1));
 ?>
 
@@ -38,7 +39,11 @@ $initials = strtoupper(substr(trim((string)($student['student_name'] ?? 'S')), 0
                     <span class="badge text-bg-light text-dark">ID: <?= $studentNumber ?></span>
                 </div>
                 <h2 class="display-6 fw-bold mb-2"><?= $studentName ?></h2>
-                <p class="mb-3 fs-5 opacity-75"><?= $courseName ?></p>
+                <p class="mb-3 fs-5 opacity-75">
+                    <?= $courseName ?> 
+                    <span class="mx-2 opacity-50">|</span> 
+                    Year <?= $yearLevel ?>
+                </p>
                 <div class="d-flex flex-wrap gap-2">
                     <span class="badge rounded-pill text-bg-light text-dark px-3 py-2">Birthday: <?= htmlspecialchars($birthday) ?></span>
                     <span class="badge rounded-pill text-bg-light text-dark px-3 py-2">Email: <?= $email ?></span>
@@ -73,6 +78,12 @@ $initials = strtoupper(substr(trim((string)($student['student_name'] ?? 'S')), 0
                             <div class="info-item">
                                 <div class="info-label">Course / Program</div>
                                 <div class="info-value"><?= $courseName ?></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <div class="info-label">Current Year Level</div>
+                                <div class="info-value">Year <?= $yearLevel ?></div>
                             </div>
                         </div>
                         <div class="col-md-6">

@@ -71,6 +71,17 @@
                     <?php endforeach; ?>
                 </select>
             </div>
+
+            <div class="mb-3">
+                <label for="year_level" class="form-label">Current Year Level</label>
+                <select name="year_level" id="year_level" class="form-select" required>
+                    <option value="1" selected>Year 1</option>
+                    <option value="2">Year 2</option>
+                    <option value="3">Year 3</option>
+                    <option value="4">Year 4</option>
+                </select>
+                <small class="form-text text-muted">Initial year level for the student.</small>
+            </div>
             
             <hr>
             
@@ -116,6 +127,11 @@
          })
         .then(data => {
             console.log("Server Response:", data);
+            
+            // Scroll to top to show message
+            const scrollContainer = document.querySelector('.app-content-scrollable');
+            if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+
             if (data.success) {
                 messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
                 form.reset();

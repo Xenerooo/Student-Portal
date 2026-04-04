@@ -16,7 +16,6 @@ $studentName = htmlspecialchars($student['student_name'] ?? 'Student');
 $studentNumber = htmlspecialchars($student['student_number'] ?? 'N/A');
 $courseName = htmlspecialchars($student['course_name'] ?? 'N/A');
 $photoData = !empty($student['img']) ? 'data:image/jpeg;base64,' . base64_encode($student['img']) : '/assets/images/person.svg';
-$returnTo = trim($_GET['return_to'] ?? '') ?: '/student/dashboard?view=get_student_grades';
 
 function academic_record_grade_label($grade, $remarks, $status = '') {
     $grade = $grade !== null && $grade !== '' ? (float)$grade : null;
@@ -286,7 +285,7 @@ function academic_record_grade_label($grade, $remarks, $status = '') {
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
-                <button type="button" class="btn btn-outline-secondary" onclick="window.close()">Close</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="goBack()">Close</button>
             </div>
         </div>
 

@@ -205,6 +205,8 @@ class StudentController extends BaseController {
         $overallSummary = $this->buildGradeSummary($scholasticHistory, false);
         $groupedHistory = $this->groupScholasticHistory($scholasticHistory);
 
+        $returnTo = $this->getSafeReturnUrl();
+
         $this->render('student/academic_record_print', [
             'pageTitle' => 'Academic Record | SIS',
             'student' => $student,
@@ -217,6 +219,7 @@ class StudentController extends BaseController {
             'groupedHistory' => $groupedHistory,
             'curriculumProgress' => $curriculumProgress,
             'generatedAt' => date('F j, Y g:i A'),
+            'returnTo' => $returnTo,
         ]);
     }
 
@@ -235,7 +238,7 @@ class StudentController extends BaseController {
 
         $curriculumProgress = $gradeModel->getCurriculumProgress($student_id);
         $summary = $this->buildCurriculumSummary($curriculumProgress);
-        $returnTo = trim($_GET['return_to'] ?? '') ?: APP_URL . '/student/dashboard?view=get_student_grades';
+        $returnTo = $this->getSafeReturnUrl();
 
         $this->render('student/curriculum_progress_print', [
             'pageTitle' => 'Curriculum Progress | SIS',
@@ -428,6 +431,43 @@ class StudentController extends BaseController {
             'total_units' => $totalUnits,
             'passed_units' => $passedUnits,
         ];
+    }
+
+    /**
+     * Safely resolve return_to URL, ensuring relative paths are prefixed with APP_URL
+     * and preventing open redirect vulnerabilities to external sites.
+     */
+    private function getSafeReturnUrl(): string {
+        $default = APP_URL . '/student/dashboard?view=get_student_grades';
+        $returnTo = trim($_GET['return_to'] ?? '');
+
+        if (empty($returnTo)) {
+            return $default;
+        }
+
+        // 1. If it's already a full URL, check if it belongs to our application
+        if (preg_match('~^https?://~i', $returnTo)) {
+            if (strpos($returnTo, APP_URL) === 0) {
+                return $returnTo; // Local absolute URL is safe
+            }
+            return $default; // External URL for return_to is blocked
+        }
+
+        // 2. If it's a relative path starting with /, normalize and prepend APP_URL
+        if (strpos($returnTo, '/') === 0 && strpos($returnTo, '//') !== 0) {
+            $appPath = parse_url(APP_URL, PHP_URL_PATH) ?: '';
+            
+            // Avoid double-prefixing if the subfolder is already in the return_to string
+            if (!empty($appPath) && $appPath !== '/' && strpos($returnTo, $appPath) === 0) {
+                $cleanPath = substr($returnTo, strlen($appPath));
+                return APP_URL . (strpos($cleanPath, '/') === 0 ? $cleanPath : '/' . $cleanPath);
+            }
+            
+            return APP_URL . $returnTo;
+        }
+
+        // 3. Any other malformed input defaults to safety
+        return $default;
     }
 }
 ?>

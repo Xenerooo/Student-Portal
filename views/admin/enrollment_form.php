@@ -121,6 +121,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                 <div class="col">
                     <h5 class="mb-0"><?= $student_name ?></h5>
                     <p class="text-muted mb-0"><?= $student_number ?> | <?= $course_name ?></p>
+                    <p class="text-muted small mb-0">Current Academic Standing: <span class="badge bg-secondary">Year <?= htmlspecialchars($student['year_level'] ?? '1') ?></span></p>
                 </div>
             </div>
         </div>
@@ -155,7 +156,7 @@ $course_id = (int)($student['course_id'] ?? 0);
                                 <label class="form-label small fw-bold">School Year</label>
                                 <select class="form-select" name="school_year" id="schoolYear" required>
                                     <?php foreach ($years as $year): ?>
-                                        <option value="<?= $year ?>"><?= $year ?></option>
+                                        <option value="<?= $year ?>" <?= ($year === ($default_sy ?? '')) ? 'selected' : '' ?>><?= $year ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -169,11 +170,13 @@ $course_id = (int)($student['course_id'] ?? 0);
                             </div>
                             <div class="col-md-4" id="yearLevelContainer">
                                 <label class="form-label small fw-bold">Year Level</label>
-                                <select class="form-select" id="yearLevel">
-                                    <option value="1">1st Year</option>
-                                    <option value="2">2nd Year</option>
-                                    <option value="3">3rd Year</option>
-                                    <option value="4">4th Year</option>
+                                <select class="form-select" id="yearLevel" name="year_level">
+                                    <?php 
+                                    $currentYear = (int)($student['year_level'] ?? 1);
+                                    for ($i = 1; $i <= 4; $i++): 
+                                    ?>
+                                        <option value="<?= $i ?>" <?= $i == $currentYear ? 'selected' : '' ?>><?= $i . ($i == 1 ? 'st' : ($i == 2 ? 'nd' : ($i == 3 ? 'rd' : 'th'))) ?> Year</option>
+                                    <?php endfor; ?>
                                 </select>
                             </div>
                         </div>
@@ -488,28 +491,44 @@ $course_id = (int)($student['course_id'] ?? 0);
         // Only render first 50 to keep it snappy
         const toRender = subjects.slice(0, 50);
         othersList.innerHTML = toRender.map(s => {
-            const latestTake = latestEnrollmentBySubject.get(parseInt(s.subject_id));
-            const isPassed = latestTake && latestTake.status === 'passed';
+            const status = s.latest_status;
+            const sy = s.latest_sy;
+            const sem = s.latest_sem;
+            
+            const isPassed = status === 'passed';
+            const isEnrolled = status === 'enrolled';
+            const isIncomplete = status === 'incomplete';
+            
+            const isDisabled = isPassed || isEnrolled || isIncomplete;
             const isChecked = selectedSubjects.has(s.subject_id.toString());
             const missing = s.missing_requisites || [];
             const hasMissing = missing.length > 0;
 
+            let statusBadge = '';
+            if (isPassed) statusBadge = '<span class="badge bg-success ms-2">Passed</span>';
+            else if (isEnrolled) statusBadge = `<span class="badge bg-info ms-2">Currently Enrolled (${sy})</span>`;
+            else if (isIncomplete) statusBadge = `<span class="badge bg-warning text-dark ms-2">Incomplete (${sy})</span>`;
+            else if (status === 'failed') statusBadge = '<span class="badge bg-danger ms-2">Failed</span>';
+
             return `
-                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''} ${hasMissing && !isPassed ? 'border-start border-warning border-4' : ''}">
+                <label class="list-group-item d-flex align-items-center ${isDisabled ? 'bg-light text-muted' : ''} ${hasMissing && !isDisabled ? 'border-start border-warning border-4' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${s.subject_id}" 
                            data-units="${s.units}" 
                            data-missing='${JSON.stringify(missing)}'
-                           ${isChecked && !isPassed ? 'checked' : ''} ${isPassed ? 'disabled' : ''}>
+                           ${isChecked && !isDisabled ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${s.subject_code}</span>
-                                ${hasMissing && !isPassed ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
+                                ${statusBadge}
+                                ${hasMissing && !isDisabled ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
                                 <div class="small">${s.subject_name}</div>
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-secondary rounded-pill">${s.units} Units</span>
                                 ${isPassed ? '<span class="d-block small text-success">Already passed</span>' : ''}
+                                ${isEnrolled ? `<span class="d-block small text-info">Enrolled in ${sy}</span>` : ''}
+                                ${isIncomplete ? `<span class="d-block small text-warning">Incomplete in ${sy}</span>` : ''}
                             </div>
                         </div>
                     </div>
@@ -709,32 +728,48 @@ $course_id = (int)($student['course_id'] ?? 0);
             </label>
         `).join('') || '<div class="p-3 text-center text-muted small">No failed subjects for retake.</div>';
 
-        // Render Curriculum
         curriculumList.innerHTML = regularCurriculum.map(e => {
-            const isPassed = parseInt(e.already_passed) > 0;
+            const status = e.latest_status;
+            const sy = e.latest_sy;
+            
+            const isPassed = status === 'passed';
+            const isEnrolled = status === 'enrolled';
+            const isIncomplete = status === 'incomplete';
+            
+            const isDisabled = isPassed || isEnrolled || isIncomplete;
             const missing = e.missing_requisites || [];
             const hasMissing = missing.length > 0;
             
-            if (!isPassed) {
-                // Pre-select curriculum subjects if not passed
+            if (!isDisabled) {
+                // Pre-select curriculum subjects if not passed, enrolled, or incomplete
                 selectedSubjects.set(e.subject_id.toString(), parseInt(e.units));
             }
+
+            let statusBadge = '';
+            if (isPassed) statusBadge = '<span class="badge bg-success ms-2">Passed</span>';
+            else if (isEnrolled) statusBadge = `<span class="badge bg-info ms-2">Currently Enrolled (${sy})</span>`;
+            else if (isIncomplete) statusBadge = `<span class="badge bg-warning text-dark ms-2">Incomplete (${sy})</span>`;
+            else if (status === 'failed') statusBadge = '<span class="badge bg-danger ms-2">Failed</span>';
+
             return `
-                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''} ${hasMissing && !isPassed ? 'border-start border-warning border-4' : ''}">
+                <label class="list-group-item d-flex align-items-center ${isDisabled ? 'bg-light text-muted' : ''} ${hasMissing && !isDisabled ? 'border-start border-warning border-4' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${e.subject_id}" 
                            data-units="${e.units}" 
                            data-missing='${JSON.stringify(missing)}'
-                           ${isPassed ? 'disabled' : 'checked'}>
+                           ${isDisabled ? 'disabled' : 'checked'}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${e.subject_code}</span>
-                                ${hasMissing && !isPassed ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
+                                ${statusBadge}
+                                ${hasMissing && !isDisabled ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
                                 <div class="small">${e.subject_name}</div>
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-secondary rounded-pill">${e.units} Units</span>
                                 ${isPassed ? '<span class="d-block small text-success">Already passed</span>' : ''}
+                                ${isEnrolled ? `<span class="d-block small text-info">Enrolled in ${sy}</span>` : ''}
+                                ${isIncomplete ? `<span class="d-block small text-warning">Incomplete in ${sy}</span>` : ''}
                             </div>
                         </div>
                     </div>
@@ -800,26 +835,42 @@ $course_id = (int)($student['course_id'] ?? 0);
         summerAllList.innerHTML = summerAvailableSubjects.map(s => {
             const sid = parseInt(s.subject_id);
             const latestTake = latestEnrollmentBySubject.get(sid);
-            const isPassed = latestTake && latestTake.status === 'passed';
+            const status = latestTake ? latestTake.status : null;
+            const sy = latestTake ? latestTake.school_year : null;
+            
+            const isPassed = status === 'passed';
+            const isEnrolled = status === 'enrolled';
+            const isIncomplete = status === 'incomplete';
+            
+            const isDisabled = isPassed || isEnrolled || isIncomplete;
             const missing = s.missing_requisites || [];
             const hasMissing = missing.length > 0;
             
+            let statusBadge = '';
+            if (isPassed) statusBadge = '<span class="badge bg-success ms-2">Passed</span>';
+            else if (isEnrolled) statusBadge = `<span class="badge bg-info text-dark ms-2">Currently Enrolled (${sy})</span>`;
+            else if (isIncomplete) statusBadge = `<span class="badge bg-warning text-dark ms-2">Incomplete (${sy})</span>`;
+            else if (status === 'failed') statusBadge = '<span class="badge bg-danger ms-2">Failed</span>';
+
             return `
-                <label class="list-group-item d-flex align-items-center ${isPassed ? 'bg-light text-muted' : ''} ${hasMissing && !isPassed ? 'border-start border-warning border-4' : ''}">
+                <label class="list-group-item d-flex align-items-center ${isDisabled ? 'bg-light text-muted' : ''} ${hasMissing && !isDisabled ? 'border-start border-warning border-4' : ''}">
                     <input class="form-check-input me-3 subject-cb" type="checkbox" name="subject_ids[]" value="${s.subject_id}" 
                            data-units="${s.units}" 
                            data-missing='${JSON.stringify(missing)}'
-                           ${isPassed ? 'disabled' : ''}>
+                           ${isDisabled ? 'disabled' : ''}>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="white-space: normal; word-break: break-word;">
                                 <span class="fw-bold">${s.subject_code}</span>
-                                ${hasMissing && !isPassed ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
+                                ${statusBadge}
+                                ${hasMissing && !isDisabled ? `<span class="badge bg-warning text-dark ms-2" title="Missing: ${missing.map(m => m.subject_code).join(', ')}">Missing Req.</span>` : ''}
                                 <div class="small">${s.subject_name}</div>
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-secondary rounded-pill">${s.units} Units</span>
                                 ${isPassed ? '<span class="d-block small text-success">Already passed</span>' : ''}
+                                ${isEnrolled ? `<span class="d-block small text-info">Enrolled in ${sy}</span>` : ''}
+                                ${isIncomplete ? `<span class="d-block small text-warning">Incomplete in ${sy}</span>` : ''}
                             </div>
                         </div>
                     </div>
@@ -976,6 +1027,11 @@ $course_id = (int)($student['course_id'] ?? 0);
             
             if (res.success) {
                 showStatus(res.message, true);
+                
+                // Scroll to top
+                const scrollContainer = document.querySelector('.app-content-scrollable');
+                if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+
                 reloadHistory();
                 checklistArea.style.display = 'none';
                 
@@ -1044,10 +1100,10 @@ $course_id = (int)($student['course_id'] ?? 0);
                         <table class="table table-sm table-hover mb-0 align-middle" style="font-size: 0.85rem;">
                             <thead class="bg-white">
                                 <tr class="text-muted small">
-                                    <th class="ps-3 border-0" style="width: 50%;">Subject</th>
-                                    <th class="text-center border-0" style="width: 16.6%;">Units</th>
-                                    <th class="text-center border-0" style="width: 16.6%;">Status</th>
-                                    <th class="text-center border-0" style="width: 16.6%;">Action</th>
+                                    <th class="ps-3 border-0" style="width: 45%;">Subject</th>
+                                    <th class="text-center border-0" style="width: 15%;">Units</th>
+                                    <th class="text-center border-0" style="width: 15%;">Status</th>
+                                    <th class="text-center border-0" style="width: 25%;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1055,7 +1111,7 @@ $course_id = (int)($student['course_id'] ?? 0);
 
             items.forEach(h => {
                 const statusClass = {
-                    'enrolled': 'bg-primary',
+                    'enrolled': 'bg-info',
                     'passed': 'bg-success',
                     'failed': 'bg-danger',
                     'incomplete': 'bg-warning text-dark',
@@ -1074,12 +1130,18 @@ $course_id = (int)($student['course_id'] ?? 0);
                             <span class="badge ${statusClass}" style="font-size: 0.7rem;">${h.status}</span>
                         </td>
                         <td class="text-center pe-2">
-                            ${h.status === 'enrolled' ? `
-                                <button class="btn btn-link btn-sm text-danger p-0 drop-btn" 
-                                        data-enroll-id="${h.enrollment_id}" title="Drop Subject">
-                                    <i class="bi bi-x-circle"></i>
+                            <div class="d-flex justify-content-center gap-1">
+                                ${h.status === 'enrolled' ? `
+                                    <button class="btn btn-danger btn-sm drop-btn py-1 px-1" 
+                                            data-enroll-id="${h.enrollment_id}" style="font-size: 0.75rem;">
+                                        <i class="bi bi-x-circle"></i> Drop Subject
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-danger btn-sm delete-btn py-1 px-1" 
+                                        data-enroll-id="${h.enrollment_id}" style="font-size: 0.75rem;">
+                                    <i class="bi bi-trash"></i> Delete Record
                                 </button>
-                            ` : '—'}
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -1109,6 +1171,33 @@ $course_id = (int)($student['course_id'] ?? 0);
                 .then(res => {
                     if (res.success) {
                         reloadHistory();
+                    } else {
+                        alert(res.message);
+                    }
+                })
+                .catch(err => alert('Network error: ' + err.message));
+            });
+        });
+
+        // Attach Delete Event
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-enroll-id');
+                if (!confirm('Are you sure you want to delete this enrollment record? This will also delete any associated grade for this term and cannot be undone.')) return;
+                
+                fetch('<?= APP_URL ?>/admin/api/students/delete-enrollment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `enrollment_id=${id}`
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        reloadHistory();
+                        // Also trigger a refresh of the subject list if visible
+                        if (typeof loadSubjectsForCurrentSelection === 'function') {
+                            loadSubjectsForCurrentSelection();
+                        }
                     } else {
                         alert(res.message);
                     }

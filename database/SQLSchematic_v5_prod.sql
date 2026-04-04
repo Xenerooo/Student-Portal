@@ -51,21 +51,22 @@ INSERT INTO `admins` (`admin_id`, `user_id`, `admin_number`, `admin_name`) VALUE
 
 CREATE TABLE `courses` (
   `course_id` int(11) NOT NULL,
-  `course_name` varchar(100) DEFAULT NULL
+  `course_name` varchar(100) DEFAULT NULL,
+  `acronym` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `courses`
 --
 
-INSERT INTO `courses` (`course_id`, `course_name`) VALUES
-(1, 'Bachelor in Science in Computer Science (BSCS)'),
-(2, 'Bachelor of Science in Hospitality Management (BSHM)'),
-(3, 'Bachelor of Science in Business Administration (BSBA)'),
-(4, 'Bachelor of Technical-Vocational Teacher Education major in Food Service Management (BTVTED)'),
-(5, 'Bachelor of Technical-Vocational Teacher Education major in Computer Programming (BTVTED)'),
-(6, 'Bachelor of Technical-Vocational Teacher Education major in Computer Hardware Servicing (BTVTED)'),
-(7, 'Bachelor of Technical-Vocational Teacher Education major in Automotive Technology (BTVTED)');
+INSERT INTO `courses` (`course_id`, `course_name`, `acronym`) VALUES
+(1, 'Bachelor in Science in Computer Science (BSCS)', 'BSCS'),
+(2, 'Bachelor of Science in Hospitality Management (BSHM)', 'BSHM'),
+(3, 'Bachelor of Science in Business Administration (BSBA)', 'BSBA'),
+(4, 'Bachelor of Technical-Vocational Teacher Education major in Food Service Management (BTVTED)', 'BTVTED-FSM'),
+(5, 'Bachelor of Technical-Vocational Teacher Education major in Computer Programming (BTVTED)', 'BTVTED-CP'),
+(6, 'Bachelor of Technical-Vocational Teacher Education major in Computer Hardware Servicing (BTVTED)', 'BTVTED-CHS'),
+(7, 'Bachelor of Technical-Vocational Teacher Education major in Automotive Technology (BTVTED)', 'BTVTED-AT');
 
 -- --------------------------------------------------------
 
@@ -324,6 +325,7 @@ CREATE TABLE `students` (
   `student_number` varchar(20) NOT NULL,
   `student_name` varchar(100) NOT NULL,
   `course_id` int(11) DEFAULT NULL,
+  `year_level` int(11) DEFAULT 1,
   `birthday` date DEFAULT NULL,
   `address` text NOT NULL,
   `last_school_attended` varchar(255) NOT NULL,
