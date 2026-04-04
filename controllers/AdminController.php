@@ -203,8 +203,20 @@ class AdminController extends BaseController {
             $this->json(['success' => false, 'message' => 'Invalid student ID or missing grades.'], 400);
         }
 
-        // The 'grades' array from POST might contain objects {grade, prelim, midterm, prefinal, finals}
+        // The 'grades' array from POST must be an object/array of grade data
         $grades = $_POST['grades'];
+        
+        // Deep validation of grades input
+        foreach ($grades as $subject_id => $data) {
+            if (!is_numeric($subject_id)) {
+                $this->json(['success' => false, 'message' => 'Invalid subject ID in grades data.'], 400);
+            }
+            if (!is_array($data)) {
+                $this->json(['success' => false, 'message' => 'Invalid data format for subject ID ' . $subject_id], 400);
+            }
+            // Optional: validate individual components (prelim, midterm, etc.)
+            // We'll trust the model for now but ensuring it's an array is a good start.
+        }
 
         $gradeModel = new Grade($this->conn);
         try {
@@ -391,6 +403,13 @@ class AdminController extends BaseController {
                 }
                 
                 if (!is_array($curriculum_data)) throw new Exception('Curriculum data must be an array.');
+
+                // Basic schema validation for bulk save
+                foreach ($curriculum_data as $index => $row) {
+                    if (!isset($row['course_id'], $row['subject_id'], $row['year_level'], $row['semester'])) {
+                        throw new Exception("Missing required fields in curriculum row at index $index.");
+                    }
+                }
 
                 $affected_rows = $curriculumModel->bulkSave($curriculum_data);
                 $this->json(['success' => true, 'message' => "Curriculum saved successfully!", 'affected_rows' => $affected_rows]);

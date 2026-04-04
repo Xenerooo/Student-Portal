@@ -1,8 +1,17 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Generic base detection
+
+    # Prevent access to sensitive files
+    <FilesMatch "^\.env|composer\.json|composer\.lock">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    # Prevent access to dot-directories (e.g. .git)
+    RewriteRule ^(\.git|vendor)(/.*)?$ - [F,L]
 
     # If the file/dir exists in the root, serve it (e.g. debug scripts)
+    # Be careful, this may still allow unwanted file access if not handled
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
@@ -12,7 +21,5 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ public/$1 [L]
-
-    # If the file still doesn't exist in public/, the public/.htaccess will 
-    # finally route it to index.php
 </IfModule>
+

@@ -12,16 +12,7 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 session_start();
 ob_start();
 
-// Security Headers
-header("X-Frame-Options: DENY");
-header("X-Content-Type-Options: nosniff");
-header("X-XSS-Protection: 1; mode=block");
-header("Referrer-Policy: strict-origin-when-cross-origin");
-
 define('ROOT_PATH', __DIR__ . '/..');
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../core/db_connect.php';
-require_once __DIR__ . '/../core/utilities.php';
 
 function portal_env(string $key, $default = null) {
     $value = getenv($key);
@@ -37,6 +28,27 @@ function portal_env(string $key, $default = null) {
 
     return $fileConfig[$key] ?? $default;
 }
+
+// Environment-based Error Reporting
+$appEnv = portal_env('APP_ENV', 'production');
+if ($appEnv === 'development') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+}
+
+// Security Headers
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
+// Global Requirements
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../core/db_connect.php';
+require_once __DIR__ . '/../core/utilities.php';
 
 if (!defined('APP_URL')) {
     $envUrl = portal_env('APP_URL', 'http://localhost/Student-Portal');
@@ -101,6 +113,9 @@ $router->map('GET', '/', 'App\\Controllers\\AuthController#showLoginForm', 'home
 $router->map('GET', '/login', 'App\\Controllers\\AuthController#showLoginForm', 'login_form');
 $router->map('POST', '/login', 'App\\Controllers\\AuthController#login', 'login_post');
 $router->map('GET', '/logout', 'App\\Controllers\\AuthController#logout', 'logout');
+$router->map('GET', '/health', function() {
+    require __DIR__ . '/health_check.php';
+}, 'health_check');
 
 /*====================================
  * ADMIN ROUTES (Requires Admin Role)
@@ -198,7 +213,8 @@ if (is_array($match) && is_callable($match['target'])) {
             exit();
         }
         http_response_code(500);
-        echo "<h1>Internal Server Error</h1><p>" . htmlspecialchars($e->getMessage()) . "</p>";
+        $errorMessage = ($appEnv === 'development') ? $e->getMessage() : "An internal server error occurred. Please contact the administrator.";
+        echo "<h1>Internal Server Error</h1><p>" . htmlspecialchars($errorMessage) . "</p>";
     }
 } else {
     // 404
