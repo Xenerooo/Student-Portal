@@ -930,16 +930,17 @@ class AdminController extends BaseController {
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
         
-        error_log("Calendar Get API Call (Admin): start=$start, end=$end");
-        
         try {
             $eventModel = new Event($this->conn);
             $events = $eventModel->getExpandedEvents($start, $end);
-            error_log("Calendar Get API Response (Admin): " . count($events) . " events found.");
             $this->json(['success' => true, 'events' => $events]);
         } catch (\Throwable $e) {
-            error_log("Calendar Get API Error (Admin): " . $e->getMessage());
-            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+            error_log("Calendar Get API Error (Admin): " . $e->getMessage() . " | Params: start=$start, end=$end");
+            $this->json([
+                'success' => false, 
+                'message' => 'Failed to fetch calendar events.',
+                'debug' => (portal_env('APP_ENV') === 'development') ? $e->getMessage() : null
+            ], 500);
         }
     }
 
