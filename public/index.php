@@ -205,18 +205,11 @@ if (is_array($match) && is_callable($match['target'])) {
             throw new Exception("Method $methodName not found in $controllerNamespace.");
         }
     } catch (Throwable $e) {
-        $isApi = (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) || 
-                 (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/api/') !== false);
-
-        if ($isApi) {
+        if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
             if (ob_get_length() > 0) ob_clean();
             http_response_code(500);
             header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false, 
-                'message' => ($appEnv === 'development') ? $e->getMessage() : "An internal server error occurred.",
-                'trace' => ($appEnv === 'development') ? $e->getTraceAsString() : null
-            ]);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             exit();
         }
         http_response_code(500);

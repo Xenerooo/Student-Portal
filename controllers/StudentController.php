@@ -283,22 +283,19 @@ class StudentController extends BaseController {
 
     public function getEventsApi() {
         $this->checkStudent();
-        header('Content-Type: application/json');
+        $start = $_GET['start'] ?? date('Y-m-01');
+        $end = $_GET['end'] ?? date('Y-m-t');
         
-        $start = $_GET['start'] ?? null;
-        $end = $_GET['end'] ?? null;
-        
+        error_log("Calendar Get API Call (Student): start=$start, end=$end");
+
         try {
             $eventModel = new Event($this->conn);
             $events = $eventModel->getExpandedEvents($start, $end);
+            error_log("Calendar Get API Response (Student): " . count($events) . " events found.");
             $this->json(['success' => true, 'events' => $events]);
         } catch (\Throwable $e) {
-            error_log("Calendar Get API Error (Student): " . $e->getMessage() . " | Params: start=$start, end=$end");
-            $this->json([
-                'success' => false, 
-                'message' => 'Failed to fetch calendar events.',
-                'debug' => (portal_env('APP_ENV') === 'development') ? $e->getMessage() : null
-            ], 500);
+            error_log("Calendar Get API Error (Student): " . $e->getMessage());
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
